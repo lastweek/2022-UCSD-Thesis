@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# A little script to make the testing document.
+
+export TEXINPUTS=".;..//;"
+
+pdflatex test
+makeindex test
+pdflatex test
+
+rm -f *.aux
+rm -f *.idl
+rm -f *.idx
+rm -f *.ilg
+rm -f *.ind
+rm -f *.lof
+rm -f *.log
+rm -f *.lot
+rm -f *.toc
