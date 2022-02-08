@@ -233,15 +233,14 @@ What to do about things \cite{Martin_1983}.  What did he say \cite{Rilling_Insel
 % \printindex %% Uncomment to display the index
 % \nocite{}  %% Put any references that you want to include in the bib 
 %               but haven't cited in the braces.
-\bibliographystyle{alpha}  %% This is just my personal favorite style. 
+\bibliographystyle{plain}  %% This is just my personal favorite style. 
 %                              There are many others.
 %\setlength{\bibleftmargin}{0.25in}  % indent each item
 %\setlength{\bibindent}{-\bibleftmargin}  % unindent the first line
 %\def\baselinestretch{1.0}  % force single spacing
 %\setlength{\bibitemsep}{0.16in}  % add extra space between items
-\bibliography{paper}  %% This looks for the bibliography in template.bib 
-%                          which should be formatted as a bibtex file.
-%                          and needs to be separately compiled into a bbl file.
+\bibliography{local}
+\bibliography{paper}
 \singlespace  %to force bibilography environment to use single spacing for each entry 
               %double spacing between entries remains
 \end{document}
