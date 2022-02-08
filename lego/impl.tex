@@ -1,5 +1,5 @@
 \section{\lego\ Implementation}
-\label{sec:impl}
+\label{sec:lego:impl}
 
 We implemented \lego\ in C on the x86-64 architecture.
 \lego\ can run on commodity, off-the-shelf machines 
@@ -30,7 +30,7 @@ on top of the Mellanox mlx4 InfiniBand driver we ported from Linux.
 Our RDMA RPC implementation registers physical memory addresses with RDMA NICs 
 and thus eliminates the need for NICs to cache physical-to-virtual memory address mappings~\cite{Tsai17-SOSP}.
 The resulting smaller NIC SRAM can largely reduce the monetary cost of NICs,
-further saving the total cost of a \lego\ cluster. % (\S~\ref{sec:cost}).
+further saving the total cost of a \lego\ cluster.
 All \lego\ internal communications use this RPC framework.
 For best latency, we use one dedicated polling thread at RPC server side to keep polling incoming requests.
 Other thread(s) (which we call worker threads) execute the actual RPC functions. 
@@ -54,7 +54,7 @@ Applications can choose between these two socket implementations
 and use virtual IPs for their socket communication.
 
 \subsection{Processor Monitor}
-\label{sec:procimpl}
+\label{sec:lego:procimpl}
 
 We reserve a contiguous physical memory region during kernel boot time
 and use fixed ranges of memory in this region as \excache, tags and metadata for these caches, and kernel physical memory. 
@@ -90,7 +90,7 @@ For both policies, we use a per-set lock and lock the FIFO queue (or the LRU lis
 making changes to them.
 
 \subsection{Memory Monitor}
-\label{sec:memimpl}
+\label{sec:lego:memimpl}
 
 We use regular machines to emulate \mcomponent{}s 
 by limiting usable cores to a small number (2 to 5 depending on configuration).
@@ -123,7 +123,7 @@ and issues vfs file operations to perform \lego\ storage I/Os.
 Doing so is sufficient to evaluate \lego, while largely saving our implementation efforts on storage device drivers and layered storage protocols.
 We leave exploring other options of building \lego\ storage \microos\ to future work.
 
-\input{fig-associativity}
+\input{lego/fig-associativity}
 \subsection{Experience and Discussion}
 We started our implementation of \lego\ from scratch to have a clean design and implementation that 
 can fit the \splitkernel\ model
@@ -144,7 +144,7 @@ When we started building \lego, we had a clear goal of sticking to
 the principle of ``clean separation of functionalities''.
 However, we later found several places where performance could be improved 
 if this principle is relaxed.
-For example, for the optimization in \S\ref{sec:zerofill} to work correctly,
+For example, for the optimization in \S\ref{sec:lego:zerofill} to work correctly,
 \pcomponent\ needs to store the address range and permission for anonymous virtual memory regions --- 
 memory-related information that otherwise only \mcomponent{}s need to know.
 Another example is the implementation of \mremap.

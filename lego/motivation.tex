@@ -1,8 +1,8 @@
-\input{lego/fig-resource-anal}
-\input{lego/fig-architecture}
-
 \section{Disaggregate Hardware Resource}
 \label{sec:lego:motivation}
+
+\input{lego/fig-resource-anal}
+\input{lego/fig-architecture}
 
 This section
 motivates the hardware resource disaggregation architecture
@@ -22,8 +22,8 @@ Figure~\ref{fig-resource-anal} plots the aggregated CPU and memory utilization i
 For both clusters, only around half of the CPU and memory are utilized.
 Interestingly,
 a significant amount of jobs are being evicted at the same time in these traces
-(\eg, evicting low-priority jobs to make room for high-priority ones~\cite{Borg}). % (Figures~\ref{fig-googleevict} and \ref{fig-alievict}).
-One of the main reasons for resource underutilization in these production clusters is 
+(\eg, evicting low-priority jobs to make room for high-priority ones~\cite{Borg}).
+One of the main reasons for resource under-utilization in these production clusters is 
 the constraint that CPU and memory for a job have to be allocated from 
 the same physical machine.
 
@@ -63,7 +63,7 @@ The server-centric architecture is a bad fit for the fast-changing datacenter ha
 There is an emerging interest in utilizing resources beyond a local machine~\cite{Gao16-OSDI},
 such as distributed memory~\cite{Dragojevic14-FaRM,Nelson15-ATC,Aguilera17-SOCC,Novakovic16-SOCC} and network swapping~\cite{GU17-NSDI}. 
 These solutions improve resource utilization over traditional systems.
-However, they cannot solve all the issues of monolithic servers (\eg, the last three issues in \S\ref{sec:monolimit}), 
+However, they cannot solve all the issues of monolithic servers (\eg, the last three issues in \S\ref{sec:lego:monolimit}), 
 since their hardware model is still a monolithic one.
 To fully support the growing heterogeneity in hardware and to provide elasticity and flexibility at the hardware level, 
 we should {\em break the monolithic server model.}% into flexible resource components.

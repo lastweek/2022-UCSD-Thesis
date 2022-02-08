@@ -1,6 +1,10 @@
 \input{texheader}
 \input{defs}
 
+\renewcommand*\thesubsubsection{%
+  \arabic{section}.\arabic{subsection}.\arabic{subsubsection}%
+}
+
 \twocolumn[
 \begin{@twocolumnfalse}
 \begin{center}
@@ -15,6 +19,8 @@
 \bigskip
 \end{@twocolumnfalse}
 ]
+
+
 
 \pagenumbering{gobble}
 \thispagestyle{plain}

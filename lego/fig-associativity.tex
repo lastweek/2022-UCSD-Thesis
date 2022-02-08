@@ -1,50 +1,44 @@
 {
 \begin{figure*}[th]
-\begin{minipage}{0.50\columnwidth}
+\begin{minipage}{3in}
 \begin{center}
-\centerline{\includegraphics[width=1.0\columnwidth]{Figures/g_plot_LEGO_latency.pdf}}
-\vspace{-0.1in}
-\mycaption{fig-net-latency}{Network Latency.}
-{
-%Lego raw RPC over IB and socket over IB, compared with Linux.
-}
+\centerline{\includegraphics[width=3in]{lego/Figures/g_plot_LEGO_latency.pdf}}
+\caption[Network Latency.]{Network Latency.}
+\label{fig-net-latency}
 \end{center}
 \end{minipage}
-\begin{minipage}{0.50\columnwidth}
-\vspace{0.13in}
-\begin{center}
-\centerline{\includegraphics[width=1.0\columnwidth]{Figures/g_plot_LEGO_iops_memory.pdf}}
-\vspace{-0.1in}
-\mycaption{fig-iops-memory}{Memory Throughput.}
-{
-%Lego
+\end{figure*}
 }
+{
+\begin{figure*}[th]
+\begin{minipage}{3in}
+\begin{center}
+\centerline{\includegraphics[width=3in]{lego/Figures/g_plot_LEGO_iops_memory.pdf}}
+\caption[Memory Throughput]{Memory Throughput.}
+\label{fig-iops-memory}
 \end{center}
 \end{minipage}
-\begin{minipage}{0.50\columnwidth}
-\vspace{0.11in}
-\begin{center}
-\centerline{\includegraphics[width=1.0\columnwidth]{Figures/g_plot_LEGO_iops_storage.pdf}}
-\vspace{-0.06in}
-\mycaption{fig-iops-storage}{Storage Throughput.} 
-{
-%Random read/write performance.
+\end{figure*}
 }
+{
+\begin{figure*}[th]
+\begin{minipage}{3in}
+\begin{center}
+\centerline{\includegraphics[width=3in]{lego/Figures/g_plot_LEGO_iops_storage.pdf}}
+\caption[Storage Throughput.]{Storage Throughput.} 
+\label{fig-iops-storage}
 \end{center}
 \end{minipage}
-\begin{minipage}{0.50\columnwidth}
-\vspace{0.11in}
-\begin{center}
-\centerline{\includegraphics[width=1.0\columnwidth]{Figures/g_plot_LEGO_parsec.pdf}}
-\vspace{-0.06in}
-\mycaption{fig-parsec}{PARSEC Results.}
-{
-SC: StreamClsuter. BS: BlackScholes.
-%TensorFlow and Phoenix running on Lego with different ExCache size configurations.
-%Compared with running on Linux with limited memory.
+\end{figure*}
 }
+{
+\begin{figure*}[th]
+\begin{minipage}{3in}
+\begin{center}
+\centerline{\includegraphics[width=3in]{lego/Figures/g_plot_LEGO_parsec.pdf}}
+\caption[PARSEC Results.]{PARSEC Results. SC: StreamClsuter. BS: BlackScholes.}
+\label{fig-parsec}
 \end{center}
 \end{minipage}
-\vspace{-0.1in}
 \end{figure*}
 }

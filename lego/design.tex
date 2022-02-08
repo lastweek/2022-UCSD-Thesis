@@ -1,5 +1,5 @@
 \section{\lego\ Design}
-\label{sec:design}
+\label{sec:lego:design}
 
 Based on the \splitkernel\ architecture,
 we built {\em \lego}, the first OS designed for hardware resource disaggregation.
@@ -57,7 +57,7 @@ With \splitkernel's design principle of components not being coherent,
 \lego\ does not support writable shared memory across processors. %execute application threads that need to have shared write access to common memory.
 \lego\ assumes that threads within the same process access shared memory
 and threads belonging to different processes do not share writable memory,
-and \lego\ makes scheduling decision based on this assumption (\S\ref{sec:proc-scheduling}).
+and \lego\ makes scheduling decision based on this assumption (\S\ref{sec:lego:proc-scheduling}).
 Applications that use shared writable memory across processes (\eg, with MAP\_SHARED)
 will need to be adapted to use message passing across processes.
 We made this decision because writable shared memory across processes is rare 
@@ -72,8 +72,8 @@ Distributed applications that run on Linux can seamlessly run on a \lego\ cluste
 by running on a set of \vnode{}s. % and using their virtual IP addresses to communicate.
 
 \subsection{Hardware Architecture}
-\label{sec:hardware}
-\input{fig-hw-arch}
+\label{sec:lego:hardware}
+\input{lego/fig-hw-arch}
 \lego\ \pcomponent, \mcomponent, and \scomponent\ are independent devices,
 each having their own hardware controller and network interface (for \pcomponent, the hardware controller is the processor itself).
 Our current hardware model uses CPU in \pcomponent, 
@@ -83,7 +83,7 @@ We leave exploring other hardware devices for future work.
 To demonstrate the feasibility of hardware resource disaggregation,
 we propose a \pcomponent{} and an \mcomponent\ architecture designed 
 within today's network, processor, and memory performance and hardware constraints
-(Figure~\ref{fig-hw-arch}).
+(Figure~\ref{fig-lego-hw-arch}).
 
 \noindent{\textit{\uline{Separating process and memory functionalities.}}}
 \lego\ moves all hardware memory functionalities to \mcomponent{}s 
@@ -143,7 +143,7 @@ For best hit performance, the hit path of \excache\ is handled purely by hardwar
 --- the hardware cache controller maps a virtual address to an \excache\ set, 
 fetches and compares tags in the set, and on a hit, fetches the hit \excache\ line.
 Handling misses of \excache\ is more complex than with traditional CPU caches, 
-and thus we use \lego\ to handle the miss path of \excache\ (see \S\ref{sec:excachemgmt}).
+and thus we use \lego\ to handle the miss path of \excache\ (see \S\ref{sec:lego:excachemgmt}).
 
 Finally, we use a small amount of DRAM/HBM at \pcomponent{} for \lego' own kernel data usages,
 accessed directly with physical memory addresses and managed by \lego. 
@@ -164,14 +164,14 @@ and manages the \pcomponent's CPU cores and \excache.
 \pcomponent{}s run user programs in the user space.
 
 \subsubsection{Process Management and Scheduling}
-\label{sec:proc-scheduling}
+\label{sec:lego:proc-scheduling}
 At every \pcomponent, \lego\ uses a simple local thread scheduling model 
 that targets datacenter applications 
-(we will discuss global scheduling in \S~\ref{sec:grm}).
+(we will discuss global scheduling in \S~\ref{sec:lego:grm}).
 \lego\ dedicates a small amount of cores for kernel background threads 
 (currently two to four)
 and uses the rest of the cores for application threads.
-When a new process starts, \lego\ uses a global policy to choose a \pcomponent{} for it (\S~\ref{sec:grm}).
+When a new process starts, \lego\ uses a global policy to choose a \pcomponent{} for it (\S~\ref{sec:lego:grm}).
 Afterwards, \lego\ schedules new threads the process spawns on the same \pcomponent{} 
 by choosing the cores that host fewest threads.
 After assigning a thread to a core, 
@@ -189,7 +189,7 @@ more threads than its cores will
 \lego\ start preempting threads on a core.
 
 \subsubsection{\excache\ Management}
-\label{sec:excachemgmt}
+\label{sec:lego:excachemgmt}
 \lego\ process \microos\ configures and manages \excache.
 During the \pcomponent{}'s boot time, \lego\ configures the set associativity of \excache\
 and its cache replacement policy.
@@ -202,7 +202,7 @@ It throws away the evicted line if it is clean
 and writes it back to an \mcomponent{} if it is dirty.
 \lego\ currently supports two eviction policies: FIFO and LRU.
 For each \excache\ set, \lego\ maintains a FIFO queue (or an approximate LRU list)
-and chooses \excache\ lines to evict based on the corresponding policy (see \S\ref{sec:procimpl} for details).
+and chooses \excache\ lines to evict based on the corresponding policy (see \S\ref{sec:lego:procimpl} for details).
 
 \subsubsection{Supporting Linux Syscall Interface}
 One of our early decisions is to support Linux ABIs for backward compatibility
@@ -257,7 +257,7 @@ or {\em \vregion{}s} (\eg, of 1\GB).
 Each \vregion\ that contains allocated virtual memory addresses (an active \vregion) is {\em owned} by an \mcomponent{}.
 The owner of a \vregion\ handles all memory accesses and virtual memory requests within the \vregion.
 
-\input{fig-dist-vma}
+\input{lego/fig-dist-vma}
 The lower level stores user process virtual memory area ({\em vma}) information,
 such as virtual address ranges and permissions, in {\em vma trees}.
 The owner of an active \vregion\ stores a vma tree for the \vregion,
@@ -279,7 +279,7 @@ The home \mcomponent{} uses its stored information of available virtual memory s
 to find one or more \vregion{}s that best fit the requested amount of virtual memory space.
 If no active \vregion\ can fit the allocation request, the home \mcomponent{} makes a new \vregion\ active and 
 contacts the \gmm\ (\circled{2} and \circled{3}) to find a candidate \mcomponent{} to own the new \vregion.
-\gmm\ makes this decision based on available physical memory space and access load on different \mcomponent{}s (\S~\ref{sec:grm}).
+\gmm\ makes this decision based on available physical memory space and access load on different \mcomponent{}s (\S~\ref{sec:lego:grm}).
 If the candidate \mcomponent\ is not the home \mcomponent{}, the home \mcomponent{} next forwards the request to that \mcomponent\ (\circled{4}),
 which then performs local virtual memory area allocation and sets up the proper vma tree. 
 Afterwards, the \pcomponent{} directly sends memory access requests to the owner of the \vregion\ where the memory access falls into
@@ -300,7 +300,7 @@ and own mechanism of virtual-to-physical memory address mapping.
 
 
 \subsubsection{Optimization on Memory Accesses}
-\label{sec:zerofill}
+\label{sec:lego:zerofill}
 With our strawman memory management design, 
 all \excache\ misses will go to \mcomponent{}s.
 We soon found that a large performance overhead in running real applications 
@@ -364,7 +364,7 @@ The \mcomponent\ will then insert it into the buffer cache and returns it to the
 Write and fsync requests work in a similar fashion.
 
 \subsection{Global Resource Management}
-\label{sec:grm}
+\label{sec:lego:grm}
 \lego\ uses a two-level resource management mechanism.
 At the higher level, \lego\ uses three global resource managers for process, memory, and storage resources, 
 {\em \gpm, \gmm}, and {\em \gsm}.
@@ -393,7 +393,7 @@ This on-demand allocation strategy further improves \lego' resource packing effi
 and allows more aggressive over-subscription in a cluster.
 
 \subsection{Reliability and Failure Handling}
-\label{sec:failure}
+\label{sec:lego:failure}
 After disaggregation, \pcomponent{}s, \mcomponent{}s, and \scomponent{}s can all fail independently.
 Our goal is to build a reliable disaggregated cluster that has the same or lower application failure rate
 than a monolithic cluster.
@@ -420,7 +420,7 @@ we propose to provide memory reliability in a best-effort manner.
 
 We use one primary \mcomponent, one secondary \mcomponent, and a backup file in \scomponent\ for each vma.
 A \mcomponent{} can serve as the primary for some vma and the secondary for others.
-The primary stores all memory data and metadata. %, as discussed in \S~\ref{sec:}.
+The primary stores all memory data and metadata.
 \lego\ maintains a small append-only log at the secondary \mcomponent{}
 and also replicates the vma tree there.
 When \pcomponent{} flushes a dirty \excache\ line, 

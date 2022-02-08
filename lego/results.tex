@@ -1,5 +1,5 @@
 \section{Evaluation}
-\label{sec:results}
+\label{sec:lego:results}
 
 This section presents the performance evaluation of \lego\ using micro- and macro-benchmarks and two unmodified real applications.
 We also quantitatively analyze the failure rate of \lego.
@@ -31,7 +31,7 @@ with one and two \mcomponent{}s (only showing representative configurations in F
 In general, using more worker threads per \mcomponent\ and using more \mcomponent{}s both improve throughput when an application has high parallelism,
 but the improvement largely diminishes after the total number of worker threads reaches four.
 %but using 4 worker threads can already saturate the performance.
-We also evaluated the optimization technique in \S~\ref{sec:zerofill} ({\em p-local} in Figure~\ref{fig-iops-memory}).
+We also evaluated the optimization technique in \S~\ref{sec:lego:zerofill} ({\em p-local} in Figure~\ref{fig-iops-memory}).
 As expected, bypassing \mcomponent\ accesses with p-local lines significantly 
 improves memory access performance.
 The difference between p-local and Linux demonstrates the overhead of trapping to \lego\ kernel and setting up \excache.
@@ -51,7 +51,7 @@ With better SSD sequential read performance, network cost has a higher impact.
 \lego\ requires one RTT between \pcomponent\ and \mcomponent\ to perform write 
 and two RTTs (\pcomponent\ to \mcomponent, \mcomponent\ to \scomponent) for fsync.
 
-\input{fig-latency-excache-m}
+\input{lego/fig-latency-excache-m}
 \noindent{\textit{\uline{PARSEC results.}}}
 We evaluated \lego\ with a set of workloads from the PARSEC benchmark suite~\cite{PARSEC},
 including BlackScholes, Freqmine, and StreamCluster.
@@ -96,7 +96,7 @@ compared to a monolithic Linux server that can fit all working sets in its main 
 
 \lego' performance is significantly better than swapping to SSD and to remote memory 
 largely because of our efficiently-implemented network stack, simplified code path compared with Linux paging subsystem,
-and the optimization technique proposed in \S\ref{sec:zerofill}.
+and the optimization technique proposed in \S\ref{sec:lego:zerofill}.
 Surprisingly, it is similar or even better than swapping to local memory, even when \lego' memory accesses are across network.
 This is mainly because ramdisk goes through buffer cache and incurs memory copies between the buffer cache and the in-memory swap file.
 
@@ -105,7 +105,7 @@ Our network stack and RPC optimizations yield a total improvement of up to 50\%.
 For example, we made all RPC server (\mcomponent's) replies {\em unsignaled} to save \mcomponent' processing time
 and to increase its request handling throughput.
 Another optimization we did is to piggy-back dirty cache line flush and cache miss fill into one RPC.
-The optimization of the first anonymous memory access (\S\ref{sec:zerofill}) improves \lego' performance further by up to 5\%.
+The optimization of the first anonymous memory access (\S\ref{sec:lego:zerofill}) improves \lego' performance further by up to 5\%.
 
 \noindent{\textit{\uline{\excache\ management.}}}
 Apart from its size, how an \excache\ is managed can also largely affect application performance.
@@ -127,7 +127,6 @@ the kernel background thread sweeping the \excache\ locks an LRU list when adjus
 while \excache\ miss handler thread also needs to lock the LRU list to grab its head.
 Finally, the piggyback optimization works well and the combination of FIFO, free list, and piggyback yields the best performance.
 
-\input{tbl-failure.tex}
 \noindent{\textit{\uline{Number of \mcomponent{}s and replication.}}}
 Finally, we study the effect of the number of \mcomponent s and memory replication.
 Figure~\ref{fig-mem-rep} plots the performance slowdown as the number of \mcomponent s increases from one to four.
@@ -163,7 +162,7 @@ Using more worker threads at the \mcomponent\ improves the performance slightly.
 %due to burst memory access requests from both applications resulting much higher queuing delay in the \mcomponent.
 For 1P2M, application performance largely depends on \excache\ size, similar to our findings with single-application experiments.
 
-\input{fig-multiapp.tex}
+\input{lego/fig-multiapp.tex}
 %s to two applications running on same \pcomponent, 0.5G Excahce, being 19.7\% of resident memory, results
 %much higher cache conflicts and evictions, furthermore reflected by 3-4 times slowdown in runtime. Meanwhile,
 %1\GB\ \excache, 39.4\% of resident memory, reveals a better performance than the former.
@@ -192,8 +191,9 @@ based on available cores of \pcomponent{}s.
 \fixme{will continue analysis after power outage}
 \fi
 
+\input{lego/tbl-failure.tex}
 \subsection{Failure Analysis}
-\label{sec:failure-results}
+\label{sec:lego:failure-results}
 Finally, we provide a qualitative analysis on the failure rate of a \lego\ cluster compared to a monolithic server cluster.
 Table~\ref{tbl-failure} summarizes our analysis.
 To measure the failure rate of a cluster, we use the metric Mean Time To (hardware) Failure (MTTF), 

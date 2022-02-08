@@ -1,5 +1,5 @@
 \section{Introduction}
-\label{sec:introduction}
+\label{sec:lego:introduction}
 
 For many years, the unit of deployment, operation, and failure in datacenters has been a {\em monolithic server},
 one that contains all the hardware resources 
@@ -16,8 +16,7 @@ hardware components in datacenters~\cite{FB-Wedge100}.
 Moreover, when a hardware component like a memory controller fails, the entire server is unusable.
 Finally, modern datacenters host increasingly heterogeneous hardware~\cite{sigarch-dc,Putnam14-FPGA,TPU,DPU}.
 However, designing new hardware that can fit into monolithic servers and deploying them in datacenters
-is a painful and cost-ineffective process 
-that often limits the speed of new hardware adoption. %$that datacenters can adopt new hardware.
+is a painful and cost-ineffective process that often limits the speed of new hardware adoption.
 
 We believe that datacenters should break monolithic servers
 and organize hardware devices like CPU, DRAM, and disks 
@@ -52,9 +51,7 @@ and their message passing is over local buses instead of a general network.
 While existing OSes could be retrofitted to support hardware resource disaggregation, 
 such retrofitting will be invasive to the central subsystems of an OS, such as memory and I/O management.
 
-\input{fig-architecture}
-
-We propose {\em \splitkernel}, a new OS architecture for hardware resource disaggregation (Figure~\ref{fig-architecture}).
+We propose {\em \splitkernel}, a new OS architecture for hardware resource disaggregation (Figure~\ref{fig-splitkernel}).
 The basic idea is simple: \textit{When hardware is disaggregated, the OS should be also}.  
 A \splitkernel\ breaks traditional operating system functionalities into loosely-coupled {\em \microos{}s},
 each running at and managing a hardware component.
@@ -122,27 +119,13 @@ Overall, this work makes the following contributions:
 
 \begin{itemize}
 
-\vspace{-0.065in}
 \item We propose the concept of \splitkernel, a new OS architecture that fits the hardware resource disaggregation architecture.
 
-\vspace{-0.065in}
 \item We built \lego, the first OS that runs on and manages a disaggregated hardware cluster.
 
-\vspace{-0.065in}
 \item We propose a new hardware architecture to cleanly separate processor and memory hardware functionalities, 
 while preserving most of the performance of monolithic server architecture.
 
-\vspace{-0.065in}
-
 \end{itemize}
 
-\lego\ is publicly available at {\small {\em {\url{http://LegoOS.io}}}}.\\
-
-\if 0
-The rest of the paper is organized as follows.
-\S{}2 motivates hardware resource disaggregation and a new OS for it.
-\S{}3 presents the concept of \splitkernel.
-We then discuss the detailed design and implementation of \lego\ in \S{}4 and \S{}5.
-\S{}6 presents our evaluation results of \lego.
-Finally, we cover related works in \S{}7 and conclude in \S{}8.
-\fi
+\lego\ is publicly available at {\small {\em {\url{LegoOS.io}}}}.\\
