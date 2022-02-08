@@ -1,4 +1,5 @@
-%\input{lego/fig-resource-anal}
+\input{lego/fig-resource-anal}
+\input{lego/fig-architecture}
 
 \section{Disaggregate Hardware Resource}
 \label{sec:lego:motivation}
@@ -148,25 +149,19 @@ We summarize the following key challenges in building an OS for resource disaggr
 some of which have previously been identified~\cite{HP-MemoryOS}.
 
 \begin{itemize}
-\vspace{-0.06in}
 \item How to deliver good performance when application execution involves the access of network-partitioned disaggregated hardware
 and current network is still slower than local buses?
 
-\vspace{-0.06in}
 \item How to locally manage individual hardware components with limited hardware resources?
 
 %\item How to communicate across components?
 
-\vspace{-0.06in}
 \item How to manage distributed hardware resources?
 
-\vspace{-0.06in}
 \item How to handle a component failure without affecting other components or running applications?
 
-\vspace{-0.06in}
 \item What abstraction should be exposed to users and how to support existing datacenter applications?
 
-\vspace{-0.06in}
 \end{itemize}
 
 Instead of retrofitting existing OSes to confront these challenges,
