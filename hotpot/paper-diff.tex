@@ -669,9 +669,12 @@
 %DIF 636c661-663
 %DIF < \newcommand{\mycaption}[3]{\beforecaption\caption{\label{#1}{\small \bf #2} \em\scriptsize #3}\aftercaption}
 %DIF -------
-%\newcommand{\mycaption}[3]{\beforecaption\caption{\label{#1}{\small \bf #2} \em\scriptsize #3}\aftercaption} %DIF > 
-%\newcommand{\mycaption}[3]{\beforecaption\caption{\label{#1}{\bf #2} \em\footnotesize #3}\aftercaption} %DIF > 
-\newcommand{\mycaption}[3]{\caption{\label{#1}{\bf #2} \em\small #3}} %DIF > 
+%\newcommand{\mycaption}[3]{\beforecaption\caption{\label{#1}{\small \bf #2} \em\scriptsize #3}\aftercaption}
+ %DIF > 
+%\newcommand{\mycaption}[3]{\beforecaption\caption{\label{#1}{\bf #2} \em\footnotesize #3}\aftercaption}
+ %DIF > 
+\newcommand{\mycaption}[3]{\caption{\label{#1}{\bf #2} \em\small #3}}
+ %DIF > 
 %DIF -------
 
 
@@ -761,16 +764,21 @@
 \newcommand{\pmfs}{PMFS}
 \newcommand{\tmpfs}{tmpfs}
 %DIF 724a751-754
-\newcommand{\Octopus}{Octopus} %DIF > 
-\newcommand{\Mojim}{Mojim} %DIF > 
-\newcommand{\dsmnoxact}{DSM-NoXact} %DIF > 
-\newcommand{\dsmxact}{DSM-Xact} %DIF > 
+\newcommand{\Octopus}{Octopus}
+ %DIF > 
+\newcommand{\Mojim}{Mojim}
+ %DIF > 
+\newcommand{\dsmnoxact}{DSM-NoXact}
+ %DIF > 
+\newcommand{\dsmxact}{DSM-Xact}
+ %DIF > 
 %DIF -------
 \newcommand{\clflush}{\texttt{clflush}}
 \newcommand{\pcommit}{\texttt{pcommit}}
 \newcommand{\mfence}{\texttt{mfence}}
 %DIF 727a758
-\newcommand{\sfence}{\texttt{sfence}} %DIF > 
+\newcommand{\sfence}{\texttt{sfence}}
+ %DIF > 
 %DIF -------
 \newcommand{\ra}{\textbf{R1.a}}
 \newcommand{\rb}{\textbf{R1.b}}
