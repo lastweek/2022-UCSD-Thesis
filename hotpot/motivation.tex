@@ -1,5 +1,5 @@
 \section{Motivation}
-\label{sec:motivation}
+\label{sec:hotpot:motivation}
 
 \dsnvm\ is motivated by three datacenter trends: 
 emerging hardware \nvm\ technologies, 
@@ -22,10 +22,12 @@ overheads~\cite{Coburn11-ASPLOS,Volos11-ASPLOS,Zhang15-Mojim,Memory-Persistency,
 (we call this model {\em durable in-memory computation}),
 rather than accessing it via a file system~\cite{sosp09:bpfs,Dragojevic14-NSDI,Dulloor14-EuroSys,Xiaojian11-SC,HiNFS-Eurosys16,Octopus}.
 
-\input{fig-share-1}
 Unfortunately, most previous durable in-memory systems were designed for the single-node environment.
 With modern datacenter applications' computation scale, 
 we have to be able to scale out these single-node \nvm\ systems.
+
+\input{hotpot/fig-share-1}
+\input{hotpot/fig-share-2}
 
 \subsection{Shared Memory Applications}
 Modern data-intensive applications increasingly need
@@ -62,8 +64,6 @@ make remote-memory-based systems~\cite{Nelson15-ATC,GU17-NSDI,OSDI-Disaggregate,
 
 \subsection{Lack of Distributed PM Support}
 
-\input{fig-share-2}
-
 Many large-scale datacenter applications require fast access to vast amounts of persistent data
 and could benefit from \nvm's performance, durability, and capacity benefits.
 For \nvm{}s to be successful in datacenter environments, they have to support these applications.
@@ -78,6 +78,6 @@ Octopus and our previous work Mojim~\cite{Zhang15-Mojim} are the only distribute
 Octopus was developed in parallel with \hotpot\ and has a similar goal as \hotpot: 
 to manage and expose distributed PM to datacenter applications. 
 However, Octopus uses a file system abstraction and is built in the user level.
-These designs add significant performance overhead to native PM accesses (Section~\ref{sec:mongodb}).
+These designs add significant performance overhead to native PM accesses (Section~\ref{sec:hotpot:mongodb}).
 Moreover, Octopus does not provide any data reliability or high availability, 
 both of which are key requirements in datacenter environments.
