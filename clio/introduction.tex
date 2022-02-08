@@ -1,5 +1,5 @@
 \section{Introduction}
-\label{sec:introduction}
+\label{sec:clio:introduction}
 
 Modern datacenter applications like graph computing, data analytics, and deep learning have an increasing demand for access to large amounts of memory~\cite{FastSwap}.
 Unfortunately, servers are facing {\em memory capacity walls} because of pin, space, and power limitations~\cite{HP-MemoryEvol,ITRS14,MemoryWall95}.
@@ -189,7 +189,7 @@ Although much effort has focused on improving the network and core scheduling fo
 the memory system has largely been overlooked.
 However, the (remote) memory system is what contributes to extreme long tails in a \md\ system.
 For example, RDMA's round-trip latency is around 1--2\mus\ in the common case,
-but its tail could be as long as 16.8\ms\ (Figure~\ref{fig-miss-hit} and \S\ref{sec:rdma}). % (when there is a page fault).
+but its tail could be as long as 16.8\ms\ (Figure~\ref{fig-miss-hit} and \S\ref{sec:clio:rdma}). % (when there is a page fault).
 %The main reason for RDMA's various tails is its reliance on the host virtual memory system, which is not designed for \md\ or for low tail latency.
 
 We reexamine traditional memory system

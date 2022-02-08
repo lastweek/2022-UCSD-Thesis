@@ -1,39 +1,24 @@
-
-%\input{tbl-system-cmp}
-
 \section{Goals and Related Works}
-\label{sec:motivation}
+\label{sec:clio:motivation}
 
 Resource disaggregation 
-% is a notion to 
 separates different types of resources into different pools,
 each of which can be independently managed and scaled.
 Applications can allocate resources from any node in a resource pool, resulting in tight resource packing. %regardless of where other types of resources sit.
 Because of these benefits, % its manageability, independent scaling, and efficient resource utilization benefits,
 many datacenters have adopted the idea of disaggregation, often at the storage 
 layer~\cite{FACEBOOK-BRYCECANYON,FB1,SnowFlake-NSDI20,AMAZON-S3,AMAZON-EBS,Pangu,FC-SAN-book}.
-%layer~\cite{FACEBOOK-BRYCECANYON,FB1,SnowFlake-NSDI20,Decibel-NSDI17,AMAZON-S3,AMAZON-EBS,Klimovic18-ATC,RackScaleDisaggregation}.
-%As a recent success story, Alibaba listed their storage disaggregation as one of the five reasons
-%that enable them to serve the peak load of 544,000 orders per second on the 2019 Single's Day~\cite{Ali-SinglesDay}.
-With the success of disaggregated storage, % and the fast developments in datacenter network speed,
+With the success of disaggregated storage,
 researchers in academia and industry have also sought ways to disaggregate memory
 (and persistent memory)
 \cite{Lim09-disaggregate,FireBox-FASTKeynote,IntelRackScale,Lim12-HPCA,Shan18-OSDI,Shan17-SOCC,RAMCloud,Tsai20-ATC,AIFM,FastSwap,InfiniSwap,Semeru,Nitu18-EUROSYS}.
-%For example, even though storage disaggregation has been well understood and widely deployed~\cite{SnowFlake-NSDI20,Pangu,FACEBOOK-BRYCECANYON,FB1,XXX},
 Different from storage disaggregation,
 \md\ needs to achieve at least an order of magnitude higher performance and it should offer a byte-addressable interface.
 Thus, \md\ poses new challenges and requires new designs.
-%demands much more stringent performance targets, which in turn has new implications on how scalability and low cost can be achieved.
-%Moreover, the memory interface is very different from a storage interface, requiring new designs in \md's abstraction and metadata management.
-%Different from distributed memory such as distributed shared memory~\cite{Shasta,Bennett90-PPOPP,Fleisch89-SOSP,Keleher92-ISCA,Nelson15-ATC},
-%memory disaggregation, or {\em \md}, has a clear notion of function separation where the memory pool hosts memory
-%and the compute pool executes applications.
 This section discusses the requirements of \md\ and why existing solutions cannot fully meet them.
-%This section, Table~\ref{tbl-system-cmp}, and Figure~\ref{fig-arch} put \sys\ in the perspective of two main existing memory disaggregation approaches.
-%architecture of disaggregated memory.
 
 \subsection{\md\ Design Goals}
-\label{sec:requirements}
+\label{sec:clio:requirements}
 In general, \md\ has the following features, some of which are hard requirements while others are desired goals.
 
 \stepcounter{reqs}
@@ -88,16 +73,6 @@ Moreover, to prevent buggy or malicious clients from reading/writing arbitrary m
 %and potentially also guard against new security threasts such as side channel attacks over the network~\cite{Tsai19-Security}.
 %when shared across side channel attacks~\cite{Meltdown,Spectre}
 
-\if 0
-\stepcounter{reqs}
-\boldpara{R\arabic{reqs}: Computation offloading support.}
-Accessing remote memory over the network is inevitably slower than accessing local memory over the memory bus, esp. on latency.
-Caching remote memory locally is one way to avoid network delays.
-However, \CN{}s are intended to host many applications but with limited local memory, making it hard to cache all the data.
-A viable solution is to shift some computation to \MN{}s, which could save \CN{} cache space, reduce \CN{}'s CPU utilization, and reduce network bandwidth consumption.
-Others have identified the benefits of computation offloading to remote memory and disaggregated storage as well~\cite{XXX}.
-\fi
-
 \stepcounter{reqs}
 \boldpara{R\arabic{reqs}: Low cost.}
 A major goal and benefit of resource disaggregation is cost reduction.
@@ -131,32 +106,9 @@ for example, to support high-level APIs like pointer chasing~\cite{AIFM,Aguilera
 to offload some application logic to memory devices~\cite{AIFM,StRoM},
 or to incorporate different network transports~\cite{Homa,NDP,TONIC} and congestion control algorithms~\cite{swift-sigcomm,1RMA,hpcc-sigcomm19}.
 
-\if 0
-\stepcounter{reqs}
-\boldpara{R\arabic{reqs}: Ease of deployment and management.}
-To ease the adoption of \md, it is desirable to have a solution 
-that needs no changes to existing datacenter infrastructure such as network switches.
-It is also desirable to have a \md\ solution that is easy to manage and configure.
-\fi
-%
-%\stepcounter{reqs}
-%\boldpara{R\arabic{reqs}: Ease of management.}
-%A major reason behind the successful adoption of disaggregated storage at production scale and the traction of disaggregation in general
-%is its ease of management, as it is more flexible to manage disaggregated resource pools independently at where the resource is.
-%Memory disaggregation should also follow the practice by managing the disaggregated memory pool.
-%Datacenter operators can then configure disaggregated memory pool (\eg, adding replication, migrating data across memory nodes)
-%without affecting other pools.
-
-
-%\stepcounter{reqs}
-%\boldpara{R\arabic{reqs}: Easy and cheap to deploy.}
-%opportunity
-%asymetric
-%application aware of disaggregated memory
-
 \subsection{Server-Based Disaggregated Memory}
 %RDMA-Based and Messaging-Based Disaggregated Memory}
-\label{sec:rdma}
+\label{sec:clio:rdma}
 
 \md\ research so far has mainly taken a server-based approach by using regular servers as \MN{}s~\cite{InfiniSwap,FastSwap,Semeru,Shan18-OSDI,AIFM,zombieland,FaRM},
 usually on top of RDMA.
@@ -239,7 +191,7 @@ Moreover, LegoOS %has no computation offloading support,
 uses RDMA for its network communication hence inheriting its limitations.
 
 \subsection{Physical Disaggregated Memory}
-\label{sec:pdm}
+\label{sec:clio:pdm}
 
 One way to build \md\ without a host server is to treat it as raw, physical memory,
 %\ie, client servers send read/write request with physical memory address, and the memory node directly read/write to that address without any address mapping.
@@ -281,346 +233,3 @@ Unlike \sys\ which physically separates \MN{}s from \CN{}s across generic data-c
 Thus, soNUMA works only on a limited scale (violating \textbf{R2}) and is not flexible (violating \textbf{R7}).
 MIND~\cite{mind:sosp21}, a concurrent work with \sys, proposes to use a programmable switch for managing coherence directories and memory address mappings between compute nodes and memory nodes.
 Unlike \sys\ which adds processing power to every \MN, MIND's single programmable switch has limited hardware resources and could be the bottleneck for both performance and scalability.
-
-
-%Recently, new cache-coherent interconnects like Gen-Z~\cite{Genz-citation} and CXL~\cite{CXL-citation}
-%have been proposed to connect heterogeneous components in a rack~\cite{Genz-citation,CXL-v2} or in a server~\cite{CXL-citation,CCIX,OpenCAPI}.
-%for single-machine or rack scale memory accesses.
-%They usually expose a global memory space (that covers memory and accelerator memory) to applications running at the compute (client) 
-%side and guarantee cache coherence among different compute and memory components.
-
-\if 0
-\subsection{Takeaway}
-The fundamental issues of server-based approaches such as RDMA systems are the monetary cost of a host server and the inherent performance and scalability limitations caused by the way NICs interact with the host server's virtual memory system.
-Although \pdm\ solutions solve the first (cost) issue, they introduce more performance, security, and management problems
-because \MN{}s become too ``dumb'' and low level when removing its processing power altogether.
-%overhead of root cause why RDMA is unfit for \md\ is that it is designed to work around a host server,
-%and traditional servers' virtual memory system is not designed for \md.
-%Contrary to server-based \md\ solutions, \pdm\ is another extreme where there is no processing at all at \MN{}s.
-%The root cause of \pdm's various performance, security, and management problems is exactly this: 
-%\MN{}s are too ``dumb'' and low level.
-
-%From the above discussion, we find that both server-based \md\ and raw physical \md\ have their limitations.
-Server-based \MN{}s and \MN{}s with no processing power are two extreme approaches of building \MN{}s.
-This work tries to find a sweet spot in the middle by building a hardware-based \md\ solution that has the right amount of processing power at \MN{}s.
-%for the right type of \MN{} management system.
-%To mitigate RDMA's various issues for \md, one could try to improve RDMA's hardware design or add a software layer to work around RDMA's problems.
-%This paper takes a different approach by starting
-Furthermore, we take a clean-slate approach by starting from the requirements of \md\
-and designing a \md-native system.
-%LegoOS is the only existing work that also proposes a .
-%Unfortunately, LegoOS still uses server software and the RDMA network to emulate its hardware design, leaving all the research questions we ask in this paper unanswered.
-\fi
-
-\if 0
-\subsection{Our Proposal: Hardware-Based Virtual Disaggregated Memory Device}
-
-From the above discussion, we find that both server-based \md\ and raw physical \md\ have their limitations.
-This work tries to find a sweet spot in the middle by building a hardware-based \md\ solution that has the right amount of processing power at \MN{}s
-used to build the right type of \MN{} management system.
-\fi
-
-%\subsection{Active Disaggregated Memory}
-%\label{sec:offload}
-
-
-
-\if 0
-\subsection{Requirements of Memory Disaggregation}
-Many applications can benefit from disaggregated memory, and their usages can be categorized into two types:
-as dynamically allocated memory space (\eg, as part of a heap~\cite{Semeru}, as a swap space~\cite{InfiniSwap}) during the execution of an application,
-and as the cache of a data store~\cite{XXX} or the data store itself~\cite{RAMCloud}.
-In general, memory disaggregation has the following requirements.
-
-\stepcounter{reqs}
-\boldpara{R\arabic{reqs}: Low cost and easy deployment.}
-Although disaggregated memory pool can be built with regular servers 
-(in fact, most of today's disaggregated memory solutions~\cite{AIFM,FarMem,InfiniSwap,Semeru} are server-based),
-it is much cheaper to build and run standalone disaggregated memory devices without a server box or a CPU.
-To ease the adoption of disaggregated memory in current datacenters, ideally, there should be no hardware change or addition at client servers.
-
-\stepcounter{reqs}
-\boldpara{R\arabic{reqs}: Low-latency and high-throughput.}
-Accesses to disaggregated memory are over the network, which is inevitably slower than accessing local memory.
-Despite this nature, memory disaggregation should still offer attractive performance, and by offering more (but slower) memory,
-overall application performance could be better than with just local memory.
-Specifically, when used as dynamically allocated memory, disaggregated memory should deliver low latency so as not to slow down application execution much.
-When it is used as (cache of) data store, throughput is more important, 
-and accesses to disaggregated memory should reach network line rate.
-
-\stepcounter{reqs}
-\boldpara{R\arabic{reqs}: Low tail latency and predictable performance.}
-One of the obstacles to adopting disaggregated memory is the fear for unpreditable performance and much worse tail latency than local memory. %, \eg, during network congestion
-In addition to network unstability, we found that memory systems could also contribute to long tails with today's RDMA-based systems (\S\ref{sec:}).
-Having predictable, bounded performance and low tail latency would be one key to the successful adoption of memory disaggregation in datacenters,
-where SLAs are important.
-
-\stepcounter{reqs}
-\boldpara{R\arabic{reqs}: Scale with clients and memory.}
-To fully exploit the resource-utilization benefit of disaggregation, we should allow many client servers and client processes running on them to access and share a memory device.
-At the same time, each memory device could host hundreds GBs to few TBs of memory that is expected to be close to fully utilized (and thus bringing down the number of 
-memory devices and total cost of a cluster).
-Furthermore, we should have no restriction on how applications use the memory, which could result in many disjoint memory regions.
-Thus, disaggregated memory should scale with client servers, client processes, memory size, and memory regions.
-%each client process should be able to access large amounts of memory and many disjoint memory regions 
-%scale with client servers, client processes, memory size, memory regions
-
-\stepcounter{reqs}
-\boldpara{R\arabic{reqs}: Independent resource pool management.}
-A major reason behind the successful adoption of disaggregated storage at production scale and the traction of disaggregation in general
-is its ease of management, as it is more flexible to manage disaggregated resource pools independently at where the resource is.
-Memory disaggregation should also follow the practice by managing the disaggregated memory pool.
-Datacenter operators can then configure disaggregated memory pool (\eg, adding replication, migrating data across memory nodes)
-without affecting other pools.
-
-\stepcounter{reqs}
-\boldpara{R\arabic{reqs}: Secure access.}
-When deployed in datacenters, it is important to protect disaggregated memory from undesired or malicious accesses.
-Disaggregate memory can be shared by many client servers and applications over the network.
-It should provide at least the same level of safety guarantees as today's normal (local) memory
-and potentially also guard against new security threasts such as side channel attacks over the network~\cite{Tsai19-Security}.
-%when shared across side channel attacks~\cite{Meltdown,Spectre}
-
-\stepcounter{reqs}
-\boldpara{R\arabic{reqs}: Efficient, easy, and flexible computation offloading.}
-%\boldpara{R\arabic{reqs}: Extendible.}
-%With the fast development of datacenter applications, hardware, and network, a good memory disaggregation solution should be flexible and extendible,
-for example, to support more advanced APIs like pointer chasing~\cite{StRoM,AIFM},
-to offload some application logic to memory devices~\cite{AIFM,XXX},
-or to plug different network transports~\cite{Homa,NDP,pFabric,XXX} and congestion control algorithms~\cite{Swift,XXX}.
-
-%\stepcounter{reqs}
-%\boldpara{R\arabic{reqs}: Easy and cheap to deploy.}
-%opportunity
-%asymmetric
-%application aware of disaggregated memory
-\fi
-
-
-\if 0
-%The reason behind the \pdm\ model's issues is its physical abstraction of disaggregated memory.
-%Thus, we believe that disaggregate memory should expose a \textit{virtualized} memory abstraction,
-%and memory management and address mapping should happen at the memory pool, not the compute pool (client servers).
-%By hiding the physical nature of disaggregated memory under a virtual abstraction,
-%disaggregated memory can have the same benefits as what traditional virtual memory system provide, 
-%such as on-demand allocation (paging) and protected accesses across different applications.
-%By performing memory management at the memory node, we can avoid orchestration across client servers
-%and transparently perform tasks like replication and migration.
-%Both \sys\ and RDMA offer a virtualized disaggregated (remote) memory abstraction.
-%However, the virtualized view of them are completely different, and as we will show next, RDMA has many issues when used for memory disaggregation.
-%As we will show shortly, RDMA cannot meet these requirements and is an ill fit for memory disaggregation.
-
-
-%This section discusses related topics 
-%and motivates our work. %existing proposals and attempts to build remote memory
-%and motivates programmable hardware-based disaggregated memory.
-%We also cover related works in this section.
-
-\subsection{Non-Disaggregated Remote Memory}
-\label{sec:remotemem}
-
-The idea of using non-local machine's memory dates back to the early 90s when research in 
-distributed shared memory (DSM)~\cite{Shasta,Bennett90-PPOPP,Fleisch89-SOSP,Keleher92-ISCA} 
-and distributed operating systems~\cite{Sprite88,Amoeba90} boomed.
-Recent years have seen a rise of new interests in this idea because of datacenter network improvements~\cite{Aguilera17-SOCC}.
-Several RDMA-based distributed memory systems have been proposed %in recent years
-including Grappa~\cite{Nelson15-ATC}, FaRM~\cite{FaRM}, and Hotpot~\cite{Shan17-SOCC}.
-%There are mainly two forms of using non-local (remote) machine's memory.
-These systems use a machine's memory for both applications running locally and on remote machines.
-Each machine manages its own memory and runs application processes.
-Similar to traditional DSM systems, these systems require complex and costly consistency protocols for concurrent accesses.
-Moreover, % important, %memory in these systems is not disaggregated 
-they lack the benefits of disaggregation. % (see below).
-%The second type reserves some memory space exclusively for remote accesses.
-%To use these systems in a cluster setting, another distributed software system is usually needed on top of them.
-
-\subsection{Resource Disaggregation}
-\label{sec:disaggregation}
-
-Resource disaggregation is a notion to separate different types of resources into different pools,
-each of which can be independently managed and scaled.
-Applications can allocate resources from any available node in a resource pool, resulting in tight resource packing. %regardless of where other types of resources sit.
-Because of these benefits, % its manageability, independent scaling, and efficient resource utilization benefits,
-many datacenters have adopted the idea of disaggregation, often at the storage 
-layer~\cite{FACEBOOK-BRYCECANYON,FB1,SnowFlake-NSDI20,AMAZON-S3,AMAZON-EBS,Ali-SinglesDay}.
-%layer~\cite{FACEBOOK-BRYCECANYON,FB1,SnowFlake-NSDI20,Decibel-NSDI17,AMAZON-S3,AMAZON-EBS,Klimovic18-ATC,RackScaleDisaggregation}.
-%As a recent success story, Alibaba listed their storage disaggregation as one of the five reasons
-%that enable them to serve the peak load of 544,000 orders per second on the 2019 Single's Day~\cite{Ali-SinglesDay}.
-
-With the success of disaggregated storage and the fast developments in datacenter network speed,
-researchers in both academia and industry started to seek ways to disaggregate memory 
-(and persistent memory)~\cite{Lim09-disaggregate,FireBox-FASTKeynote,IntelRackScale,Lim12-HPCA,Shan18-OSDI,RAMCloud,Tsai20-ATC}.
-Disaggregated memory proposals so far have taken two main approaches.
-The first type treats the disaggregated memory layer as a {\em passive} party (raw, physical memory space with no processing power);
-the compute pool manages the memory pool and provides high-level services to applications~\cite{HP-TheMachine,Tsai20-ATC,Lim09-disaggregate,Nitu18-EUROSYS}.
-%that requires the compute pool for further management and high-level interface, 
-The main problem of passive disaggregation is the excessive network RTTs needed when completely separating processing and memory.
-% in passive disaggregated memory results in excessive RTTs and performance loss.
-
-The second type (active disaggregated memory) organizes the disaggregated memory pool with regular servers and runs all or part of management software 
-at these servers' CPUs~\cite{InfiniSwap,NAMDB,Kalia14-RDMAKV,Aguilera18-ATC}. 
-%Recent proposals in this type include RDMA-based remote memory swap system~\cite{InfiniSwap}, remote database system~\cite{NAMDB}, 
-%remote key-value store~\cite{Kalia14-RDMAKV}, and remote memory system with file interfaces~\cite{Aguilera18-ATC}.
-%hey all run their memory systems on regular machines and use those machines' CPU to manage the memory spaces.
-Co-locating management with memory reduces network RTTs.
-However, these server-based solutions increase owning and energy cost, with full servers and large amounts of CPU cycles at the memory layer.
-Moreover, the number of CPU cores limits the amount of parallel memory requests a memory server can handle.
-An alternative way of building active disaggregated memory is to run management software in low-power cores.
-However, recent work shows that low-power cores cannot meet the high-bandwidth and low-latency demands of memory systems~\cite{Tsai20-ATC}.
-
-\phdm\ solves the problems of both these two existing disaggregated memory models.
-By managing memory and providing distributed memory services in hardware at \MN{}s,
-\phdm\ can achieve great performance, low network bandwidth consumption, and low monetary and energy cost.
-
-LegoOS~\cite{Shan18-OSDI} is a distributed OS that takes a {\em partially} active disaggregation approach. 
-%designed for resource disaggregation. %, which also advocates for managing resources at the resource nodes.
-It runs a virtual memory system at its disaggregated memory pool and exposes a virtual memory interface to the compute pool.
-%However, a virtual memory system is all what LegoOS' memory layer runs.
-To support higher-level memory services, LegoOS still needs to add a software layer at the compute side.
-More important, LegoOS has no real hardware design or implementation.
-%runs all management in software on regular servers that are emulated as resource devices.
-HPE's ``The Machine'' (Memory-Driven Computing) project~\cite{HP-TheMachine,THEMACHINE-HOTOS,HP-MODC-POSTER,THEMACHINE-WEB}
-is another proposal that adopts the partially active disaggregation approach.
-It separates a pool of DRAM/NVM from a pool of SoCs with a special interconnect inside a rack. % through a special interconnect~\cite{Genz-citation}. 
-Memory instructions running at SoCs are transparently translated to access the DRAM/NVM pool,
-and the translation is performed either at the interconnect~\cite{Genz-citation} or at the memory pool.
-Similar to LegoOS, the Machine still needs extra software running at the SoC pool to provide high-level memory services.
-Moreover, neither its design nor its maturity is known to the public.
-%The DRAM/NVM pool provides a global memory address space,
-%which requires extra software running at the SoC pool to manage and . % in, and use the memory pool.
-
-\subsection{RDMA and Other Network Technologies}
-\label{sec:rdma}
-
-Datacenter network speed has increased dramatically in the past decade.
-%Most datacenters now run on 10\Gbps/server or 40\Gbps/server networks~\cite{CatapultV1,Facebook-10GDatacenter},
-%with 100\Gbps\ and 200\Gbps\ networks on the horizon~\cite{Facebook-100G,Mellanox200Gbps}.
-%Meanwhile, network RTT can be as low as 1\mus\ for a single hop~\cite{Mellanox-Switch}.
-High-bandwidth, low-latency networks give rise to a surge of interest in exploring remote or disaggregated 
-resources~\cite{FaRM,FireBox-FASTKeynote,Shan18-OSDI,HP-TheMachine}.
-%Network's much faster frequency speedup than CPU's~\cite{XXX} also motivated offloading various application and 
-%I/O functionalities to hardware.
-%Both these hardware trends are in line with what we propose in \phdm.
-
-A high-speed network technology that several major datacenters have adopted~\cite{AZURE-RDMA,ALIBABA-RDMA} is
-{\em Remote Direct Memory Access} (RDMA),
-%RDMA supports both {\em one-sided} and {\em two-sided} communication to remote memory.
-%One-sided RDMA allows one machine to directly read and write another machine's memory without involving the latter's CPU.
-%Two-sided RDMA works like traditional messaging, involving both sender and receiver CPU.
-which is the communication media adopted by most remote memory systems. % use RDMA as the communication media.
-%with one-sided RDMA being used by systems where remote memory are managed by local (compute) machines~\cite{DPM}
-%and two-sided RDMA used by systems where each machine manages its own memory~\cite{Kalia14-RDMAKV,Mitchell13-ATC}.
-%With the help of one-sided RDMA and other one-sided network technologies~\cite{GenZ},
-%several software systems have been proposed to treat 
-%Albeit its superior performance, RDMA's limited interface is too restrictive for most applications,
-Although several recent proposals of hardware~\cite{StRoM,Aguilera-FarMemory} and software~\cite{Tsai17-SOSP,HyperLoop} extensions to RDMA made it more flexible and performant, 
-RDMA is still an ill fit for memory disaggregation.
-The RDMA protocol and its implementation are both tightly bound with the processor that co-locates with the memory.
-At least a process running on this processor needs to perform virtual memory allocation 
-and registration through an OS and then share the allocated virtual memory addresses
-with other (client) servers that wish to access the allocated memory. 
-Essentially, RDMA's abstraction is a {\em host-server-centric} memory view.
-What fits disaggregated memory and what \phdm\ provides is a {\em client-centric} memory view 
-where client applications running on a server can directly access remote memory without the need to contact or maintain 
-any additional processes or OSs running at the memory side.
-Moreover, \phdm\ is a system-level design that has built-in distributed support, while RDMA is just a network layer that needs another software distributed system. 
-%a client-side address space in \phdm\ could span multiple \MN{}s. %memory nodes.
-%This client virtual address space can also span multiple \MN{}s.
-
-Recently, new cache-coherent interconnects like Gen-Z~\cite{Genz-citation} and CXL~\cite{CXL-citation}
-have been proposed for single-machine or rack scale memory accesses.
-They expose a global memory space to applications running at the compute (client) 
-side and guarantee cache coherence among applications and memory.
-They are low-level, physical-layer solutions for accessing disaggregated memory.
-With additional software systems, they could be used to build passive disaggregated memory.
-\phdm's active disaggregated memory model saves network RTTs and client-side CPU cycles.
-Moreover, the need to mainain cache coherence limits the scalability of these interconnects, and they require the replacement of existing datacenter network infrasturcture.
-\phdm\ does not have cache-coherence scalability bottlenecks
-and builds on Ethernet and can directly be deployed in today's datacenters.
-%Rack-scale cache-coherent interconnects like CXL and Gen-Z provide a hardware layer to access disaggregated memory. 
-%Software layer needs to be added on top (at the CPU side) to manage the disaggregated memory space.
-
-\subsection{HADM Benefits and Use Cases}
-
-The \phdm\ model offers several benefits over existing proposals. 
-%that are key to meeting today's datacenter needs.
-Unlike non-disaggregated remote memory, 
-\phdm's separate, self-contained disaggregated memory layer is easy to configure, manage, and scale.
-Compared to software-based approaches, 
-\phdm\ can achieve 
-%with hardware-based implementation, remote memory services can achieve
-high-bandwidth, low-latency performance 
-and sustain large concurrent loads
-without paying the high costs of full servers.
-Unlike passive disaggregated memory,
-%By offering high-level distributed memory services, 
-applications can build different remote memory services and/or offload
-their near-data computation to the memory pool, 
-improving performance and reducing CPU cycles.
-%easily use remote memory without 
-%worrying about its distributed nature or dealing with low-level interfaces.
-%Finally, programmable hardware enables the reuse of the same hardware for different 
-%types of memory services, yielding faster and cheaper deployment. %option than ASIC.
-
-Many types of applications can make use of \phdm.
-For example, applications or libraries can store large in-memory data structures 
-like hash tables and tree indices at \phdm's memory pool and offload operations
-like hash lookup and tree traversal to move computation closer to data.
-More advanced types of application offloading are also possible, such as data 
-processing and data analytics.
-Applications can also use the memory layer of \phdm\ as a location to cache storage 
-data or to share data across different compute nodes, 
-\eg, storage-data caching or shared states for serverless computing systems.
-Finally, OS and low-level systems software can build more functionalities like remote swap over \phdm\
-and offer applications transparent accesses to remote memory.
-See Appendix for further discussion.
-
-
-\fi
-
-
-\if 0
-\sys\ is also different from previous computation offloading systems in terms of its hardware choice.
-Previous solutions use either FPGA or ARM-based SoC to build their smart devices.
-%with most of them also include a full NIC on board.
-\MN{}s in \sys\ include both FPGA and ARM 
-and use them for different planes. %, with the former used for the data plane and the latter used for the control plane.
-%\sys\ integrates all the data path, including a lean network stack, on a single FPGA chip,
-%while moving all the control plane and metadata operations to the SoC.
-In doing so, \sys\ could achieve the best performance, cost, and programmability
-combination that fits the need of a remote memory system.
-%FPGA has seen an increasing adoption in industry~\cite{XXX} and more research interests~\cite{XXX} in recent years.
-%Among the many FPGA-based systems, KV-Direct~\cite{KVDIRECT} and Catapult~\cite{XXX} are most relevant to \sys.
-\fi
-
-\if 0
-Among all existing computation offloading solutions, three are the most relevant to \sys. 
-KV-Direct~\cite{KVDIRECT} is a remote key-value store built on FPGA.
-%Similar to \sys, it also integrates a lightweight network stack on the FPGA chip.
-Unlike \sys, it targets a non-disaggregated environment and 
-relies on the host CPU to perform metadata tasks such as memory allocation.
-StRoM~\cite{StRoM} is a recent hardware proposal that includes a full RoCE (RDMA-over-Converged-Ethernet) network stack
-and several high-level APIs like pointer chasing on an FPGA.
-Although StRoM extends RDMA's restricted APIs to a more feature-rich interface,
-it still has the same host-based memory view like RDMA (\S\ref{sec:rdma}).
-Moreover, it has no distributed systems support.
-Catapult~\cite{Catapult,CatapultV1} is a general-purpose distributed FPGA computation-offloading platform developed and deployed at Microsoft.
-%which has been used for network-function offloading~\cite{AccelNet}, deep-learning inference~\cite{Brainwave}, and Bing search~\cite{CatapultV1}.
-%Although Catapult is also a distributed FPGA-based platform, 
-Different from \sys, Catapult is designed for a non-disaggregated environment 
-and targets general computation offloading instead of memory management/services.
-\fi
-
-
-\if 0
-Conceptually, the \phdm\ model could be built using any programmable hardware technologies.
-For example, a SmartNIC could be extended to a programmable disaggregated memory device by attaching some memory chips to it.
-Processor-based SmartNICs usually attach an ARM-based SoC or a small CPU to a NIC~\cite{BLUEFIELD,BROADCOM-SMARTNIC}.
-Software can be easily deployed in the processor.
-However, our experiments show that the processor cannot meet the performance requirements of high-speed network.
-Hardware-based SmartNICs attach an FPGA chip to a NIC~\cite{INNOVA,SOLARFLARE-FPGA}.
-\sys's hardware architecture is close to these SmartNICs, both using FPGA as programmable hardware (and thus could easily be modified to run on them).
-Differently, \sys\ does not use a separate NIC and integrates the network stack with the memory services, 
-saving both monetary cost and the performance overhead of communicating between two chips.
-\fi
-

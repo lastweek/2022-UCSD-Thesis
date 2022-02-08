@@ -1,5 +1,12 @@
 
-\newcommand{\mycaption}[3]{\beforecaption\caption{\label{#1}{\bf #2} \em\small #3}\aftercaption}
+\newcommand{\mycaption}[3]{
+\beforecaption
+    \caption[#2]{#2 #3}
+    \label{#1}
+\aftercaption
+}
+
+\newcommand{\boldpara}[1]{\noindent{\textbf{#1}}}
 
 \newcommand{\BigO}[1]{${\cal O}(#1)$}
 \newcommand{\BigOmega}[1]{$\Omega(#1)$}
@@ -123,3 +130,40 @@
 \newcommand{\rdu}{\textbf{R3.u}}
 \newcommand{\re}{\textbf{R3}}
 \newcommand{\rf}{\textbf{R4}}
+
+
+% LegoMem
+\newcounter{principle}
+\newcounter{reqs}
+\newcounter{case}
+\newcommand{\sys}{Clio}
+\newcommand{\syskv}{Clio-KV}
+\newcommand{\sysmv}{Clio-MV}
+\newcommand{\sysdf}{Clio-DF}
+\newcommand{\pdm}{PDM}
+\newcommand{\mnva}{Server-VA}
+\newcommand{\appva}{Client-VA}
+\newcommand{\rkey}{\texttt{rkey}}
+\newcommand{\sysboard}{CBoard}
+\newcommand{\syslib}{CLib}
+\newcommand{\cas}{{\texttt{rCAS}}}
+\newcommand{\tas}{{\texttt{rTAS}}}
+\newcommand{\faa}{{\texttt{FAA}}}
+\newcommand{\nil}{{\texttt{NULL}}}
+\newcommand{\alloc}{\texttt{ralloc}}
+\newcommand{\sysfree}{\texttt{rfree}}
+\newcommand{\sysread}{\texttt{rread}}
+\newcommand{\syswrite}{\texttt{rwrite}}
+\newcommand{\syslock}{\texttt{rlock}}
+\newcommand{\sysunlock}{\texttt{runlock}}
+\newcommand{\repwrite}{\texttt{replicate}}
+\newcommand{\syssync}{\texttt{rsync}}
+\newcommand{\fence}{\texttt{rfence}}
+\newcommand{\release}{\texttt{rrelease}}
+\newcommand{\pid}{CPID}
+\newcommand{\CN}{CN}
+\newcommand{\MN}{MN}
+\newcommand{\md}{MemDisagg}
+\newcommand{\hdm}{HDM}
+\newcommand{\rspace}{RAS}
+\newcommand{\poll}{\texttt{rpoll}}
