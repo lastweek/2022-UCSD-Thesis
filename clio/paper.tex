@@ -1,0 +1,208 @@
+\documentclass[sigconf,screen]{acmart}
+
+\usepackage{microtype}
+\usepackage{libertine}
+\usepackage[T1]{fontenc}
+
+\usepackage[normalem]{ulem}
+\usepackage[bottom]{footmisc}
+
+\usepackage{balance}
+\usepackage{caption}
+\usepackage{tightenum}
+
+\usepackage{soul}
+\usepackage[toc,page]{appendix}
+
+\usepackage{subfig}
+
+
+\usepackage{hyperref}
+\hypersetup{hidelinks,colorlinks=true,linkcolor=red,citecolor=red}
+
+
+\usepackage{setspace}
+%\usepackage{epsf}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{nonfloat}
+% % \urlstyle{rm}
+% % {0em}{-0ex}{-2ex}
+
+\usepackage{multirow}
+
+
+% \usepackage{tikz}
+% \usetikzlibrary{calc}
+% \newcommand*\circled[1]{\tikz[baseline=-3pt]{
+%             \node[shape=circle,draw,inner sep=1pt,minimum size=10pt] (char) {\small #1};}}
+
+\usepackage{xcolor}
+\definecolor{commentgreen}{RGB}{2,112,10}
+\definecolor{eminence}{RGB}{108,48,130}
+\definecolor{weborange}{RGB}{255,165,0}
+\definecolor{frenchplum}{RGB}{129,20,83}
+
+\input{defs}
+
+\usepackage{listings}
+\lstset {
+    language=C,
+    frame=tb,
+    tabsize=2,
+    showstringspaces=false,
+    %numbers=left,
+    %upquote=true,
+    commentstyle=\color{commentgreen},
+    keywordstyle=\color{eminence},
+    stringstyle=\color{red},
+    basicstyle=\scriptsize\ttfamily, % basic font setting
+    emph={int,char,double,float,unsigned,void,bool},
+    emphstyle={\color{blue}},
+    otherkeywords={rread,rwrite,ralloc,ras_lock,rlock,runlock,rrelease,rpoll},
+    keywordstyle={\color{purple}},
+    escapechar=\&,
+    % keyword highlighting
+    classoffset=1, % starting new class
+    %otherkeywords={>,<,.,;,-,!,=,~},
+    %morekeywords={>,<,.,;,-,!,=,~},
+    %keywordstyle=\color{weborange},
+    classoffset=0,
+}
+
+\sloppy
+\input{macros}
+%\newcommand{\ignore}[1]{}
+\input{remark}
+%% Leave this on, so we can see them!!!
+\remarktrue
+\newcommand{\shortenum}{\vspace*{-0.1in}}
+\newcommand{\sparagraph}[1]{\vspace*{0.0in}\paragraph{#1}}
+
+% add below for confidential distribution
+%\usepackage{draftwatermark}
+%\SetWatermarkText{DO NOT DISTRIBUTE}
+%\SetWatermarkScale{0.4}
+
+%%% If you see 'ACMUNKNOWN' in the 'setcopyright' statement below,
+%%% please first submit your publishing-rights agreement with ACM (follow link on submission page).
+%%% Then please update our instructions page and copy-and-paste the NEW commands into your article.
+%%% Please contact us in case of questions; allow up to 10 min for the system to propagate the information.
+%%%
+%%% The following is specific to ASPLOS '22 and the paper
+%%% 'Clio: A Hardware-Software Co-Designed Disaggregated Memory System'
+%%% by Zhiyuan Guo, Yizhou Shan, Xuhao Luo, Yutong Huang, and Yiying Zhang.
+%%%
+
+\setcopyright{rightsretained}
+\acmPrice{}
+\acmDOI{10.1145/3503222.3507762}
+\acmYear{2022}
+\copyrightyear{2022}
+\acmSubmissionID{asplos22main-p968-p}
+\acmISBN{978-1-4503-9205-1/22/02}
+\acmConference[ASPLOS '22]{Proceedings of the 27th ACM International Conference on Architectural Support for Programming Languages and Operating Systems}{February 28 -- March 4, 2022}{Lausanne, Switzerland}
+\acmBooktitle{Proceedings of the 27th ACM International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS '22), February 28 -- March 4, 2022, Lausanne, Switzerland}
+\keywords{Resource Disaggregation, FPGA, Virtual Memory, Hardware-Software Co-design}
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10010520.10010521.10010537.10003100</concept_id>
+<concept_desc>Computer systems organization~Cloud computing</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10010583.10010588</concept_id>
+<concept_desc>Hardware~Communication hardware, interfaces and storage</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+<concept>
+<concept_id>10011007.10010940.10010941.10010949.10010950.10010951</concept_id>
+<concept_desc>Software and its engineering~Virtual memory</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computer systems organization~Cloud computing}
+\ccsdesc[300]{Hardware~Communication hardware, interfaces and storage}
+\ccsdesc[300]{Software and its engineering~Virtual memory}
+
+\begin{document}
+
+% remove page numbers
+\pagenumbering{gobble}
+\pagestyle{plain}
+
+\title{\sys: A Hardware-Software Co-Designed Disaggregated Memory System}
+
+\author{Zhiyuan Guo}
+\authornote{Both authors contributed equally to the paper}
+\affiliation{%
+ \institution{University of California, San Diego}
+ \city{San Diego}
+ \state{California}
+ \country{USA}}
+\email{z9guo@ucsd.edu}
+
+
+\author{Yizhou Shan}
+\authornotemark[1]
+\affiliation{%
+ \institution{University of California, San Diego}
+ \city{San Diego}
+ \state{California}
+ \country{USA}}
+\email{ys@ucsd.edu}
+
+
+\author{Xuhao Luo}
+\affiliation{%
+ \institution{University of California, San Diego}
+ \city{San Diego}
+ \state{California}
+ \country{USA}}
+\email{x3luo@ucsd.edu}
+
+\author{Yutong Huang}
+\affiliation{%
+ \institution{University of California, San Diego}
+ \city{San Diego}
+ \state{California}
+ \country{USA}}
+\email{yutonghuang@ucsd.edu}
+
+
+\author{Yiying Zhang}
+\affiliation{%
+ \institution{University of California, San Diego}
+ \city{San Diego}
+ \state{California}
+ \country{USA}}
+\email{yiying@ucsd.edu}
+
+\input{abstract}
+\maketitle
+
+\input{introduction}
+\input{motivation}
+\input{overview}
+\input{usage}
+\input{design}
+\input{impl}
+\input{application}
+\input{results}
+%\input{related}
+\input{discussion}
+\input{conclude}
+
+%\input{asplos-appendix}
+
+%\input{appendix}
+\balance
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{all-defs,all,personal,all-confs,local,paper}
+
+\end{document}

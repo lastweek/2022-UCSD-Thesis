@@ -1,0 +1,315 @@
+OSDI '21 Paper #205 Reviews and Comments
+===========================================================================
+Paper #205 Disaggregated Virtual Memory Access
+
+
+Review #205A
+===========================================================================
+
+Novelty
+-------
+2. Incremental improvement
+
+Experimental methodology
+------------------------
+4. Good
+
+Writing quality
+---------------
+3. Adequate
+
+Overall merit
+-------------
+3. Weak reject (This paper should be rejected, but I'll not fight strongly)
+
+Paper summary
+-------------
+DVMA provides fast access (from userspace) to disaggregated memory.  
+The addressing mode is "virtual" in that clients access within collections, which are backed by dynamic resources within the remote node.  It provides support for one-side read/write operations (U2), and custom operations that execute within the remote node (U4,U5).
+
+DMVA is implemented on an FGPA board that implements a deterministic pipeline that can respond to all operations, including the lazy allocation of a physical page (assuming one blank page is available).
+Within the RM board's FGPA, a (soft-)core runs the control plane, responsible for resource allocation, etc.
+
+Specifically, the hardware-based virtual memory system, DBoard (prototyped in FPGA), manages the memory at the memory node and provides isolation to each client by providing virtual memory address space. By managing virtual memory in hardware, DVMA can avoid paying the cost of using a full server, overheads that occur due to software stack such as communication between NIC and host server (in RDMA based designs) and can provide hardware level parallelism. The DBoard design provides low tail latency and almost line rate speed by co-designing a fast path hardware implementation and a decoupled slow path software implementation. The fast path is responsible for reading/writing virtual memory addresses and address translation by managing the DRAM page table and the page table entries in the TLB. The slow path is responsible for virtual and physical memory allocations and deallocations. DBoard provides optimizations for memory accesses. DBoard optimizes allocations by cleverly interleaving the fast path and the slow path using pre-generated physical memory addresses and asynchronous buffers for communication. Another important novel optimization is the conflict-free hash-based page table design with fixed slots which retries hashing in the slow path to avoid hash overflows.
+
+The network protocol is connection-less, with each operation being independent of each other.  THe use of timeout-based stateless RPCs reduces network overhead costs. The network system does not order packets as DVMA uses a relaxed memory ordering model similar to ARM which can lead to performance optimizations. DVMA puts the burden of ordering onto the client side software. DVMA retries requests which fail, timeout or get corrupted. DVMA moves functionalities such as congestion control, ordering to the client side library.
+
+
+The evaluation is thorough, and shows performance improvements of standard one-side RDMA implementations (CX5), in particular it shows better scalability w.r.t. to client connections.
+
+Strengths
+---------
+* important problem with an ambitous goal. 
+* thorough implementation and evaluation.
+
+Significant weaknesses
+----------------------
+* While the design is quite interesting, it could be better described. DVMA seems to be some combination of API, protocol and RM architecture, yet the layers and building blocks are not well articulated.
+
+* the design introduces tradeoffs. for example, the simplistic retry model leads to painful coherency and consistency issues for multi-MTU writes.  This should be discussed and put into context.
+
+* Some claims are not backed up.  For example, the authors come up with their congestion control approach (AIMD), yet don't really compare it with PFC.  While PFC does cause HOL blocking and can spread congestion to the core, it does come with massive advantages for low-latency protocols.  Also, claiming the evaluation U1 (cache coherent) as merely beyond the scope of this paper is actually a stretch -- the design & implementation of a distributed cache-coherency protocol between host nodes and remote nodes is an open problem.
+
+* The related work, and indeed the paper itself, lacks from an understanding of the historical protocols in that space and of the more recent academic related work.
+
+Comments for author
+-------------------
+First, thank you for your submission to OSDI.  Clearly, significant work has gone into this project, which is well motivated. My comments focus on the positioning of the paper, with a goal to separate the contributions.
+
+Right now, the paper is really a description of the implementation challenges of DBoard, and the evaluation of its performance.  Unfortunately, DBoard required you to create a new ad-hoc API and stack, a new ad-hoc protocol, which is insufficiently motivated, and probably unncessary.  While there could be contributions at the architectural level (of the system, not of DBoard), they don't come across in the paper.
+
+Please read up on the history of FC Storage Area Networks, both in terms of protocols and in terms of target-mode block storage devices.  While these devices are/were sold as "disks" with persistence in mind, their API, architecture, network protocol and quite similar.  for example: 
+- DVMA collections are FC LUNs (disks), and physical memory (RN) is simply a physical RAID set.
+- the network is asymetric, with initiators (CN) and target (MN)
+- FC operations are connection-less, based on the notion of uniqely identfiable exchange ID (DVMA request ID).  Multi-MTU operations are possible.
+- U2 operations (read/write) are similar to SCSI read/write.  Both are block operations with explicit copying (SCSI has atomicity guarantees - to discuss)
+- both use timeouts as part of the logic.
+- etc, etc, etc.
+
+Of course, there are differences, including the atomicity guarantees, ownership model, the congestion management approaches, the extensibility for remote operations, but these differences are difficult to understand in the context of the paper.
+
+Specifically, Table 1 is a necessary comparison of different disaggregation models, but not a sufficient comparison of approaches to remote memory which should include
+
+- RDMA, where a must more extensive discussion of the tradeofs, in particular w.r.t. to atomicity, fault-management and security
+- asymetric SAN (see above)
+- rack-scale memory designs
+- low latency RPC protocols based on kernel bypass.
+
+Questions for authors’ response
+---------------------------------
+1. would DVMA in fact benefit from PFC, and how ?
+
+2. how do clients (in practice) synchronize access to data structures that are accessed with multi-MTU requests? Is it desirable ?
+
+3. is there a semantic difference between a multi-MTU request and its unrolled equivalent ?
+
+4. U4 and U5 require FPGA modifications, which are incompatible with an ASIC implementation ?  Would programmable dataplane ASICs, e.g. based on p4 provide a higher-performance alternative to the use of an FPGA ?
+
+
+
+Review #205B
+===========================================================================
+
+Novelty
+-------
+2. Incremental improvement
+
+Experimental methodology
+------------------------
+3. Average
+
+Writing quality
+---------------
+4. Well-written
+
+Overall merit
+-------------
+3. Weak reject (This paper should be rejected, but I'll not fight strongly)
+
+Paper summary
+-------------
+The paper describes an FPGA-based solution to improve RDMA performance
+overheads and tail latencies. The paper presents a protocol with primitives of
+read/write, remote memory allocation/free, CAS, TAS and fence that can be
+used to support various remote-memory
+use cases. The solution involves hash-based and huge-pages
+address translation mechanism, preallocating buffers by software for use
+by the FPGA upon "allocation". Several workloads are evaluated, mostly
+of home-grown implementations. Superior performance relatively to Clover
+and Herd is shown.
+
+Strengths
+---------
+- Actual FPGA implementation that enables to see where RDMA NICs induce
+unwarranted overheads.
+
+- Certain solutions, such as hash-based address translation may be better
+than the common solutions that are used today.
+
+Significant weaknesses
+----------------------
+- The holistic presentation does not clarify for each part of the solution
+its novelty, (isolated) benefit and limitations.
+
+- The evaluation is mostly on home-grown workloads and do not show the
+overhead relatively to local-memory execution.
+
+- It is not clear what the impact of actual deployment with multiple
+memory-nodes would have on performance (and correctness).
+
+Comments for author
+-------------------
+This paper presents a holistic approach for an interesting problem:
+efficient remote memory access in disaggregated memory systems. To do
+so it takes an extreme approach, taking a clean slate to design
+a new solution that is tailored for this problem.
+
+Doing so and actually following and implementing the solution should
+be commenced. However, such a clean slate approach usually raises
+several questions: (1) the significance of each design choice, (2)
+whether the solution is complete, and (3) what were the reasons for
+prior existing solution design choices. It is certainly possible that existing solutions
+do not match the use-case(s) that this paper considers. Yet,
+one must ask himself eventually whether the components of the proposed
+solution are applicable to existing hardware/software and if not why. Answering this
+question is necessary to discern the benefit of the proposed solution,
+and thereby analyzing its value.
+
+Unfortunately, I do not think that the paper discerned the benefits of
+the proposed mechanisms. I will try to analyze the main benefits relatively
+to RDMA as I perceive them (disregarding the "steps" that the paper used),
+and explain what they seem to be missing.
+
+First and foremost, it seems that the system benefits most from reduced
+page-walk latency due to the hash-based address translation. The overheads
+of device-IOTLB have been recognized before and similar solutions - using
+huge-pages and hash function for translations - have been employed in various
+contexts. These solutions have their own drawbacks, for instance, 
+huge-pages cause greater memory fragmentation (and overhead). The use
+of hashes, as described in the paper, requires to avoid using certain
+virtual addresses due to hash-conflicts. If applications must use a certain
+virtual address, for instance after checkpoint/restore (CRIU), this is
+a blocking limitation. There is also related work that should have been
+regarded and regards similar goals [1].
+
+Second, the solution addresses two limitations of RDMA as implemented at least
+on Mellanox devices: high overhead of memory registration and I/O page-faults.
+These overheads are notoriously high and were studied before.
+The proposed solution of preallocating buffers for use by the hardware upon
+allocation resembles previous work ([30] in your citations).
+
+Third, the paper claims that all possible bottlenecks have been eliminated.
+However, the solution seems to be mainly designed for a system in which
+each compute node has a single memory node. Indeed, the paper describes
+mechanisms for migration of memory, but it is not clear which entity performs
+balancing, QoS and other orchestration tasks. It is also not clear whether
+the proposed solution is not racy: usually memory migration requires multiple
+copying iterations (pre-copy) or pulling old data from the source (post-copy).
+This is not mentioned in the paper.
+
+Fourth, the proposed congestion control solution is indeed simple, but
+seems as one that does
+not take into account potential bottlenecks in the switches. It is also
+not clear whether QoS should be taken into account.
+
+The evaluations could have clarified some of these issues, yet instead they
+introduce additional questions. The use of "clean slate" for evaluation as
+well, by developing new applications instead of porting existing ones,
+disallows to understand how the system is expected to be used in real-life.
+For instance, the first application is image compression, but does compression of an image requires to have the entire image and the result in memory? Are they expected to be read/written to secondary storage and do not need to be fully "cached" in memory? If that is the case, this is not a good example.
+
+The evaluations and the new use-cases leave many additional questions unanswered. For instance: how applications would split their data
+across local-memory and remote-memory; what the overhead of remote-memory
+relatively to local-memory (w/o remote-memory); or how DMA to remote-memory is handled. It is not clear in what use-cases, RDMA limitations (those that are related to high number of processes) would come into effect in the evaluated workloads.
+
+Eventually, this paper can have great(er) value for the reader if it
+clarifies the design choices, the trade-offs, and how the proposed mechanisms can be applied
+to existing hardware/software. Evaluating real-life workloads would enable
+readers to understand the value of the system.
+
+Other technical notes:
+
+- TCP copying can be avoided in various ways, certainly for write/send.
+
+- It would be better to use more precise terminology and discuss "device-IOTLB". 
+
+- Avoiding the #PF latency is clear, but eliminating other elements of the
+"tail-latency" might be an overkill. If the memory and network latency access 
+themselves are not deterministic, why would one care that address translation
+takes exactly 3 cycles?
+
+- The paper claims "MNs have to trust that CNs will never access beyond their allocated physical memory regions". Yet, IOMMU with different VFs for each
+client can be used to avoid this limitation.
+
+- The use of FPGA instead of software is not fully justified if we ignore
+tail and small latencies. What is the great benefit of using FPGA that
+cannot be achieved by a software solution?
+
+Nits:
+
+* "Needs[" - missing space between word and citation
+
+* "Sever-Based" - Server-based?
+
+[1] FileMR: Rethinking RDMA Networking for Scalable Persistent Memory
+
+Questions for authors’ response
+---------------------------------
+- What do you consider as the most novel and beneficial mechanism in your
+design, and how does it compare to the state-of-the-art?
+
+- Why FPGA solution is needed instead of RDMA enhancement or software-based
+solution?
+
+
+
+Review #205C
+===========================================================================
+
+Novelty
+-------
+2. Incremental improvement
+
+Experimental methodology
+------------------------
+3. Average
+
+Writing quality
+---------------
+2. Needs improvement
+
+Overall merit
+-------------
+3. Weak reject (This paper should be rejected, but I'll not fight strongly)
+
+Paper summary
+-------------
+This paper presents DVMA, an FPGA hardware accelerator for remote memory. DVMA exposes a tray of RAM over the network, allowing developers to interact with it using d-lib, a software-based API for accessing remote memory pages. DVMA employs a number of techniques to improve scalability, support near-memory offloads, and reduce latency. It differs from prior work primarily in providing an FPGA-based implementation of other similar ideas done in software or with RDMA NICs.
+
+Strengths
+---------
+- well motivated, timely problem. memory disaggregation could improve memory utilization, reducing cost and energy consumption
+- a real FPGA hardware implementation is used to evaluate the ideas in DVMA
+
+Significant weaknesses
+----------------------
+- basic premise has limited novelty relative to RDMA, FaRM, and LegoOS, so the contribution lies in optimizations and design choices. Unfortunately, some choices are poorly explained and justified in the paper.
+- programming model is confusing but seems to be incompatible with existing code in practice. d-lib requires DPDK-like polling, so it can't hide latency, which could be high when compute is offloaded to the memory side.
+
+Comments for author
+-------------------
+- Throughout the paper, too many nonconventional acronyms are coined, obscuring readability.
+
+Section 1:
+- The programming interface is a bit confusing in the intro. At one level it seems transparent and page-based, but then at another level, near-memory computation cannot be transparent and page-based. More description of d-lib could help with this issue.
+- The intro might also benefit from a paragraph about why RDMA is not a good alternative to DVMA, as RDMA appears to be the most relevant baseline. Or is it LegoOS? it's hard to tell how local memory is being used from the intro (is it a virtual cache?).
+
+Section 2:
+- Figure 1 is referenced too early or poorly placed.
+- Congestion control in RDMA has improved considerably, it's not just PFC anymore...
+- What are mcomponents (define this legoOS terminology)? LegoOS prototypes its ideas in software, but is proposing a design with hardware components.
+- "finding none of its design components or implementation fit a hardware environment" -> this statement requires further evidence.
+
+Section 3:
+- Figure 1 is packed with symbols that are never defined.
+- What's the precise motivation for maintaining virtual addresses in the MN? This seems like a departure from LegoOS's design for example.
+- re network layer: but don't you still have to share the network with other tenants? It would be expensive to deploy a separate network just for DVMA.
+
+Section 4:
+- Include a table that describes the full API. Does it operate at byte or cache line or page granularity?
+- So essentially DVMA's implementation only supports direct usage of the API (U2, U4, and U5).
+
+Section 5:
+- okay it sounds like the design is page-based after all. Doesn't this introduce read and write amplification? Why not use a finer granularity if applications need to be rewritten anyway?
+- "waiting for a slow (software) operation requires DBoard hardware to maintain a big buffer" -> this sounds like quite a limitation. Doesn't it effectively rule out U1 and U3 entirely?
+- Does the alloc retry mechanism prevent the user from choosing a specific virtual address? Some programs may want to control the layout or may require a specific layout. This seems especially concerning when trying to support standard memory swapping use cases.
+- How would DBoard notify d-lib if a memory page is moved to another MN? What metadata would have to be exchanged?
+- Why not use a standard network congestion control protocol? Doesn't a delay-based approach require session state? How does this scale?
+
+Section 6:
+- The client side library needs more details. How does the transport protocol run? Is it polling based? How do timeouts work? How do you ensure congestion windows are updated quickly enough? etc.
+
+Section 8:
+- For the key value store, don't compare to reported values in other papers. The hardware config is different across these experiments.
+- The evaluation focuses on only unloaded latency, but latency is sensitive to load.
+- Latency results are simulated; report real results too.

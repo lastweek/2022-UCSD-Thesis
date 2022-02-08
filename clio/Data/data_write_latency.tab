@@ -1,0 +1,9 @@
+#Size(B) Clio	RDMA	Clover	HERD	HERDBF    LegoOS
+1	2.309	1.17	5.379	2.638	4.782     4.312
+2	2.35	1.19	5.381	2.669	4.586     4.331
+3	2.758	1.27	5.431	2.807	4.613     4.352
+4	2.92	1.96	5.520	3.336	4.7       4.552
+5	3.685	2.78	6.420	4.23	4.883     4.916
+6	6.426	5.52	9.172	6.924	5.594     5.661
+
+#latency figure from https://docs.google.com/spreadsheets/d/1oYvfLmrZP0PFvA9QuKpnQn2hFinfX6vVr1bGqEqttCk/edit#gid=0

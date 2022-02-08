@@ -1,0 +1,325 @@
+\section{RDMA Issues and \sys\ Solutions}
+
+{\em Remote Direct Memory Access} (RDMA), a high-speed network technology that allows direct access to memory on a remote server,
+has been adopted by several major datacenter\cite{AZURE-RDMA,ALIBABA-RDMA}.
+It is also the communication media adopted by most existing remote and disaggregated memory systems~\cite{XXX}. 
+However, as this section will present, RDMA --- its interface, memory system, and network protocol --- 
+are all ill fits for memory disaggregation (esp. for virtualized disaggregated memory),
+and existing workarounds all have their limitations.
+\sys\ solves RDMA's issues by redesigning and co-design with the virtualized disaggregated memory model.
+Figure~\ref{fig-arch} illustrates the architectural differences between RDMA and \sys.
+%RDMA supports both {\em one-sided} and {\em two-sided} communication to remote memory.
+%One-sided RDMA allows one machine to directly read and write another machine's memory without involving the latter's CPU.
+%Two-sided RDMA works like traditional messaging, involving both sender and receiver CPU.
+%with one-sided RDMA being used by systems where remote memory are managed by local (compute) machines~\cite{DPM}
+%and two-sided RDMA used by systems where each machine manages its own memory~\cite{Kalia14-RDMAKV,Mitchell13-ATC}.
+%With the help of one-sided RDMA and other one-sided network technologies~\cite{GenZ},
+%several software systems have been proposed to treat 
+%Albeit its superior performance, RDMA's limited interface is too restrictive for most applications,
+%Although several recent proposals of hardware~\cite{StRoM,Aguilera-FarMemory} and software~\cite{Tsai17-SOSP,HyperLoop} extensions to RDMA made it more flexible and performant, 
+
+%fine-grained sharing
+
+\subsection{Memory System} 
+\label{sec:memory}
+
+\subsubsection{Memory Abstraction}
+\label{sec:abstraction}
+%\subsubsection{Tight Coupling to Co-Located CPU}
+
+\boldpara{RDMA issue.}
+Addressing of memory regions ({\em MR}s) registered with RNIC is through the virtual memory address space of a process running at the memory node
+(the registering process, or {\em RP} in Figure~\ref{fig-arch}. 
+Before registration, the RP first needs to allocate virtual memory address for the MR,
+and after registration, the RP passes its virtual memory address and an \rkey\ assigned by the RNIC to application processes running at client nodes.
+Essentially, RDMA's abstraction is not a {\em client-facing} one, creating two main issue.
+First, clients need to communicate with the RP to allocate or use MRs, usually through a non-RDMA, out-of-band communication channel,
+causing performance overhead.
+Second and more severe for memory disaggregation, RDMA's abstraction implies that each memory node needs to have a co-located CPU that runs an RP.
+
+\boldpara{Current solutions and their limitations.}
+The current practice of using RDMA to access remote memory is to add a client-side software indirection layer 
+to translate client application's view (\eg, process virtual memory addresses, object IDs) to MRs and RP's virtual addresses.
+%to translate client application's view (\eg, process virtual memory addresses, object IDs) to MRs and RP's virtual addresses.
+This approach involves two mappings: client address to RP virtual address (performed at client node) and RP virtual address to remote physical address (performed at memory node).
+Doing so (unnecessarily) adds performance and memory space overhead.
+
+\boldpara{\sys\ solution and benefits.}
+\sys\ provides a {\em client-facing} virtual memory view 
+where client application processes can directly access disaggregated memory with their virtual memory addresses.
+\sys\ only performs one address mapping: application virtual address to remote physical address (done at memory node),
+and \sys\ completely gets rid of the need for registering processes or server boxes at memory nodes.
+Client applications can directly perform allocation, read, write, atomic APIs (\eg, \tas, \cas, \fence), 
+and extended APIs like array indexing and pointer chasing (\S\ref{sec:extendability}) to disaggregated devices.
+
+Note that the application ``virtual memory addresses'' \sys\ use (we call them \textit{\sys\ virtual memory address}es) may not necessarily come from normal process memory address space.
+In fact, there are three ways to use \sys, and they have their own interpretation of what \sys\ virtual memory addresses mean,
+as illustrated in Figure~\ref{fig-arch}.
+First, an application process can explicitly call \sys\ APIs by linking to a \sys\ library which creates a special \textit{\sys\ virtual memory address space}
+under the hood. 
+The returned addresses of \alloc\ and input addresses of \sysread/\syswrite requests will all be virtual addresses in this space ({\em dvma-vaddr}).
+Second, applications can sit on top a remote-memory swap system like FastSwap~\cite{FastSwap} and InfiniSwap~\cite{InfiniSwap},
+which uses \sys\ virtual memory addresses as swap partition address ({\em swap-vaddr}) and performs \sys\ read/write to swap in/out disaggregated memory.
+Third, a disaggregated compute device like pComponent in LegoOS~\cite{Shan18-OSDI} can integrate \sys\ into its hardware cache controller
+and send \sys\ read/write with application processes' virtual addresses ({\em AP-vaddr}) for last-level-cache (called ExCache in LegoOS) misses. 
+
+%Using client process virtual memory addresses also has the benefit that disaggregated memory can potentially be 
+%integrated into client machine's memory microarchitecture~\cite{Lim09-disaggregate}.
+
+
+\stepcounter{principle}
+\ulinebfpara{Principle \arabic{principle}:}
+\textit{The disaggregated memory abstraction should face client processes}.
+
+
+\subsubsection{Memory Pinning and Page Faults}
+\label{sec:pagefault}
+
+\boldpara{RDMA Issue.}
+Because RNICs rely on host machine's MMU and OS for virtual memory system support, they do not have any way to deal with page faults.
+As a result, RDMA offers only two options, each having their own problem:
+1) allocate and ping physical memory when registering MRs with RNIC, 
+or 2) no allocation of physical memory and trap to the OS to handle page faults at first accesses.
+Option 1) wastes physical memory space before they are used, 
+while option 2) has poor performance for first accesses (and thus long tail latency) 
+because of the costly communication between RNIC and the host OS (through interrupts)~\cite{ASPLOS17}.
+Figure~\ref{fig-} \fixme{XXX}
+
+\boldpara{Current solutions and their limitations.}
+To not waste physical memory or causing high page fault performance overhead, 
+one option is \textit{fine-grained pinning} where client application dynamically asks 
+the memory process to register/unregister a new MR (and pin/unpin physical memory)  
+immediately before and after the remote memory usages.
+However, it is difficult to infer or ask programmers to specify first memory accesses, 
+and RDMA's costly MR register operations significantly degrades application performance
+(in our experiments, sending a network request and registering a new MR take \fixme{XXX} in total).
+%Another solution proposed recently~\cite{ASPLOS-17} is to 
+Thus, the common practice today~\cite{FastSwap,XXX} is to trade memory space for performancy by 
+allocating a big MR and pinging its physical memory before an application starts.
+%However, such \textit{coarse-grained pinning}'s resulting memory wastes would be a severe problem in a disaggregated setting, 
+%as memory at  and should be used by applications as much as possible.
+
+\boldpara{\sys\ solution and benefits.}
+\sys\ completely eliminates pinning (and registering) with a virtual memory system that 
+performs on-demand physical allocation and page fault handling --- just like what modern OS's provides,
+but without the performance cost of RDMA's page fault mechanism.
+The key to achieve this is our efficient implementation of the page fault handler in the memory device's main hardware pipeline.
+Our main idea here is to move the slower, more complex, and non-deterministic allocation logic (both virtual and physical memory allocation)
+to software running at a co-located low-power core, and to use an asynchronous methods to communicate 
+between the software allocator and the hardware page fault handler.
+With this novel virtual memory system design, our implementation has a \textbf{constant three-cycle latency of page fault handler}.
+Figure~\ref{fig-} \fixme{XXX}
+We will present the detailed design of our virtual memory system in \S\ref{sec:}.
+
+\stepcounter{principle}
+\ulinebfpara{Principle \arabic{principle}:}
+\textit{Efficient space usage and performance can both be achieved by integrating virtual memory system in the hardware pipeline}.
+
+
+\subsubsection{Memory Region}
+\label{sec:mr}
+
+\boldpara{RDMA issue.}
+RDMA associates a set of metadata with each MR, namely an ID and two keys (\texttt{lkey} and \texttt{rkey}).
+RNIC stores these MR metadata in its SRAM cache, and the memory consumption grows linearly with the number of MRs registered with the RNIC. 
+When the SRAM is filled up, RNIC will swap the MR metadata to host memory (thrashing), causing significant performance degradation.
+Figure~\ref{fig-} \fixme{XXX}
+
+Another issue with MR is that RDMA uses it as the protection scope.
+Thus, each client process needs to have at least one MR,
+and if two client processes want to share some memory, the RP has to create a new MR.
+In addition, metadata of different MRs share the same RNIC cache,
+causing (remote) side channels that can be exploited to infer access patterns of victim clients~\cite{Tsai19-Security}.
+
+\boldpara{Current solutions and their limitations.}
+One way to reduce the number of MRs is to register a huge MR before an application starts and use a software layer to 
+manange this MR (allocation) and map application memory areas to different parts of the MR.
+However, as discussed in \S\ref{sec:pagefault}, huge MR will cause either memory waste or high tail latency (due to page faults),
+and a new MR needs to be created for each protection scope.
+LITE~\cite{Tsai17-SOSP} uses the OS kernel to register the entire server's physical memory as one MR when the system starts up
+and to use a kernel module to allocate physical memory to applications.
+LITE suffers from performance overhead of user-level-kernel crossings and all the drawbacks of the \pdm\ model (\S\ref{sec:pdm}).
+1RMA~\cite{1RMA} uses a fix-sized region table
+
+\boldpara{\sys\ solution and benefits.}
+\sys\ gets rid of MR all together. 
+With the per-client-process virtual memory space \sys\ offers, applications can allocate (and share) 
+as many memory areas as they want without incuring any performance overhead.
+%is all  with arbitrary memory areas in the space (through rmalloc instead of registering MR)
+Figure~\ref{fig-} \fixme{XXX}
+
+\stepcounter{principle}
+\ulinebfpara{Principle \arabic{principle}:}
+\textit{}.
+
+\subsubsection{Page Table}
+\label{sec:pte}
+
+\boldpara{RDMA issue.}
+RDMA uses page tables created and maintained by host CPU and OS to map MRs (RP virtual addresses) to physical memory.
+To speed up page table lookup, RNIC caches hot PTEs (page table entries) in its SRAM.
+Similar to the scalability problem of MRs, RDMA performance degrades significantly when cached PTEs fill up the SRAM.
+Figure~\ref{fig-} \fixme{XXX}
+
+\boldpara{Current solutions and their limitations.}
+The common practice to mitigate RDMA's PTE scalability problem is to use huge pages (\eg, 2\GB),
+which effectively reduces the number of PTEs~\cite{FaRM,Tsai17-SOSP,XXX}.
+However, with large memory, even huge page PTEs could still fill up RNIC SRAM, 
+and when it does, it could take up to four DRAM accesses from the RNIC (over PCIe) to walk a x86 page table and fetch a PTE.
+
+\boldpara{\sys\ solution and benefits.}
+We propose a new {\em overflow-free} hash-based page table design that bounds the size of PTEs to physical memory size 
+and address translation to at most one DRAM access.
+Specifically, we store {\em all} PTEs (from all client processes) in a hash table 
+whose size is fixed and proportional to the physical memory size of a disaggregated memory device,
+\ie, the hash table has enough entries to cover the entire physical memory (\eg, \fixme{XXX \MB\ for 100\GB\ physical memory and XXX page size}).
+The hash value of a virtual memory address and its PID is used as the index to determine which hash bucket in the table the corresponding PTE goes to.
+To lookup the page table, we always fetch
+% compute its hash value (using the {\em lookup3}~\cite{lookup3-wiki} hash function) 
+the entire bucket (with all its slots), in a single DRAM read.
+
+Normally, a hash table with fixed slots will have an overflow problem because of hash conflicts.
+We use a novel technique to {\em proactively avoid} hash overflows at virtual address allocation time.
+To allocate a new virtual memory page, we keep trying available virtual memory addresses until there is one 
+whose hash value would go to a bucket that still has an empty slot.
+This allocation process is carried out in software running on an ARM core, while the page table lookup is performed by the hardware pipeline of a \sys\ device.
+We trade potential retry overhead at allocation time for better run-time performance and simpler hardware design.
+% core-memory implementation.
+This overhead is manageable because 1) each retry is fast with our implementation~\cite{sec:metadataplane}, 
+2) we employ huge pages, which means fewer pages need to be allocated, 
+3) we choose a hash function that has very low collision rate~\cite{lookup3-wiki},
+and 4) the \sys\ 64-bit virtual address space is huge.
+
+Figure~\ref{fig-} \fixme{XXX}
+
+\stepcounter{principle}
+\ulinebfpara{Principle \arabic{principle}:}
+\textit{}.
+
+\subsection{Network System}
+\label{sec:network}
+
+\subsubsection{Connection, Reliability, and Ordering}
+
+\boldpara{RDMA issue.}
+RDMA's RC (reliable connection) mode, the only mode that supports both RDMA one-sided read and write operations,
+is connection-oriented, requiring QPs (send\&receive queue pairs) to be established 
+between a sender and a receiver before communication can happen.
+RDMA implements its transport layer in hardware (RNIC),
+and a reliable transport requires per-connection states.
+Like MR and PTE, these states and other QP metadata are stored in RNIC SRAM, 
+and QPs, too, have scalability issues.
+Figure~\ref{fig-} \fixme{XXX}
+
+\boldpara{Current solutions and their limitations}
+A common mitigations to the QP scalability issue is QP sharing, 
+where multiple threads in a workload or multiple workloads share a QP~\cite{FaSST}.
+However, threads sharing a QP content for locks to use the QP,
+and the FIFO order enforced by a QP can cause ``false ordering'' among workloads~\cite{1RMA}.
+An alternative method is to use RDMA UD (unreliable datagram) mode.
+The main issues with UD are its unreliable communication and 
+its only support of two-sided RDMA, which requires the receiving node's CPU to be involved in the communication and thus does not fit the disaggregated memory model.
+
+1RMA~\cite{1RMA} proposed a connection-less approach to perform remote read/write
+and to use the reply of read/write requests as the ACK.
+It relies on 
+
+\boldpara{\sys\ solution and benefits.}
+\if 0
+Our insight is that we {\em can} achieve reliability without the need for connection or {\em any} states at the memory devices
+by exploiting the {\em asymmetric} nature of memory disaggregation.
+Our main idea is to shift all reliability tasks at the client side in software
+and only include L1 and L2 in hardware (regular Ethernet NIC at client servers and a standard Ethernet MAC module at memory device hardware).
+%and perform {\em all} reliable transport operations at the client side in software (\syslib).
+
+Since all \sys\ operations are in the RPC style initiated by client servers, \ie, sending read/write requests and getting data/response back,
+we use the reply as the ACK and matches replies to their corresponding requests using a request ID that is embedded in the packet header.
+Each request's packet headers also include sender-receiver addresses, which will be used to construct reply packets. 
+With these mechanisms, we essentially have a (unreliable) connectionless transport.
+Below, we explain how we add reliability.
+
+Network errors can happen when a packet is corrupted, loss, or reordered.
+We use link-/physical-layer error correction like Forward Error Correction and retries that are already available in InfiniBand~\cite{MellanoxOFED} \fixme{and Ethernet???}
+to deal with packet corruption, similar to prior practices~\cite{RAIL-NSDI17,FaSST}.
+As the link layer does not (\fixme{or rarely?}) drop packets, packet loss is mainly due to buffer overflows in the network.
+We control (minimize) packet loss with our client-side, software congestion/flow control mechanism (\S\ref{sec:cc}).
+In the rare case of packet loss (either in a \sys\ request or its response), the client-side \syslib\ will fail after a request timeout
+and retry the entire \sys\ request.
+This leaves us with packet reordering, which is rare in non-multi-path network, but can still happen.
+
+We take three approaches in handling packet reordering.
+First, we guarantee that each request/reply is always delivered to upper layers in its entirety 
+even when it is split into multiple link-layer packets that can be reordered.
+We achieve this simply by using intra-request/reply sequence IDs to mark the proper ordering of packets 
+and if needed, reorder them before delivering the request/reply.
+Second, we offer synchronous APIs, with which we can guarantee that requests in the same session\footnote{Session is a \sys\ notion of }
+is executed one after another. 
+Thus, even without ordering guarantees from the network layer, synchronous requests will still be executed in order.
+Finally, to offer more aggressive performance optimization, we offer asynchronous APIs, 
+where multiple requests can be sent out before their replies are received.
+Unlike synchronous requests, network reordering can affect asynchrnous requests' ordering.
+We handle asynchronous requests' ordering in \sys\ with two methods:
+1) the \syslib\ tracks read-write and write-write dependencies (outstanding read and write requests to the same address)
+and issue dependent requests in a synchronous way;
+2) we· offer a \fence\ operation, which lets a client process to wait until all outstanding asynchrnous requests have finished.
+With these mechanisms, applications can achieve {\em release consistency}.
+
+As a result, \sys\ memory devices completely remove the need for network states and thus all network-related scalability bottlenecks,
+and client servers only need regular L2 Ethernet NICs with no NIC scalability issues either.
+Figure~\ref{fig-} \fixme{XXX}
+
+\stepcounter{principle}
+\ulinebfpara{Principle \arabic{principle}:}
+\textit{Efficient end-to-end reliability and stateless memory devices can be and is better achieved by shifting reliability handling to client-side software.}
+%with unreliable, connectionless network
+%Relaxing strict network reliability and handling reliability at system/application level }.  
+
+\subsubsection{Congestion and Flow Control}
+\label{sec:cc}
+
+\boldpara{Issue}
+RDMA over Converged Ethernet (RoCE) relies on link-layer Priority Flow Control (PFC~\cite{PFC}) to provide a drop-free substrate.
+PFC is a mechanism for switches and NICs to avoid buffer overflow by forcing the immediate upstream entity to pause (through PFC pause frames).
+However, PFC has a well-known head-of-line blocking issue and a risk of deadlock that make it infeasible to deploy at large scale~\cite{Zhu15-SIGCOMM}.
+
+\boldpara{Current solutions and their limitations}
+A common practice adopted by datacenters is to reduce PFC triggering by adding hardware-based congestion control schemes~\cite{Zhu15-SIGCOMM,hpcc-sigcomm19}
+or by switching to a backup TCP network~\cite{RDMA-NSDI21}.
+These schemes do not fit our needs, as we 
+Recently, 1RMA~\cite{1RMA} proposed to 
+two RTT writes
+
+\boldpara{\sys\ solution and benefits.}
+RDMA's network protocol treats all endpoints the same, \ie, a symmetric protocol.
+We make two insights here.
+First, with our design and implementation, a \sys\ memory device' internal throughput is always higher than its port bandwidth.
+Thus, there will be no buffer overflow in a \sys\ memory device (\ie, it is faster than the network), 
+and there is no memory-side in-cast problem and no need for memory-side flow control.
+Second, 
+client-side controlled congestion control
+reactive, delay-based, window based 
+solicitation window for client-side incast
+
+\stepcounter{principle}
+\ulinebfpara{Principle \arabic{principle}:}
+\textit{}.
+
+\subsection{Extendability}
+\label{sec:extendability}
+
+\boldpara{Issue}
+limited primitives
+bundled network stack and memory system, in a closed system
+As a result, datacenters cannot easily deploy new transports~\cite{Homa,NDP,pHost} or congestion-control algorithms~\cite{1RMA,XXX}.
+
+\boldpara{Current solutions and their limitations}
+
+\boldpara{\sys\ solution and benefits.}
+\sys\ allows \textit{easy extension} to different network stacks, high-level APIs, and to distributed disaggregated memory
+modularized approach, each could be replaced by a new one
+
+\stepcounter{principle}
+\ulinebfpara{Principle \arabic{principle}:}
+\textit{}.
+
+\subsection{Putting It Together}

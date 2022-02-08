@@ -1,0 +1,186 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Modern datacenter applications like graph computing, data analytics, and deep learning have increasing demand for access to large amounts of memory.
+Unfortunately, server machines are facing {\em memory capacity walls} because of pin, space, and power limitations~\cite{HP-MemoryEvol,ITRS14,MemoryWall95}.
+Going forward, it is imperative for datacenters to seek solutions that can go beyond what a (local) machine can offer, \ie, using non-local memory.
+
+At the same time, datacenters are seeing the needs from management and resource utilization perspectives
+to {\em disaggregate} resources --- separating hardware resources into different network-attached pools 
+that can be scaled and managed independently.
+Disaggregated memory pool is thus an appealing proposal that has recently been 
+seriously considered by several datacenter providers.
+However, although many major datacenters have successfully adopted disaggregated storage systems~\cite{FACEBOOK-BRYCECANYON,FB1,AMAZON-S3,AMAZON-EBS,SnowFlake-NSDI20,Ali-SinglesDay},
+it is unclear how to best build {\em disaggregated memory systems},
+as memory and storage systems have fundamentally different interfaces and performance requirements.
+
+Disaggregated memory proposals so far have taken two main approaches.
+The first type treats the disaggregated memory pool as a {\em passive} party 
+(raw, physical memory space with no processing power),
+and the compute pool manages the memory pool and provides high-level services to 
+applications~\cite{HP-TheMachine,Tsai20-ATC,Lim09-disaggregate,Nitu18-EUROSYS,Genz-citation}.
+The main problem of passive disaggregation is the addition of excessive network RTTs
+when completely separating processing and memory.
+
+The second type runs management and service software at the memory pool~\cite{InfiniSwap,NAMDB,Kalia14-RDMAKV,Aguilera18-ATC}
+to avoid the high-RTT problem of passive disaggregated memory. 
+%Co-locating management with memory reduces network RTTs.
+%organizes the disaggregated memory pool with regular servers and runs all or part of management software 
+%at these servers' CPUs
+This type can be considered as {\em software-based active} disaggregated memory ({\em \sadm}), 
+and the software can run either at a CPU of a regular server %(server-based)
+or at low-power cores in a device like an ARM-based SmartNIC.
+For the former, using whole servers to build the memory pool significantly increases owning and energy cost compared to non-disaggregated systems.
+%, with full servers and large amounts of CPU cycles at the memory layer.
+Moreover, the number of CPU cores limits the amount of parallel memory requests a memory server can handle.
+For the latter, %An alternative way of building active disaggregated memory is to run management software in low-power cores.
+low-power cores cannot meet the high-bandwidth and low-latency demands of memory systems~\cite{Tsai20-ATC}.
+
+In short, existing disaggregated memory proposals have either performance or cost problems.
+\if 0
+Another fundamental issue of these existing systems is their reliance on RDMA (Remote Direct Memory Access).
+%Albeit its superior performance, RDMA's limited interface is too restrictive for most applications,
+%giving rise to several recent proposals of hardware~\cite{StRoM,Aguilera-FarMemory} and software~\cite{Tsai17-SOSP,HyperLoop} extensions to RDMA.
+RDMA and RDMA-based systems are an ill fit for memory disaggregation because the RDMA protocol and implementation are both tightly bound with the processor that co-locates with the memory.
+At least a process running on this processor needs to perform virtual memory allocation 
+and registration through an OS and then share the allocated virtual memory addresses
+with other (client) servers that wish to access the allocated memory. 
+Essentially, RDMA's abstraction is a {\em host-server-centric} memory view.
+%RDMA's interface is virtual memory addresses allocated by processes running at the server where the data is; 
+%these addresses need to be shared to other servers for clients to use.
+%This addressing mode forces RDMA memory to attach to a host CPU and host software.
+What fits disaggregated memory is a {\em client-centric} memory view 
+where client applications running on a server can directly access remote memory without the need to contact or maintain 
+any additional processes or OSs running at the memory side.
+%that enables remote memory to be independent of a host-server.
+%With \phdm, remote memory is directly addressed by client-side application processes' virtual address spaces.
+%Moreover, a client-side address space in \phdm\ could span multiple \MN{}s. %memory nodes.
+\fi
+We propose a {\em hardware-based active disaggregated memory} ({\em \phdm}) model.
+Like \sadm, %software-based active disaggregated memory, 
+\phdm\ performs management and service tasks at the memory pool.
+Unlike \sadm, \phdm\ uses customized hardware at the disaggregated memory to achieve performance goals and to avoid the high owning cost of full servers.
+%\zhiyuan{
+%Unlike \sadm, \phdm\ uses specialized hardware to attach disaggreated memory banks direcly to datacenter network, avoids the high owning cost and interconnect overhead for full servers.
+%}
+Further, unlike RDMA-based solutions, applications running on {\em compute (client) 
+nodes} ({\em \CN}s) can store data in any set of disaggregated {\em memory nodes}
+({\em \MN}s) and access them via a sinale client-centric memory space.
+Finally, we propose to use programmable hardware 
+to enable flexible implementation and deployment of different distributed memory services.
+%virtualize and orchestrate disaggregated memory accesses,
+%3) provides high-level distributed memory services, 
+%and 4) supports changing/adding/removing services through programmable hardware.
+%Applications running on {\em compute (client) nodes} ({\em \CN}s) store and access data 
+%in a set of disaggregated {\em memory nodes} ({\em \MN}s).
+%\MN{}s are programmable hardware devices directly connected to the network,
+%each managing its own memory and collectively providing one or more remote distributed memory services.
+
+The \phdm\ model offers several benefits that are key to meeting today's datacenter needs.
+With a separate, self-contained remote memory layer, 
+\phdm\ makes it easy to configure, manage, and scale remote memory.
+With a (good) hardware-based implementation, remote memory services can achieve
+high-bandwidth, low-latency performance 
+and support large amounts of clients in parallel.
+By offering high-level distributed memory services, 
+applications can easily use remote memory without 
+worrying about its distributed nature or dealing with low-level interfaces.
+Finally, programmable hardware enables the reuse of the same hardware for different 
+types of memory services, yielding faster and cheaper deployment. %option than ASIC.
+
+We built {\em \sys},
+an \phdm\ system %and the first publicly described hardware implementation of disaggregated memory.
+%that %offers many benefits over existing remote-memory solutions.
+that delivers {\bf hardware-like performance and software-like flexibility, within a tight cost budget}.
+\sys's high-level ideas are to extend traditional virtual memory systems to a distributed one 
+and to separate data and metadata virtual memory operations by running the former in hardware and the latter in low-power processors.
+%traditional execute the data plane in hardware
+%and the metadata and control planes in low-power ARM cores.
+Each \sys\ cluster consists of 1) a set of \CN{}s that run user applications on top of a \sys\ user-level library,
+2) a set of \MN{}s, each being a network-attached hardware device with FPGA, 
+an ARM processor, and large amounts of DRAM,
+and 3) one {\em global controller}, a regular server that oversees the whole
+cluster (Figure~\ref{fig-arch}).
+%performs monitoring, orchestration, 
+%and coarse-grain metadata operations for the whole cluster.
+%Figure~\ref{fig-arch} demonstrates this overall architecture.
+Each application process running on a \CN{} has its own {\em remote} virtual memory address space.
+%that is separated from its regular local address space.
+Physical memory in this address space can sit on multiple \MN{}s,
+and the physical locations are hidden from applications.
+Similar to traditional address spaces, \sys\ protects remote address spaces from each other.
+%but a remote virtual memory address space can map to physical memory on multiple \MN{}s.
+
+There are three key technical challenges \sys\ faces.
+First, {\em how to ensure low-latency, high-throughput end-to-end performance} 
+when not every operation is implemented in hardware (because of flexibility and cost budget)?
+Our key idea is to implement data operations in hardware pipelines with guaranteed 
+{\em performance determinism} and to move metadata operations and 
+non-performance-deterministic operations off performance-critical path 
+to run in software (at each \MN's ARM processor and the global controller).
+%We implement \sys's data plane an FPGA and metadata plane in software that runs at the global controller and each \MN{}'s ARM processor.
+Further, we use a novel, asynchronous approach to efficiently interact between 
+the data plane and the (slower) metadata plane.
+With these ideas, we implemented a new page table design, a new page-fault handler,
+a reliable network stack, and other virtual memory operations 
+in FPGA hardware and software.
+%a virtual-to-physical memory address translation unit,
+%and a page fault handler, and logic to access memory data.
+%We implement the metadata plane in software that runs at the global controller and each \MN{}'s ARM processor.
+%They perform virtual and physical memory allocation, monitoring, and load balancing.
+
+Second, {\em how to make a virtual memory system distributed?}
+%At the core of \sys\ is a remote distributed virtual memory system.
+\sys's answer is a two-level approach, % to manage distributed memory, 
+where the global controller assigns {\em coarse-grain} remote virtual memory address ranges to \MN{}s
+and each \MN\ manages its virtual and physical memory at fine granularity.
+Further, instead of traditional swap-based paging, we %propose %migration-based approaches
+use a novel approach that leverages the distributed nature of \sys\ memory to {\em migrate} memory across \MN{}s
+during space or load pressures.
+%for on-demand memory allocation% and load balancing. %, and memory redundancy.
+
+Finally, {\em how to support flexible extension of distributed services?}
+On top of \sys's main functionalities, 
+we built a framework for implementing and running extended memory services.
+Each extended service's data plane is encapsulated in a {\em module} on the FPGA,
+with its own protection domain and virtual address space.
+% (that is orthogonal to user application processes).
+These modules can directly use \sys's virtual memory data/metadata APIs and distributed operations, %, distributed operations, and 
+or implement their own counterparts but leverage \sys's general framework. %(\eg, by building 
+Thus, developing extended memory services on \sys\ is easier than on raw hardware but still flexible.
+
+We implemented \sys\ on a low-cost Xilinx FPGA+ARM board,
+and we built %several extended virtual memory APIs including pointer operations, \fixme{XXX}, and \fixme{XXX},
+two distributed memory services: a shared multi-version data store, {\em \sysmv},
+and a distributed in-memory key-value store, {\em \syskv}.
+\sys\ achieves network line-rate throughput 
+and an end-to-end read/write latency of 2.4--2.6\mus.
+%We compare \sys\ and \syskv\ with a passive disaggregated memory system,
+%a \sadm\ system, % (running on CPU and on ,
+%and raw RDMA.
+It outperforms the best existing passive diaggregated memory system by 23\%
+and a popular CPU-based \sadm\ system by 29\%.
+%Compared to server-based disaggregated memory systems, 
+\sys\ also has a 2\x\ owning cost and 25\x\ energy cost savings over server-based disaggregated memory systems.
+Overall, this paper makes the following contributions.
+
+\begin{itemize}
+
+\item The first publicly described disaggregated memory system built with real (non-server) hardware.
+
+\item A design that separates memory systems' data and metadata planes into hardware and software.
+
+\item A distributed virtual memory system that integrates hardware and software in novel ways.
+
+%\item Hardware-based distributed operation support such as migration and replication.
+
+\item A framework to build extended memory services %on virtual memory interface
+and two hardware-based distributed memory services.
+% and a set of extended virtual memory APIs. 
+%\item Demonstration of how real systems could use and benefit from disaggregated memory services.
+
+%\item Two hardware-based high-level distributed memory services.
+%\item Demonstration of two deployment models of disaggregated memory hardware.
+
+\end{itemize}
+

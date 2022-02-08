@@ -1,0 +1,9 @@
+#Size(MB) alloc  free  rdma_alloc   rdma_free   rdma_alloc_odp   rdma_free_odp    phys
+1	  36     34    39           39          31               23		  0.147
+2	  38     37    76           67          58               24		  1.007
+3	  52     49    246          185         197              88		  1.797
+4	  106    94    918          649         754              390		  3.734
+5         256    207   2271         1364        2031             800		  12.348
+6	  320    274   3515         2597        3086             1178		  16.372
+
+#from https://docs.google.com/spreadsheets/d/1oYvfLmrZP0PFvA9QuKpnQn2hFinfX6vVr1bGqEqttCk/edit#gid=687444626

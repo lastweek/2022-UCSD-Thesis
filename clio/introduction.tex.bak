@@ -1,0 +1,134 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Modern data-center applications like graph computing, data analytics, and deep learning have increasing demand for access to large amounts of memory~\cite{FastSwap}.
+Unfortunately, servers are facing {\em memory capacity walls} because of pin, space, and power limitations~\cite{HP-MemoryEvol,ITRS14,MemoryWall95}.
+Going forward, it is imperative for datacenters to seek solutions that can go beyond what a (local) machine can offer, \ie, using remote memory.
+At the same time, data centers are seeing the needs\cite{Ali-SinglesDay,SnowFlake-NSDI20,FB1} from management and resource utilization perspectives
+to {\em disaggregate} resources --- separating hardware resources into different network-attached pools 
+that can be scaled and managed independently.
+These real needs have pushed the idea of memory disaggregation:
+organizing computation and memory resources as two separate network-attached
+pools, one with compute nodes ({\em CN}s) and one with memory nodes ({\em MN}s).
+
+%Unlike traditional computer
+%modern computers that manage and use memory at the same place,
+% where memory is managed and used at the same place, % at the server CPU and MMU,
+Unlike traditional computers that manage and use memory at the same place,
+there are many ways of building a disaggregated memory system when memory is far from computation.
+For example, should memory be managed at \CN{}s or \MN{}s?
+Should \MN{}s be full server boxes, raw DRAM chips, or something in between?
+Should computation only happen at \CN{}s or can some of it happen at \MN{}s as well?
+
+Memory disaggregation also poses new requirements in performance, scalability, cost, and deployment.
+Like today's storage disaggregation solutions~\cite{AMAZON-S3,SnowFlake-NSDI20,Pangu}, 
+the disaggregated memory pool is intended to host huge amounts of memory
+that can be shared by many clients.
+At the same time, to be an appealing solution that can be adopted by today's data centers, 
+memory disaggregation should improve performance per dollar and be easy to deploy and manage.
+%and have an easy way 
+%At the same time, it is desirable to maintain or decrease data-center costs
+%when introducing memory disaggregation.
+%Thus, each \MN\ 
+%Memory disaggregation presents new requirements in performance, cost
+%Existing approaches in building disaggregated-memory systems take three main forms,
+%and they have different choices of the above questions and their own limitations.
+
+Existing memory disaggregation solutions have taken two main approaches,
+neither of which can meet all the above requirements.
+The first type treats \MN{}s as raw, physical memory 
+and manage it at \CN{}s~\cite{Genz-citation,CXL-citation,Tsai20-ATC}.
+Although \MN{}s are cheap to build, using and managing them at \CN{}s
+is slow because of the network round trips needed to access \MN{}s.
+%which causes high communication overhead and security concerns, 
+
+The second type accesses \MN{}s over a virtual memory interface
+and relies on a host server to virtualize and manage memory at \MN{}s. 
+RDMA-based solutions~\cite{FaRM,FastSwap,InfiniSwap,StRoM,Kalia14-RDMAKV,Aguilera18-ATC} all fall into this category.
+%The main issue with this approach is the involvement of host 
+Using a whole server to manage memory is an overkill and unnecessarily consumes too much power.
+Moreover, with today's server architecture, a NIC needs to either suffer from a slow crossover to the host memory and/or CPU for 
+fetching virtual memory metadata and executing virtual memory tasks~\cite{NICPageFaultArchPaper},
+or use limited on-NIC memory to cache metadata, which results in serious scalability issues~\cite{FaRM,Tsai17-SOSP}.
+%or rely on a host server to run a virtual memory system (RDMA- and messaging-based),
+%which has tail latency, scalability, and cost issues.
+
+We argue that memory disaggregation can and should achieve all the performance, scalability, cost, and deployment requirements.
+The solution is to virtualize and manage disaggregated memory in hardware.
+We propose \textit{\sys} (\textit{Disaggregated Virtual Memory Access}), 
+a cross-layer, software/hardware-codesign solution that %centers around 
+%allows both applications running at \CN{}s and computation offloads running at \MN\ hardware
+allows applications to access disaggregated memory through a virtual memory interface
+and at the same time, allows \MN{}s to be built without a server box.
+%\sys\ includes a memory system, a network system, and a framework for computation offloading,
+%all of which are catered towards the hardware-based disaggregated virtual memory model and memory disaggregation's unique requirements.
+The \sys\ \MN\ is a new hardware device (\textit{\sysboard}) that we designed from scratch and prototyped with FPGA. %a Xilinx FPGA-based MPSoC board.
+The rest of \sys\ uses common hardware and network infrastructure available in today's data centers with a user-space library (\textit{\syslib}) at each \CN,
+making \sys\ easy to be adopted.
+The key piece of \sys\ is a hardware-based virtual memory system that runs entirely in \sysboard.
+It achieves the same functionality as traditional, software-based virtual memory system,
+but with very different approaches --- new designs that fit the hardware model and memory disaggregation.
+\sys\ also includes a new network system that we co-design with \sys's memory system
+by exploiting memory disaggregation's {\em asymmetric} nature.
+Finally, to mitigate the network communication costs between \CN{}s and \MN{}s,
+\sys\ creates a framework for applications to safely and easily offload their computation.
+% support computation offloading (from \CN{}s to \MN{}s),
+%both catered towards the hardware-based virtual disaggregated memory model.
+
+\sys\ offers three ways of using disaggregated memory.
+First, applications or a system layer (\eg, a swap system~\cite{InfiniSwap,FastSwap}) running at \CN{}s can allocate (remote) virtual memory spaces and read/write data in them.
+In addition, \sys\ offers a set of extended APIs like synchronization primitives and pointer chasing, % for applications running at \CN{}s to use,
+and users can also write and deploy new extended APIs at \MN{}s.
+Second, applications can offload some of their computation to \MN{}s.
+\sys\ provides such offloads with the same virtual memory address space and interface as their \CN\ counterparts.
+Finally, users can build \textit{memory services} that run entirely at \MN{} hardware (\eg, a key-value store).
+\sys\ offers each memory service its own virtual memory address space.
+
+\sys\ achieves 
+\textbf{1) \textit{low tail latency and high throughput}} --- \sys\ achieves network line rate (100\Gbps\ with our FPGA prototype)
+and low average and tail latency (\eg, 2.7\mus\ avg and 3.2\mus\ 99\% for 1000 clients concurrently reading 16\,B), 
+\textbf{2) \textit{excellent scalability}} --- one \MN{} can %freely\footnote{as long as sustainable by port link bandwidth and total memory size}
+scale perfectly to thousands of concurrent clients and TBs of memory, % with the number of \CN{}s, client processes, and disjoint memory regions,
+\textbf{3) \textit{low cost}} --- \sys\ completely removes the need for a server box and power-hungry CPUs at \MN{}s,
+%and \sysboard\ can be built with XXX\MB\ on-chip memory and simple logic,
+\textbf{4) \textit{safe and flexible computation offloading}} --- 
+applications can safely offload their computation and enjoy a unified virtual memory system support,
+and \textbf{5) \textit{extendible}} --- existing application-level~\cite{AIFM} and system-level~\cite{InfiniSwap,FastSwap,Semeru} 
+disaggregated memory solutions can easily use \sys\ as the low-level platform,
+and \sys\ itself can be easily extended and reconfigured.
+Achieving these goals requires novel design and careful engineering in almost every part of the system.
+
+The first major challenge is to build a full-fledged hardware-based virtual memory system that can deliver bounded, low latency for any type of data accesses.
+Directly porting today's software-based virtual memory system to hardware will not only require huge hardware resources but also results in long tails for tasks like page fault handling.
+Our idea is to implement a {\em deterministic} hardware pipeline that bounds the latency of {\em all} memory access operations %including page fault handling 
+and to keep non-deterministic and/or complex operations in software (running at few low-power cores in \sysboard).
+We use a novel, asynchronous approach to efficiently interact between hardware and software to achieve good foreground performance.
+We further propose a new conflict-free hash-based page table design that bounds address mapping to take at most one memory access.
+
+Another big challenge is to achieve scalability with only minimal hardware resources at \sysboard.
+Our general idea is to avoid maintaining states or data structures that could grow with clients or \CN{}s.
+For example, for \sys's memory system, we design the page table to have a total size proportional to the physical memory size on an \MN, 
+not to the number of client processes using the \MN.
+Similarly, we avoid maintaining any states that could grow with network flows or clients at \sysboard.
+To achieve this while delivering end-to-end reliability, 
+\sys\ 1) uses a connection-less, RPC-like interface, % on top of a standard Ethernet link layer,
+2) treats network errors as \sys\ request failure and re-executes the entire request, 
+3) shifts stateful tasks like re-execution, packet ordering, and congestion control to the \CN\ side, % (in \syslib\ software),
+and 4) removes ordering guarantees from the network and provides memory operation ordering at \syslib.
+
+The rest of the paper will dive deep into \sys\ design and our FPGA prototype implementation.
+We built five applications on top of \sys:
+an image compression utility, a binary-tree index, a key-value store, a multi-version object store, and a simple data analytics service.
+%We prototyped \sys's memory device with FPGA (\sysboard).
+%\sys\ achieves high throughput (100\Gbps\ with FPGA prototype), low (tail) latency (XXX\mus\ end-to-end MTU round trip latency), 
+%low cost (XXX\x\ energy saving), %and great extendibility,
+%and \sys\ scales well with XXX. %eliminates {\em all} scalability bottlenecks in both its memory and network systems.
+We compared \sys\ with vanilla RDMA, two RDMA-based disaggregated/remote memory systems~\cite{Tsai20-ATC,Kalia14-RDMAKV}, 
+%an FPGA-based RDMA implementation~\cite{StRoM}, 
+and a software-based SmartNIC~\cite{BlueField}.
+\sys\ scales much better and has orders of magnitude lower tail latency than RDMA, 
+while achieving similar throughput and min latency as RDMA (even with the slower FPGA frequency in our prototype).
+\sys\ has 1.1\x\ to 3.4\x\ energy saving compared to CPU-based and SmartNIC-based disaggregated memory systems 
+and is 2.7\x\ faster than SmartNIC solutions. 
+
+

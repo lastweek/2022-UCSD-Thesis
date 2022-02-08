@@ -1,0 +1,7 @@
+1.00	232	   172	        12	          24	    24	      
+2.00	327	   195	        12	          24	    806	      
+3.00	12	   179	        12	          24	    24	      
+4.00	12	   181	        12	          24	    24      
+
+#Size   DDR-Access PTECacheMiss PTE-Cache-Hit     InterConn WireDelay 
+# from https://docs.google.com/spreadsheets/d/1oYvfLmrZP0PFvA9QuKpnQn2hFinfX6vVr1bGqEqttCk/edit#gid=0

@@ -1,0 +1,29 @@
+{
+\begin{table*}[th]
+\footnotesize
+\begin{center}
+%\begin{tabular}{ $p{1.2cm} |{\vrule width 1.6pt} ^p{1.2cm} | ^p{1.2cm} | ^c | ^p{1.2cm} |{\vrule width 1.2pt} ^c | ^c | ^c | ^c}
+\begin{tabular}{ p{1cm} || p{1.8cm} 	   | p{1.5cm} 		| p{1.4cm}	  | p{1.2cm} 		| p{2.3cm} | p{1.9cm} 		    | p{0.9cm} | p{1.6cm} 	  }
+		Scheme 	  & Abstraction   & VirtMemSys Location &  On-Demand Allocation& Offloading Support 	& Latency & Scalability Bottlenecks & Cost & Management\& Extendibility \\
+		%\bf Scheme 	  & \bf Abstraction   & \bf VirtMemSys Location & \bf On-Demand Alloc& \bf Offloading Support 	& \bf Latency & \bf Scalability Bottlenecks & \bf Management Extendability \\
+\hline
+\ChangeRT{1pt}
+		\pdm\   	& Physical	& \CN\ HW/SW	& No		& No		& High Min		& \CN\ coordination & Low & Hard   \\
+\hline
+		RDMA 		& Memory virtual& \MN\ OS/CPU 	& via host OS& SW		& Low Min, High Tail	& Conn, MR, PTE	& High & Hard   \\
+\hline
+		LegoOS		& Client virtual& \MN\ SW	& No		& No		& High Min		& \MN\ SW	& Medium & Easy	\\
+\hline
+%\rowstyle{\bfseries}
+		\bf\sys\ 	& \bf Client virtual& \bf \MN\ HW& \bf in HW 	& \bf HW	& \bf Low Min, Low Tail	& \bf None	& \bf Low & \bf Easy    
+\end{tabular}
+\end{center}
+\vspace{-0.15in}
+\mycaption{tbl-system-cmp}{Comparison of RDMA, \pdm, and \sys.}
+{
+SW and HW stands for software and hardware.
+}
+%\vspace{-0.1in}
+\end{table*}
+}
+

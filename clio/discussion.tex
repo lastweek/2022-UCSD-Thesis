@@ -1,0 +1,48 @@
+%\vspace{-0.05in}
+\section{Discussion and Conclusion}
+\label{sec:discussion}
+%\vspace{-0.05in}
+
+%We presented a new hardware-based active disaggregated memory model
+%and \sys, a real system built with this model.
+We presented \sys, a new hardware-based disaggregated memory system.
+Our FPGA prototype demonstrates that \sys\ achieves great performance, scalability, and cost-saving.
+This work not only guides the future development of \md\ solutions
+but also demonstrates how to implement a core OS subsystem in hardware and co-design it with the network.
+We now present our concluding thoughts.
+%\sys\ outperforms passive disaggregated memory system and 
+%achieves comparable performance as CPU-based active disaggregated memory,
+%while significantly reduces the monetary cost of server-based disaggregated memory systems.
+
+
+%\ulinebfpara{Data caching.}
+
+\ulinebfpara{Security and performance isolation.}
+\sys’s protection domain is a user process, which is the same as the traditional single-server process-address-space-based protection. The difference is that \sys\ performs permission checks at MNs: it restricts a process’ access to only its (remote) memory address space and does this check based on the global PID. Thus, the safety of \sys\ relies on PIDs to be authentic (\eg, by letting a trusted CN OS or trusted CN hardware attach process IDs to each \sys\ request). There have been researches on attacking RDMA systems by forging requests~\cite{ReDMArk-security21} and on adding security features to RDMA~\cite{1RMA,sRDMA-ATC20}. How these and other existing security works relate and could be extended in a memory disaggregation setting is an open problem, and we leave this for future work.
+%We believe we could draw inspiration from these research works to add security features to Clio, which we leave to future work.
+
+There are also designs in our current implementation that could be improved to provide more protection against side-channel and DoS attacks.
+For example, currently, the TLB is shared across application processes,
+and there is no network bandwidth limit for an individual connection.
+Adding more isolation to these components would potentially increase the cost of \sysboard\ or reduce its performance.
+We leave exploring such tradeoffs to future work.
+%It is fairly easy to change them to provide more isolation and SLA guarantees,
+%and we leave it for future work. % isolation between processes.
+
+\ulinebfpara{Failure handling.}
+Although memory systems are usually assumed to be volatile, % (\ie, in-memory data can be lost),
+there are still situations that require proper failure handling (\eg, for high availability or to use memory for storing data).
+As there can be many ways to build memory services on \sys\ 
+and many such services are already or would benefit from handling failure on their own,
+we choose not to have any built-in failure handling mechanism in \sys.
+Instead, \sys\ should offer primitives like replicated writes for users to build their own services.
+We leave adding such API extensions to \sys\ as future work.
+%The usage of \sys\ ranges from temporarily hosting cached or ephemeral data to permanently storing data.
+
+\ulinebfpara{\CN-side stack.}
+An interesting finding we have is that \CN-side systems
+could become a performance bottleneck after we made the remote memory layer very fast.
+Surprisingly, most of our performance tuning efforts are spent on the \CN\ side (\eg, thread model, network stack implementation).
+Nonetheless, software implementation is inevitably slower than customized hardware implementation.
+Future works could potentially improve \sys's \CN\ side performance by offloading the software stack to a customized hardware NIC.
+%More future research could go into finding the best way for client applications to fully exploit \sys's remote memory performance.

@@ -1,0 +1,62 @@
+{
+\begin{figure*}[th]
+\begin{minipage}{\figWidthSix}
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{Figures/g_plot_dp.pdf}}
+\vspace{-0.1in}
+\mycaption{fig-dataframe}{Select-Aggregate-Shuffle.}
+{
+Y axis starts at 4 sec. 
+CN represents computation done at \CN.
+%, as histogram computation time is the same.
+}
+\end{center}
+\end{minipage}
+\begin{minipage}{0.2in}
+\hspace{0.2in}
+\end{minipage}
+\begin{minipage}{\figWidthSix}
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{Figures/g_plot_ycsb_energy.pdf}}
+\vspace{-0.1in}
+\mycaption{fig-energy}{Energy Comparison.}
+{
+Darker/lighter shades represent energy spent at \MN{}s and \CN{}s.
+}
+\end{center}
+\end{minipage}
+\begin{minipage}{0.2in}
+\hspace{0.2in}
+\end{minipage}
+\begin{minipage}{\figWidthSix}
+\begin{center}
+\scriptsize
+\begin{tabular}{ p{0.7in} | p{0.2in} |p{0.27in} }
+
+ & \textbf{Logic} & \textbf{Memory} \\
+\textbf{System/Module} & \textbf{(LUT)} & \textbf{(BRAM)} \\
+\hline
+\hline
+StRoM-RoCEv2 & 39\% & 76\% \\
+Tonic-SACK & 48\% & 40\% \\
+\hline
+\sys\ (Total) & 31\% & 31\% \\
+VirtMem & 5.5\% & 3\% \\
+NetStack & 2.3\% & 1.7\% \\
+\hline
+Go-Back-N & 5.8\% & 2.6\% \\
+
+\end{tabular}
+\mycaption{fig-fpga-resource}{FPGA Utilization.}
+{
+}
+%\centerline{\includegraphics[width=\columnwidth]{Figures/fpga-resource-util.png}}
+%\vspace{-0.1in}
+%\mycaption{fig-fpga-resource}{FPGA Utilization.}
+%{
+%}
+\end{center}
+\end{minipage}
+%\vspace{-0.1in}
+\end{figure*}
+}

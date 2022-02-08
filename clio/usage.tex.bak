@@ -1,0 +1,78 @@
+\section{\sys\ Abstraction and Usages}
+\label{sec:usage}
+\sys\ exposes an isolated virtual memory view to each of its ``user'' (\eg, an application process, a client library runtime, a compute offload running at \MN),
+with which the user can perform allocation, read, write, atomic and synchronization primitives (\eg, \tas, \cas, \fence), 
+and extended APIs like array indexing and pointer chasing (\S\ref{sec:extendability}) to \MN{}s.
+For all the non-synchronization APIs, we offer two versions: synchronous and asynchronous.
+While synchronous APIs are always strictly ordered with in a user (and thus slower),
+we relax the ordering of asynchronous APIs to a release consistency where operations can be executed out of order as long as 
+1) read/write dependencies (WAR, RAW, WAW) are followed,
+2) operations before a \fence\ must all complete before the \fence\ can return,
+and 3) \fence{} operations are strictly ordered.
+This release consistency is the same as architectures like ARMv8~\cite{XXX} and makes it possible for \sys\ to use a connectionless network layer with possible reordering (\S\ref{sec:network}).
+Different users can share memory and can use \sys's synchronization primitives to achieve inter-user synchronization (\eg, using \tas\ to define critical section). 
+
+There are many ways to use \sys's virtual memory view (we call it {\em \sys\ address space}), making \sys\ versatile.
+Below and in Figure~\ref{fig-usage}, we list five typical ways of using \sys.
+We implemented five applications with U2, U4, and U5;
+U1 and U3 requires building new hardware and/or OS/low-level systems, which are beyond this paper's scope.
+%where client application processes can directly access disaggregated memory with their virtual memory addresses,
+%no matter whether they run on \CN{}s or on \MN{}s.
+%\sys\ only performs one address mapping: application virtual address to remote physical address (done at memory node),
+%ordering
+
+\stepcounter{case}
+\boldpara{{\bf U\arabic{case}}: Entire virtual memory controlled by OS/hardware.}
+A completely disaggregated solution like LegoOS~\cite{Shan18-OSDI} where \CN{}s are compute devices (pComponent in LegoOS) with only CPU cache but no memory
+can use \sys\ as the memory layer by sending \sys\ read/write requests to fulfill 
+last-level-cache (called ExCache in LegoOS) misses.
+With this usage, a \sys\ address space becomes the entire virtual memory address space
+of a process, and \sys\ is completely transparent to application processes.
+
+%usages
+\stepcounter{case}
+\boldpara{{\bf U\arabic{case}}: Extended virtual memory controlled by applications.}
+%Applications run purely at \CN{}s and exploit \MN{}s for larger, dynamically allocated memory space.
+%Note that the application ``virtual memory addresses'' \sys\ use (we call them \textit{\sys\ virtual memory address}es) 
+%may not necessarily come from normal process memory address space.
+%In fact, there are three ways to use \sys, and they have their own interpretation of what \sys\ virtual memory addresses mean,
+%as illustrated in Figure~\ref{fig-arch}.
+Without changing existing server hardware or OS at \CN{}s, 
+an application process can explicitly call \sys\ APIs by linking \syslib\ which creates an extra \textit{remote virtual memory address space} (\ie, a \sys\ address space)
+that is separate from the process' normal (local) virtual memory address space.
+Applications have precise control over what and when to use disaggregated memory and can use or write high-level APIs like pointer chasing.
+
+%The returned addresses of \alloc\ and input addresses of \sysread/\syswrite requests will all be virtual addresses in this space ({\em dvma-vaddr}).
+
+\stepcounter{case}
+\boldpara{{\bf U\arabic{case}}: Remote memory space controlled by a middle layer.}
+A system layer like a remote-memory swap system~\cite{InfiniSwap,FastSwap} or a language runtime~\cite{Semeru}
+can sit on top of \sys\ and use a \sys\ address space as its own managed space (\eg, a swap partition, a JVM heap).
+%Second, applications can sit on top a remote-memory swap system like FastSwap~\cite{FastSwap} and InfiniSwap~\cite{InfiniSwap},
+%which uses \sys\ virtual memory addresses as swap partition address ({\em swap-vaddr}) and performs \sys\ read/write to swap in/out disaggregated memory.
+
+%Using client process virtual memory addresses also has the benefit that disaggregated memory can potentially be 
+%integrated into client machine's memory microarchitecture~\cite{Lim09-disaggregate}.
+
+\stepcounter{case}
+\boldpara{{\bf U\arabic{case}}: Memory services running at \MN{}s.}
+Users can deploy {\em memory services} that run entirely at \MN{}s (\eg, 
+an in-memory key-value store or object data store) 
+and expose their own interface (\eg, key-value get/set) 
+to the clients of these services that run at \CN{}s.
+These services can be deployed to \sysboard's programmable hardware and/or software platforms.
+Each memory service has its own isolated \sys\ address space and can use \sys's APIs, 
+which makes hardware implementation easier and execution safer.
+
+\stepcounter{case}
+\boldpara{{\bf U\arabic{case}}: Partial computation offloading.}
+While U1, U2, and U3 perform computation completely at \CN{}s and U4 performs computation entirely at \MN{}s,
+applications can also split their computation across \CN{} and \MN{}.
+An application can offload some of its computation tasks to an \MN{} (run in hardware or software).
+\sys\ offers a {\em unified} address space for an application's \CN{} and \MN{} parts,
+with each being treated as a traditional thread (\eg, \CN{} and \MN{} threads can be synchronized using \tas\ and other \sys\ synchronization primitives).
+%\stepcounter{principle}
+%\ulinebfpara{Principle \arabic{principle}:}
+%\textit{The disaggregated memory abstraction should face client processes}.
+
+

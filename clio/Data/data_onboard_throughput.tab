@@ -1,0 +1,12 @@
+1	5.217	22.44	3.725	3.613
+2	10.3	43.66	7.45	7.013
+3	19.57	81.53	14.9	13.24
+4	36.51	96.59	29.8	23.84
+5	62.6	106.64	59.59	39.74
+6	97.81	109.34	97.81	59.61
+7	114.76	110.75	114.76	79.48
+8	115.21	111.48	115.2	95.38
+
+#Size (B)	Read-SingleCycle	Write-SingleCycle	Read-32Cycle Write-32Cycle
+#from https://docs.google.com/spreadsheets/d/1oYvfLmrZP0PFvA9QuKpnQn2hFinfX6vVr1bGqEqttCk/edit#gid=2096877739
+

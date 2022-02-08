@@ -1,0 +1,9 @@
+#from https://docs.google.com/spreadsheets/d/1I-lv-JMGyMzM04IdTxaxpPQy2GJk3a_s-_gu4xe2DIE/edit#gid=2107537003
+#
+#Size(B) rSync  wSync  rAsync  wAsync           Linerate
+1	 1.879	2.214  8.077   8.212		9.4
+2	 3.728	4.460  8.878   9.130		9.4
+4	 7.368	8.640  8.889   9.130		9.4
+8	 8.880	9.132  8.889   9.130		9.4
+12	 8.880	9.132  8.889   9.130		9.4
+16	 8.880	9.132  8.889   9.130		9.4

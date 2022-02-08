@@ -1,0 +1,6 @@
+Type dvma-asic  dvma-tlb-hit  dvma-tlb-miss dvma-pgfault EMPTY   rdma-tlb-hit    rdma-tlb-miss   rdma-mr-miss  rdma-pgfault
+1    1.92       2.542         2.719         2.719       0       2.28            2.755           3.677         5
+2    1.87       2.35          2.507         2.507       0       1.19            2.535           3.453         5
+
+#16B access
+#https://docs.google.com/spreadsheets/d/1I-lv-JMGyMzM04IdTxaxpPQy2GJk3a_s-_gu4xe2DIE/edit#gid=0

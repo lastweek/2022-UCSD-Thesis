@@ -1,0 +1,204 @@
+\if 0
+\documentclass[10pt,times,twocolumn]{article}
+%\documentclass[11pt,times,twocolumn]{article} %\documentclass[11pt]{article} 
+%\documentclass[pageno]{jpaper}
+%\documentclass[10pt,times,twocolumn]{z2-article}
+%\PassOptionsToPackage{hyphens}{url}
+
+%\documentclass[letterpaper,twocolumn,10pt]{article}
+%\documentclass[preprint, numbers]{sigplanconf}
+%\documentclass[pageno]{jpaper}
+\usepackage[normalem]{ulem}
+%\usepackage{geometry}
+
+%\pagestyle{plain}
+\usepackage{caption}
+\usepackage{times}
+\usepackage{oneinchmargins}
+\usepackage{tightenum}
+
+\usepackage{soul}
+
+%\usepackage{draftwatermark}
+%\SetWatermarkText{CONFIDENTIAL}
+%\SetWatermarkText{DRAFT}
+%\SetWatermarkScale{0.8}
+
+\usepackage[toc,page]{appendix}
+
+\usepackage{subfig}
+\usepackage[normalem]{ulem}
+
+%\usepackage{hyperref,url}%,bibunits}
+\usepackage[hidelinks]{hyperref}
+%\urlstyle{rm}
+\usepackage[numbers,sort]{natbib}
+
+%
+
+\usepackage{setspace}
+%\usepackage{epsf}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{times}
+%\usepackage{algorithm}
+%\usepackage{algorithmic}
+\usepackage{amsmath}
+\usepackage[compact]{titlesec}
+\usepackage{url}
+%\usepackage{nonfloat}
+\urlstyle{rm}
+%\usepackage{algorithmic}
+% \titlespacing*{\section}{0em}{-0ex}{-2ex}
+% \titlespacing*{\subsection}{0em}{-0ex}{-2ex}
+% \titlespacing*{\subsubsection}{0em}{-0ex}{-2ex}
+%\setstretch{0.98}
+
+\usepackage{multirow}
+
+
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\newcommand*\circled[1]{\tikz[baseline=-3pt]{
+            \node[shape=circle,draw,inner sep=1pt,minimum size=10pt] (char) {\small #1};}}
+
+%\setstretch{2.2}
+%\setlength{\textheight}{9in}
+%\setlength{\textwidth}{6.4in}
+%\setlength{\oddsidemargin}{0in}
+%\setlength{\evensidemargin}{0in}
+%\setlength{\topmargin}{1in}
+\usepackage{geometry}
+%\geometry{lmargin=0.75in,rmargin=0.75in,tmargin=1in,bmargin=1in}
+\geometry{reset, letterpaper, height=9in, width=7in, hmarginratio=1:1, vmarginratio=1:1, marginparsep=0pt, marginparwidth=0pt, headheight=15pt}
+
+%\setlength{\textheight}{9.0in}
+\setlength{\columnsep}{0.33in}
+%\setlength{\textwidth}{7.00in}
+%\setlength{\topmargin}{0.0in}
+%\setlength{\headheight}{0.0in}
+%\setlength{\headsep}{0.0in}
+%\addtolength{\oddsidemargin}{-0.25in}
+%\addtolength{\evensidemargin}{-0.25in}
+%\usepackage{usenix2019_v3}
+
+
+  \let\oldthebibliography=\thebibliography
+  \let\endoldthebibliography=\endthebibliography
+  \renewenvironment{thebibliography}[1]{%
+    \begin{oldthebibliography}{#1}%
+      \setlength{\parskip}{0ex}%
+      \setlength{\itemsep}{0ex}%
+  }%
+  {%
+    \end{oldthebibliography}%
+  }
+
+%\setlength{\rightmargin}{0.0in}
+%\setlength{\topmargin}{-0.5in}
+%\setlength{\textheight}{9.6in}
+%\setlength{\textwidth}{7.0in}
+%\setlength{\oddsidemargin}{-0.275in}
+%\setlength{\evensidemargin}{-0.275in}
+
+%\newcommand{\ignore}[1]{}
+%\setlength{\rightmargin}{-0.3in}
+%\setlength{\topmargin}{-0.6in}
+%\setlength{\textheight}{9.8in}
+%\setlength{\textwidth}{7.5in}
+%\setlength{\oddsidemargin}{-0.55in}
+%\setlength{\evensidemargin}{-0.55in}
+
+%\setlength{\topmargin}{-0.5in}
+%\setlength{\textheight}{9.2in}
+%\setlength{\textwidth}{6.9in}
+%\setlength{\oddsidemargin}{-0.25in}
+%\setlength{\evensidemargin}{-0.25in}
+
+
+\if 0
+\usepackage{listings}
+  \usepackage{courier}
+ \lstset{
+         basicstyle=\footnotesize\ttfamily, % Standardschrift
+         %numbers=left,               % Ort der Zeilennummern
+         numberstyle=\tiny,          % Stil der Zeilennummern
+         %stepnumber=2,               % Abstand zwischen den Zeilennummern
+         numbersep=5pt,              % Abstand der Nummern zum Text
+         tabsize=2,                  % Groesse von Tabs
+         extendedchars=true,         %
+         breaklines=true,            % Zeilen werden Umgebrochen
+         keywordstyle=\color{red},
+    		frame=b,         
+ %        keywordstyle=[1]\textbf,    % Stil der Keywords
+ %        keywordstyle=[2]\textbf,    %
+ %        keywordstyle=[3]\textbf,    %
+ %        keywordstyle=[4]\textbf,   \sqrt{\sqrt{}} %
+         stringstyle=\color{white}\ttfamily, % Farbe der String
+         showspaces=false,           % Leerzeichen anzeigen ?
+         showtabs=false,             % Tabs anzeigen ?
+         xleftmargin=17pt,
+         framexleftmargin=17pt,
+         framexrightmargin=5pt,
+         framexbottommargin=4pt,
+         %backgroundcolor=\color{lightgray},
+         showstringspaces=false      % Leerzeichen in Strings anzeigen ?        
+ }
+ \lstloadlanguages{% Check Dokumentation for further languages ...
+         %[Visual]Basic
+         %Pascal
+         %C
+         C++
+         %XML
+         %HTML
+         %Java
+ }
+\fi
+
+\usepackage{xcolor}
+\definecolor{commentgreen}{RGB}{2,112,10}
+\definecolor{eminence}{RGB}{108,48,130}
+\definecolor{weborange}{RGB}{255,165,0}
+\definecolor{frenchplum}{RGB}{129,20,83}
+
+\usepackage{listings}
+\lstset {
+    language=C,
+    frame=tb,
+    tabsize=2,
+    showstringspaces=false,
+    %numbers=left,
+    %upquote=true,
+    commentstyle=\color{commentgreen},
+    keywordstyle=\color{eminence},
+    stringstyle=\color{red},
+    basicstyle=\scriptsize\ttfamily, % basic font setting
+    emph={int,char,double,float,unsigned,void,bool},
+    emphstyle={\color{blue}},
+    otherkeywords={rread,rwrite,ralloc,ras_lock,rlock,runlock,rrelease,rpoll},
+    keywordstyle={\color{purple}},
+    escapechar=\&,
+    % keyword highlighting
+    classoffset=1, % starting new class
+    %otherkeywords={>,<,.,;,-,!,=,~},
+    %morekeywords={>,<,.,;,-,!,=,~},
+    %keywordstyle=\color{weborange},
+    classoffset=0,
+}
+
+\sloppy
+\input{macros}
+%\newcommand{\ignore}[1]{}
+\input{remark}
+%% Leave this on, so we can see them!!!
+\remarktrue
+\newcommand{\shortenum}{\vspace*{-0.1in}}
+%\newcommand{\shortsec}{\vspace*{-0.2in}}
+%\newcommand{\sparagraph}[1]{\vspace*{-0.2in}\paragraph{#1}}
+%\newcommand{\sparagraph}[1]{\vspace*{-0.15in}\paragraph{#1}}
+\newcommand{\sparagraph}[1]{\vspace*{0.0in}\paragraph{#1}}
+
+% add below for confidential distribution
+%\usepackage{draftwatermark}
+%\SetWatermarkText{DO NOT DISTRIBUTE}
+%\SetWatermarkScale{0.4}
