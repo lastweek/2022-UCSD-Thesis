@@ -1,0 +1,31 @@
+{
+\begin{table}[th]\normalsize
+\begin{center}
+\begin{center}
+\begin{tabular} { p{0.4in} | p{1.5in} | p{0.9in} }
+\normalsize API & \normalsize Explanation & \normalsize Backward \\
+\hline
+\hline
+\open\ \ \ \ (\close) & open or create (close) a \dsnvm\ dataset & same as current \\
+\hline
+\mmap\ (\unmap) & map (unmap) a \dsnvm\ region in a dataset to application address space & same as current \\
+%\close\ & close a \dsnvm\ dataset & same as file \close\ \\
+\hline
+\commit\  & commit a set of data and make $N$ persistent replicas & similar to msync \\
+\hline
+\acquire\  & acquire single writer permission & \\
+%\fetch\ & fetch a set of committed data & \\
+\hline
+%\commit\ & atomically commit dirty data and make $N$ persistent replicas & same as current \\
+%\hline
+\barrier\ & helper function to synchronize threads on different nodes & similar to pthread barrier \\
+\end{tabular}
+\end{center}
+\mycaption{tbl-apis}{\hotpot\ APIs.}
+{
+%APIs \hotpot\ provides to applications, their meaning, and backward compatibility to traditional system calls.
+Apart from these APIs, \hotpot\ also supports direct memory loads and stores.
+}
+\end{center}
+\vspace{-0.2in}
+\end{table}

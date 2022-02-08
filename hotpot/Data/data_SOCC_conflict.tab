@@ -1,0 +1,12 @@
+# SOCC Conflict
+# nr_nodes running the workload
+# begin/commit latency (us)
+#
+# (1) means with dist_barrier(), lots conflict
+# (2) means committing to different areas, no conflict
+#
+#	MRSW-C1	MRSW-C2 MRMW-C1	MRMW-C2
+1	101	101	91	89
+2	172	110	156	100
+3	206	112	198	103
+4	227	120	239	103

@@ -1,0 +1,23 @@
+\begin{abstract}
+
+
+Next-generation non-volatile memories ({\em NVMs}) 
+will provide byte addressability, persistence, high density, and DRAM-like performance.
+They have the potential to benefit many datacenter applications.
+However, most previous research on NVMs has focused on using them in a single machine environment.
+It is still unclear how to best utilize them in distributed, datacenter environments.
+
+We introduce {\em Distributed Shared Persistent Memory (\dsnvm)}, a new framework for
+using persistent memories in distributed datacenter environments. 
+\dsnvm\ provides a new abstraction that allows applications to both perform traditional
+memory load and store instructions  and to name, share, and persist their data.
+
+We built {\em \hotpot}, a kernel-level \dsnvm\ system that provides low-latency,
+transparent memory accesses, data persistence,  data reliability, and high availability.
+The key ideas of Hotpot are to integrate distributed memory caching and data replication
+techniques and to exploit application hints. We implemented \hotpot\ in the Linux kernel
+and demonstrated its benefits by building a distributed graph engine on \hotpot\ and porting a NoSQL database to \hotpot.
+Our evaluation shows that \hotpot\ outperforms a recent distributed shared memory system
+by 1.3\x{} to 3.2\x{} and a recent distributed \nvm-based file system by 1.5\x{} to 3.0\x{}.
+
+\end{abstract}

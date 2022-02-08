@@ -1,0 +1,314 @@
+%%
+%% This is file `bibunits.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% bibunits.dtx  (with options: `package')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from bibunits.sty.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file bibunits.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%% Package `bibunits' to use with LaTeX2e.
+%% Copyright (C) 1999, 2000 by Thorsten Hansen. All rights reserved.
+%%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{bibunits}
+          [2000/10/10 v2.2 Multiple bibliographies in one document.]
+\newif\iflabelstoglobalaux \labelstoglobalauxfalse
+\DeclareOption{labelstoglobalaux}{\labelstoglobalauxtrue}
+\newif\ifglobalcitecopy
+\globalcitecopyfalse
+\DeclareOption{globalcitecopy}{\globalcitecopytrue}
+\ProcessOptions
+\newwrite\@bibunitaux
+\newcount\@bibunitauxcnt \@bibunitauxcnt=0
+\def\@bibunitname{bu\the\@bibunitauxcnt}
+\newif\if@starredversion
+\let\std@cite\cite
+\DeclareRobustCommand\bu@cite{%
+  \@ifstar
+    {\@starredversiontrue\std@cite}%
+    {\@starredversionfalse\std@cite}%
+}
+\AtBeginDocument{%
+  \@ifpackageloaded{natbib}%
+  {%
+    \NAT@set@cites \let\std@@citex\@citex
+    \def\bu@@citex[#1][#2]#3{%
+      \@startbibunitorrelax
+      \leavevmode
+      \begingroup\let\@auxout\@bibunitaux\std@@citex[#1][#2]{#3}\endgroup
+      \ifglobalcitecopy
+        \std@nocite{#3}%
+      \fi
+    }%
+  }%
+  {%
+    \@ifpackageloaded{overcite}%
+    {%
+      \let\std@@citew\@citew
+      \def\bu@@citew#1{%
+        \@startbibunitorrelax
+        \leavevmode
+        {\let\@auxout\@bibunitaux \std@@citew{#1}}%
+        \ifglobalcitecopy
+          \@nocite{#1}%
+        \else
+          \if@starredversion
+            \@nocite{#1}%
+          \fi
+        \fi
+      }
+      \let\std@@citex\@citex
+      \def\bu@@citex[#1]#2{%
+        \@startbibunitorrelax
+        \leavevmode
+        {\let\@auxout\@bibunitaux \std@@citex[#1]{#2}}%
+        \ifglobalcitecopy
+          \@nocite{#2}%
+        \else
+          \if@starredversion
+            \@nocite{#2}%
+          \fi
+        \fi
+      }
+    }%
+    {%
+      \@ifpackageloaded{jurabib}%
+      {%
+         \let\std@@citex\@citex
+        \def\bu@@citex[#1][#2]#3{%
+          \@startbibunitorrelax
+          \leavevmode
+          {\let\@auxout\@bibunitaux \std@@citex[#1][#2]{#3}}%
+          \ifglobalcitecopy
+            \std@nocite{#3}%
+          \else
+            \if@starredversion
+              \std@nocite{#3}%
+            \fi
+          \fi
+        }%
+      }%
+      {%
+        \let\std@@citex\@citex
+        \def\bu@@citex[#1]#2{%
+          \@startbibunitorrelax
+          \leavevmode
+          {\let\@auxout\@bibunitaux \std@@citex[#1]{#2}}%
+          \ifglobalcitecopy
+            \std@nocite{#2}%
+          \else
+            \if@starredversion
+              \std@nocite{#2}%
+            \fi
+          \fi
+        }%
+      }%
+    }%
+  }%
+}%
+\let\std@nocite\nocite
+\def\bu@nocite{%
+  \@ifstar
+    {\@starredversiontrue\@bu@nocite}%
+    {\@starredversionfalse\@bu@nocite}%
+}
+\def\@bu@nocite#1{%
+  \@startbibunitorrelax
+  {\let\@auxout\@bibunitaux \std@nocite{#1}}%
+  \ifglobalcitecopy
+    \std@nocite{#1}%
+  \else
+    \if@starredversion
+      \std@nocite{#1}%
+    \fi
+  \fi
+}
+\def\bu@bibdata{}
+\AtBeginDocument{%
+  \iflabelstoglobalaux
+  \else
+    \let\orig@bibliography\bibliography
+    \def\bibliography#1{%
+      \if@filesw
+        \immediate\openout\@bibunitaux bu.aux
+        \immediate\write\@mainaux{\string\@input{bu.aux}}%
+      \fi
+      \orig@bibliography{#1}%
+      \if@filesw
+        \immediate\closeout\@bibunitaux
+      \fi
+    }%
+  \fi
+  \let\std@bibliography\bibliography
+}
+\def\bu@bibliography{%
+  \@ifstar
+    {\@starredversiontrue\@bu@bibliography}%
+    {\@starredversionfalse\@bu@bibliography}%
+}
+\def\@bu@bibliography#1{%
+  \if@filesw
+    \immediate\write\@auxout{\string\gdef\string\bu@bibdata{#1}}%
+  \fi
+  \gdef\bu@bibdata{#1}%
+  \if@starredversion
+  \else
+    \std@bibliography{#1}%
+  \fi
+}
+\def\bu@bibstyle{}
+\let\std@bibliographystyle\bibliographystyle
+\def\bu@bibliographystyle{%
+  \@ifstar
+    {\@starredversiontrue\@bu@bibliographystyle}%
+    {\@starredversionfalse\@bu@bibliographystyle}%
+}
+\def\@bu@bibliographystyle#1{%
+  \if@filesw
+    \immediate\write\@auxout{\string\gdef\string\bu@bibstyle{#1}}%
+  \fi
+  \gdef\bu@bibstyle{#1}%
+  \if@starredversion
+  \else
+    \std@bibliographystyle{#1}%
+  \fi
+}
+\def\bibunit{%
+  \global\let\cite\bu@cite
+  \global\let\@citex\bu@@citex
+  \global\let\@citew\bu@@citew
+  \global\let\nocite\bu@nocite
+  \global\let\@startbibunitorrelax\@startbibunit
+  \global\let\@finishbibunit\relax
+  \@ifnextchar[{\@bibunitx}{\@bibunitx[\bu@bibstyle]}%
+}
+\def\@bibunitx[#1]{\gdef\@localbibstyle{#1}}
+\def\endbibunit{%
+  \global\let\cite\std@cite
+  \global\let\@citex\std@@citex
+  \global\let\@citew\std@@citew
+  \global\let\nocite\std@nocite
+  \@finishbibunit
+  \@input{bu.aux}%
+}
+\def\@startbibunit{%
+  \global\let\@startbibunitorrelax\relax
+  \global\let\@finishbibunit\@finishstartedbibunit
+  \global\advance\@bibunitauxcnt 1
+  \if@filesw
+    {\endlinechar-1
+    \@input{\@bibunitname.aux}}%
+    \immediate\openout\@bibunitaux\@bibunitname.aux
+    \immediate\write\@bibunitaux{\string\bibstyle{\@localbibstyle}}%
+  \fi
+}
+\let\@finishbibunit\relax
+\def\@finishstartedbibunit{%
+  \if@filesw
+    \immediate\closeout\@bibunitaux
+  \fi
+}
+\let\old@bibunit\@gobble
+\def\@bibunit{\endbibunit\bibunit\old@bibunit}
+\def\@endbibunit{}
+\def\bibliographyunit{%
+  \@endbibunit
+  \@ifnextchar[{\@bibliographyunit}{%
+    \global\let\old@bibunit\@gobble
+    \global\let\bibliography\std@bibliography
+    \global\let\bibliographystyle\std@bibliographystyle
+    \endbibunit
+    \gdef\@endbibunit{}}%
+}
+\def\@bibliographyunit[#1]{%
+  \global\let\bibliography\bu@bibliography
+  \global\let\bibliographystyle\bu@bibliographystyle
+  \global\let\old@bibunit#1
+  \global\let#1\@bibunit
+  \gdef\@endbibunit{\global\let#1\old@bibunit}%
+}
+\def\putbib{\@ifnextchar[{\@putbib}{\@putbib[\bu@bibdata]}}
+\def\@putbib[#1]{%
+  \@startbibunitorrelax
+  \if@filesw
+    \immediate\write\@bibunitaux{\string\bibdata{#1}}%
+  \fi
+  \@input@{\@bibunitname.bbl}%
+}
+\AtBeginDocument{%
+  \iflabelstoglobalaux
+  \else
+    \let\std@bibitem\@bibitem
+    \let\std@lbibitem\@lbibitem
+    \def\@bibitem#1{%
+      \let\temp@auxout\@auxout
+      \let\@auxout\@bibunitaux
+      \std@bibitem{#1}%
+      \let\@auxout\temp@auxout
+    }
+    \def\@lbibitem[#1]#2{%
+      \let\temp@auxout\@auxout
+      \let\@auxout\@bibunitaux
+      \std@lbibitem[#1]{#2}%
+      \let\@auxout\temp@auxout
+    }
+  \fi
+}
+\def\remequivalent#1\from#2{%
+  \let\given=#1%
+  \ifx#2\empty
+  \else
+    \edef#2{\expandafter\plugh#2\plugh}%
+  \fi
+}
+\def\plugh\do#1#2{%
+  \ifx#1\given
+  \else
+    \noexpand\do\noexpand#1%
+  \fi
+  \ifx#2\plugh
+    \hgulp\fi\plugh#2%
+}
+\def\hgulp\fi\plugh\plugh{\fi}
+\remequivalent\bibcite\from\@preamblecmds
+\AtBeginDocument{%
+  \@ifpackageloaded{natbib}%
+    {\renewcommand\bibcite[2]{\global\@namedef{b@#1\@extra@binfo}{#2}}}%
+    {\renewcommand\bibcite[2]{\global\@namedef{b@#1}{#2}}}%
+}
+\AtBeginDocument{%
+  \@ifundefined{bbl@redefine}%
+  {}%
+  {%
+    \bbl@redefine\@input#1{%
+      \@safe@activestrue\org@@input{#1}\@safe@activesfalse}%
+    \@ifpackageloaded{natbib}%
+    {%
+      \bbl@redefine\std@@citex[#1][#2]#3{%
+        \@safe@activestrue\org@std@@citex[#1][#2]{#3}\@safe@activesfalse}%
+      \bbl@redefine\bu@@citex[#1][#2]#3{%
+        \@safe@activestrue\org@bu@@citex[#1][#2]{#3}\@safe@activesfalse}%
+    }%
+    {% natbib not loaded
+      \bbl@redefine\std@@citex[#1]#2{%
+        \@safe@activestrue\org@std@@citex[#1]{#2}\@safe@activesfalse}%
+    }%
+  }%
+}
+\endinput
+%%
+%% End of file `bibunits.sty'.

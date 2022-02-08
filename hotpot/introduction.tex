@@ -1,0 +1,139 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Next-generation non-volatile memories ({\em NVMs}), 
+such as 3DXpoint~\cite{Intel3DXpoint}, 
+phase change memory ({\em PCM}),
+spin-transfer torque magnetic memories ({\em STTMs}),  and the memristor
+will provide byte addressability, persistence, high density, and DRAM-like performance~\cite{NVMDB}.
+These developments are poised to radically alter the landscape of memory and storage technologies
+and have already inspired a host of research 
+projects~\cite{Bailey10-OSImpl,Coburn11-ASPLOS, sosp09:bpfs, Dulloor14-EuroSys, hotos09:mogul, Volos11-ASPLOS, Xiaojian11-SC,Zhang15-Mojim,Octopus}.
+However, most previous research on NVMs has focused on using them in a single machine environment.
+Even though NVMs have the potential to greatly improve the performance and reliability of large-scale applications,
+it is still unclear how to best utilize them in distributed, datacenter environments. 
+
+This paper takes a significant step towards the goal of using NVMs in distributed datacenter environments.
+We propose {\em Distributed Shared Persistent Memory (\dsnvm)},
+a framework that provides a global, shared, and persistent memory space 
+using a pool of machines with NVMs attached at the main memory bus.
+Applications can perform native memory load and store instructions to access both local and remote data in this global memory space 
+and can at the same time make their data persistent and reliable.
+\dsnvm\ can benefit both single-node persistent-data applications that want to scale out efficiently
+and shared-memory applications that want to add durability to their data.
+
+Unlike traditional systems with separate memory and storage layers~\cite{Larchant,Perdis00,Larchant94,PerDis},
+we propose to use just one layer that incorporates both distributed memory and 
+distributed storage in \dsnvm.
+\dsnvm's one-layer approach eliminates the performance overhead of data marshaling and unmarshaling,
+and the space overhead of storing data twice. 
+With this one-layer approach, \dsnvm\ can potentially provide the low-latency performance, 
+vast persistent memory space, data reliability, and high availability
+that many modern datacenter applications demand. 
+
+
+Building a \dsnvm\ system presents its unique challenges.
+Adding ``Persistence'' to Distributed Shared Memory (DSM)
+is not as simple as just making in-memory data durable.
+Apart from data durability, \dsnvm\ needs to provide two key features that DSM does not have:
+persistent naming and data reliability.
+In addition to accessing data in \nvm\ via native memory loads and stores,
+applications should be able to easily
+name, close, and re-open their in-memory data structures.
+User data should also be reliably stored in NVM and sustain various types of failures; %(\eg, to have $N$ copies of persistent data).
+they need to be consistent both within a node and across distributed nodes after crashes.
+To make it more challenging, 
+\dsnvm\ has to deliver these guarantees without sacrificing application performance
+in order to preserve the low-latency performance of NVMs.
+
+We built {\em \hotpot}, a \dsnvm\ system in the Linux kernel.
+\hotpot\ offers low-latency, direct memory access, data persistence, reliability, and
+high availability to datacenter applications.
+It exposes a global virtual memory address space to each user application
+and provides a new persistent naming mechanism that is both easy-to-use and efficient.
+Internally, \hotpot\ organizes and manages data in a flexible way
+and uses a set of adaptive resource management techniques to improve performance and scalability.
+
+\hotpot\ builds on two main ideas to efficiently provide data reliability with distributed shared memory access.
+Our first idea is to integrate distributed memory caching and data replication 
+by imposing {\em morphable} states on persistent memory ({\em \nvm}) pages.
+
+In DSM systems, when an application on a node accesses shared data in remote memory {\em on demand},
+DSM caches these data copies in its local memory for fast accesses
+and later evicts them when reclaiming local memory space.
+Like DSM, \hotpot\ caches application-accessed data in local \nvm\
+and ensures the coherence of multiple cached copies on different nodes.
+But \hotpot\ also uses these cached data as {\em persistent data replicas}
+and ensures their reliability and crash consistency.
+
+On the other hand, unlike distributed storage systems, which {\em creates} extra data replicas 
+to meet user-specified reliability requirements, 
+\hotpot\ makes use of data copies that {\em already exist} in the system when
+they were fetched to a local node due to application memory accesses.
+ 
+In essence, every local copy of data serves two simultaneous purposes.
+First, applications can access it locally without any network delay.
+Second, by placing the fetched copy in \nvm, it can be treated as a persistent replica 
+for data reliability.
+
+This seemingly-straightforward integration is not simple. 
+Maintaining wrong or outdated versions of data can result in inconsistent data.
+To make it worse, these inconsistent data will be persistent in \nvm.
+We carefully designed a set of protocols to deliver data reliability and crash consistency guarantees 
+while integrating memory caching and data replication.
+
+Our second idea is to exploit application behaviors and intentions in the \dsnvm\ setting. 
+Unlike traditional memory-based applications, persistent-data-based applications,
+\dsnvm's targeted type of application, have well-defined data {\em commit points}
+where they specify what data they want to make persistent.
+When a process in such an application makes data persistent,
+it usually implies that the data can be {\em visible} outside the process (\eg, to other processes or other nodes). 
+\hotpot\ utilizes these data commit points to also push updates to cached copies on distributed nodes
+to avoid maintaining coherence on every \nvm\ write. %~\cite{XXX},
+Doing so greatly improves the performance of \hotpot, 
+while still ensuring correct memory sharing and data reliability.
+
+To demonstrate the benefits of \hotpot, we ported the MongoDB~\cite{MongoDB} NoSQL database to \hotpot\
+and built a distributed graph engine based on PowerGraph~\cite{Gonzalez12-OSDI} on \hotpot. 
+Our MongoDB evaluation results show that \hotpot\ outperforms a \nvm-based replication system~\cite{Zhang15-Mojim} by up to 3.1\x{}, 
+a recent \nvm-based distributed file systems~\cite{Octopus} by up to 3.0\x{}, and a DRAM-based file system by up to 53\x{}. 
+\hotpot\ outperforms PowerGraph by 2.3\x{} to 5\x{}, a recent DSM system~\cite{Nelson15-ATC} by 1.3\x{} to 3.2\x{},
+and two DSM systems that we built by TODO.
+Moreover, \hotpot\ delivers stronger data reliability and availability guarantees than these alternative systems.
+
+Overall, this paper makes the following key contributions:
+
+\begin{itemize}
+\item We are the first to introduce the Distributed Shared Persistent Memory (DSPM) model
+and among the first to build distributed \nvm-based systems.
+The DSPM model provides direct and shared memory accesses to a distributed set of \nvm{}s 
+and is an easy and efficient way for datacenter applications to use \nvm.
+
+\item We propose a one-layer approach to build \dsnvm\ by 
+integrating memory coherence and data replication.
+The one-layer approach avoids the performance cost of two or more indirection layers.
+
+\item We designed two distributed data commit protocols with different consistency levels 
+and corresponding recovery protocols to 
+ensure data durability, reliability, and availability.
+
+\item We built the first \dsnvm\ system, \hotpot, in the Linux kernel, 
+and two traditional kernel-level DSM systems (as comparison to \hotpot). 
+\hotpot\ and the two DSM systems are both open sourced.
+
+\item We demonstrated \hotpot's performance benefits and ease of use with two real datacenter applications
+and extensive microbenchmark evaluation. 
+We compared \hotpot\ with five existing file systems and distributed memory systems, 
+and two in-house DSM systems.
+
+\end{itemize}
+
+The rest of the paper is organized as follows.
+Section 2 presents and analyzes several recent datacenter trends that motivated our design of DSPM.
+We discuss the benefits and challenges of DSPM in Section 3.
+Section 4 presents the architecture and abstraction of Hotpot.
+We then discuss Hotpot's data management in Section 5.
+We present our protocols and mechanisms to ensure data durability, consistency, reliability, and availability in Section 6.
+Section 7 briefly discusses the network layer we built underlying \hotpot,
+and Section 8 presents detailed evaluation of Hotpot.
+We cover related work in Section 9 and conclude in Section 10.

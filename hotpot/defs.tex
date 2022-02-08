@@ -1,0 +1,43 @@
+
+\newcommand{\mm}{mm$^2$}
+\newcommand{\figtitle}[1]{\textbf{#1}}
+\newcommand{\us}{$\mu$s}
+\newcommand{\fixme}[1]{{\color{red}\textbf{#1}}}
+
+\definecolor{pink}{rgb}{1.0,0.47,0.6}
+\newcommand{\adrian}[1]{{\color{green}\textbf{#1}}}
+\newcommand{\laura}[1]{{\color{pink}\textbf{#1}}}
+\newcommand{\joel}[1]{{\color{red}\textbf{#1}}}
+\newcommand{\ameen}[1]{{\color{blue}\textbf{#1}}}
+\newcommand{\arup}[1]{{\color{yellow}\textbf{#1}}}
+\newcommand{\hungwei}[1]{{\color{purple}\textbf{#1}}}
+
+
+\newcommand{\note}[2]{\fixme{$\ll$ #1 $\gg$ #2}}
+
+\newcommand{\myitem}[1]{\item \textbf{#1}}
+
+\lstloadlanguages{% Check Dokumentation for further languages ...
+        %[Visual]Basic
+        %Pascal
+        C
+        %C++
+        %XML
+        %HTML
+        %Java
+}
+
+\lstdefinestyle{customc}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=b,
+  xleftmargin=\parindent,
+  language=C,
+  showstringspaces=false,
+  basicstyle=\scriptsize\ttfamily,
+  keywordstyle=\bfseries\color{green!40!black},
+  commentstyle=\itshape\color{purple!40!black},
+  identifierstyle=\color{blue},
+  stringstyle=\color{red},
+}
+\lstset{escapechar=@,style=customc}

@@ -1,0 +1,80 @@
+\section{Network Layer}
+\label{sec:network}
+
+The networking delay in \dsnvm\ systems is crucial to their overall performance.
+We implement \hotpot's network communication using RDMA. %(Remote Direct Memory Access), 
+RDMA provides low-latency, high-bandwidth direct remote memory accesses with low CPU utilization.
+\hotpot's network layer is based on LITE~\cite{lite-sosp17}, an efficient RDMA software stack we
+built in the Linux kernel on top of the RDMA native APIs, {\em Verbs}~\cite{ibverbs}.
+
+Most of \hotpot's network communication is in the form of RPC. % uses this RPC interface to implement most of its functionality. 
+We implemented a customized RPC-like interface in our RDMA layer based on the two-sided RDMA send and receive semantics.
+We further built a multicast RPC interface where one node can send a request to multiple nodes in parallel and let them each 
+perform their processing functions and reply with the return values to the sending node.
+Similar to the findings from recent works~\cite{FaSST}, two-sided RDMA works better and is more flexible 
+for these RPC-like interfaces than one-sided RDMA. 
+
+To increase network bandwidth, our RDMA layer enables multiple connections between each pair of nodes. 
+It uses only one busy polling thread per node to poll a shared ring buffer for all connections, 
+which delivers low-latency performance while keeping CPU utilization low.
+Our customized RDMA layer achieves an average latency of 7.9\us\ to perform a \hotpot\ remote page read. %an RPC of 8B outgoing and 4KB incoming message size (equivalent to a remote page read).
+In comparison, IPoIB, a standard IP layer on top of Verbs, requires 77\us\ for a round trip with the same size.
+
+
+
+
+\if 0 
+%Our \ib\ layer provides a richer and more efficient abstraction of \ib\ operations than 
+%existing kernel-level \ib\ layers such as IPoIB and RDS.
+To provide low-latency network performance for \hotpot, 
+we made several unique design and implementation decisions that are different from previous 
+\ib- and RDMA-based network implementations~\cite{Dragojevic14-NSDI,Nelson15-ATC,Kalia14-SIGCOMM}.
+%IB-Verbs requires the application to post send (receive) requests to send (receive) queues.
+%It uses completion messages in the completion queue to indicate the completion of requests 
+%and supports both polling and interrupts to detect completions.
+%IB-Verbs offers native IB performance and outperforms alternative IB protocols such as IPoIB and RDS.
+
+%uses a thin protocol based on the reliable transportation mode of IB-Verbs. 
+
+The basic primitive of our \ib\ layer is a pair of send and reply messages
+between two nodes. 
+With this primitive, one node sends a message to a remote node,
+usually a request for an operation, and then waits for a reply.
+After the remote node handles this request, it sends a reply back to the calling node,
+finishing a send-reply round. 
+
+Interestingly, although \ib's one-sided RDMA operations allow direct read and write to remote memory 
+without involving remote side's CPU~\cite{Dragojevic14-NSDI}, 
+using them to implement \hotpot\ incurs higher latency than RDMA send and receive~\cite{Kalia14-SIGCOMM}.
+This is because one-sided RDMA is mainly useful when accessing remote memory without any states managed by remote side.
+\hotpot\ maintains various states and metadata at each node. 
+%These metadata need to be consistently updated with their data.
+%For example, when a \dn\ accesses a remote page, 
+%\hotpot\ uses the send-reply primitive to send a request to the \on. 
+%The \on\ updates its list of \dn{}s with committed data copies
+%and then sends the page back to the \dn.
+Implementing complex \hotpot\ operations using one-sided RDMA requires the combination of several RDMA commands.
+Even though the latency of one send or reply is slightly higher than a single one-sided RDMA command,
+using send-reply to implement \hotpot\ operations achieves better performance than using one-sided RDMA.
+
+On top of the send-reply primitive, our \ib\ layer further provides an efficient implementation of 
+two new interfaces:
+atomically sending a group of messages and waiting for reply, 
+and multicasting send messages to a set of nodes and waiting for all replies from them.
+Both these operations are useful in implementing \hotpot's transaction system.
+
+Our \ib\ layer implements a persistent, append-only log in \nvm\ for receiving messages.
+with the help of the Linux kernel slab allocator.
+The slab allocator performs object-based allocation efficiently 
+by maintaining lists of free objects 
+where it allocates new objects from and frees objects into.
+%Thus, the slab allocator has v
+%The slab allocator is more efficient than 
+%Instead of preallocating and maintaining a circular log,
+The \ib\ layer allocates new receiving buffers in \nvm\ using the slab allocator
+and provides an interface to free these buffers back to the slab lists.
+%The \ib\ layer supports atomic operations 
+%in \nvm\ and provides a free let .
+\hotpot\ uses this mechanism to maintain a persistent redo log for transactions.
+\hotpot\ only frees buffers in this log after a transaction has been committed.
+\fi

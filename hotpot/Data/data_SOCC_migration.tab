@@ -1,0 +1,10 @@
+# Zipf Migration Commit-xact improvement (x%)
+# rep_degree 1, 2, 3, 4
+#
+# interval 2s, min_bytes_committed_per_window=1MB
+#
+#	MRSW	MRMW
+1	29	64
+2	13	38
+3	20	39
+4	21	48

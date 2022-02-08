@@ -1,0 +1,110 @@
+\subsection{Crash Recovery}
+\label{sec:recovery}
+
+\hotpot\ can safely recover from different crash scenarios
+without losing applications' data.
+% as long as the number of concurrent
+%node failures is less than the application-specified replication degree.
+\hotpot\ detects node failures
+%by detecting an unresponsive node during a network operation and 
+by request timeout 
+and by periodically sending heartbeat messages from 
+the \cd\ to all \hotpot\ nodes.
+We now explain \hotpot's crash recovery mechanism
+in the following four crash scenarios.
+Table~\ref{tbl-crash} summarizes various crash scenarios and \hotpot's recovery mechanisms.
+
+%\subsubsubsection{Crash During Transaction Commit}
+
+\input{tbl-crash}
+
+\noindent{\bf Recovering \cd\ and \master.}
+\cd\ maintains node membership and dataset name mappings.
+\hotpot\ currently uses one \cd\ but can be easily extended to 
+include a hot stand-by \cd\ (\eg, using Mojim~\cite{Zhang15-Mojim}).
+%When the primary \cd\ fails, the stand-by \cd\ can resume immediately.
+
+\master\ tracks which node has acquired write access to a page under the \mrsw\ mode.
+\hotpot\ does not make this information persistent
+and simply reconstructs it by contacting all other nodes during recovery.
+%If the \cd\ fails, a new node will be selected as \cd.
+%Since all the metadata that the \cd\ maintains can be reconstructed, 
+%\hotpot\ simply rebuild them by contacting all \hotpot\ nodes.
+
+\noindent{\bf Non-commit time crashes.}
+Recovering from node crashes during non-commit time is fairly straightforward.
+If the \nvm\ in the crashed node is accessible after the crash (we call it {\em with-\nvm\ failure}),
+\hotpot\ directly restarts the node and
+lets applications access data in \nvm.
+% provides the data in \nvm\ to applications,
+%which can choose to resume from where they left over~\cite{Narayanan12-ASPLOS}.
+As described in Section~\ref{sec:singleconsistency}, \hotpot\ ensures crash consistency of a single node.
+Thus, \hotpot\ can always recover to a consistent state 
+when \nvm\ survives a crash.
+\hotpot\ can sustain arbitrary number of with-\nvm\ failures concurrently. 
+
+When a crash results in corrupted or inaccessible \nvm\ (we call it {\em no-\nvm\ failure}),
+\hotpot\ will reconstruct the lost data using redundant copies.
+\hotpot\ can sustain $N-1$ concurrent no-\nvm\ failures, where $N$ is the user-defined degree of replication.
+
+If a \dn\ chunk is lost, 
+the \on\ of this chunk will check what data pages in the chunk
+have dropped below user-defined replication degree
+and replicating them on the new node that replaces the failed node. 
+%If a node fails and loses all its \dn{} data, and \hotpot\ 
+%no longer meets the degree of replication requested by an application,
+%the \on\ will send a committed copy of the failed node's data to the new node.
+There is no need to reconstruct the rest of the \dn\ data;
+\hotpot\ simply lets the new node access them on demand.
+
+%\noindent{\bf Reconstructing \on{} chunks.}
+When an \on\ chunk is lost, it is critical to reconstruct it quickly,
+since an \on\ serves both remote data read and 
+commit operations.
+%If a node fails and loses its \on\ chunks,
+Instead of reconstructing a failed \on\ chunk from scratch,
+\hotpot\ promotes an existing \dn\ chunk to an \on\ chunk
+and creates a new \dn\ chunk.
+%To promote a \dn\ chunk to an \on\ chunk,
+%the newly promoted \dn\ will communicate with all the other \dn{}s of this chunk.
+The new \on\ will fetch locally-missing committed data from other nodes
+and reconstruct \on\ metadata for the chunk.
+Our evaluation results show that it takes at most 2.3 seconds to promote
+a 1GB \dn\ chunks to \on.
+
+%\subsubsection{}
+\noindent{\bf Crash during commit.}
+If a with-\nvm\ failure happens during a \commitxact\ call,
+\hotpot\ will just continue its commit process after restart.
+When a no-\nvm\ failure happens during commit,
+\hotpot\ takes different actions to recover depending on when the failure happens.
+
+For \mrmw\ commit, if no-\nvm\ failure happens before all the \on{}s have created the persistent redo logs (\ie, before starting phase 2),
+\hotpot\ will undo the commit and revert to the old committed state
+by deleting the redo logs at \on{}s.
+If a no-\nvm\ failure happens after all \on{}s have written the committing data to their persistent redo logs (\ie, after commit phase 1),
+\hotpot\ will redo the commit by replaying redo logs.
+
+For \mrsw, since we combine \mrmw's phase 1 and phase 2 into one commit phase,
+%do not allow each \on\ to proceed with pushing updates to \dn{}s right after it has written its own persistent redo log,
+we will not be able to tell whether or not an \on\ has pushed the committing data to \dn{}s 
+when this \on\ experience a no-\nvm\ failure.
+In this case, \hotpot\ will let \xn\ redo the commit from scratch. 
+Even if the crashed \on\ has pushed updates to some \dn{}s,
+the system is still correct after \xn\ redo the commit;
+it will just have more \redundant\ copies.
+When the \xn\ fails during \mrsw\ commit, \hotpot\ will undo the commit
+by letting all \on{}s delete their redo logs and send old data to \dn{}s to overwrite \dn{}s' updated data.
+%During this recovery process, \hotpot\ needs to know what are the \on{}s that are involved in the commit.
+%Instead of contacting all nodes to discover which ones are the \on{}s,
+%\hotpot\ uses the \master\ %to reduce the overhead of contacting all nodes
+%to only contact the nodes that owns pages that have been acquired by the failed \xn.
+
+During commit, \hotpot\ only supports either \xn\ no-\nvm\ failure or \on\ no-\nvm\ failure.
+%Although concurrent \xn\ and \on\ no-\nvm\ failures during commit can lead to inconsistent state,
+We choose not to support concurrent \xn\ and \on\ no-\nvm\ failures during commit,
+because doing so largely simplifies \hotpot's commit protocol and improves its performance.
+\hotpot's commit process is fast (under 250\mus\ with up to 16 nodes, see Section~\ref{sec:results}).
+Thus, the chance of \xn\ and \on\ both fail and lose their \nvm\ during commit is very small.
+\hotpot\ always supports \dn\ no-\nvm\ failures during commit regardless of whether there are concurrent \xn\ or \on\ failure.
+

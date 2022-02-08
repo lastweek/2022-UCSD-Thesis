@@ -1,0 +1,42 @@
+{
+\begin{table}[th]\small
+\begin{center}
+\begin{center}
+\begin{tabular}{ p{0.017in} | p{0.28in} | p{0.1in} | p{0.29in} | p{1.95in} }
+ & \small Node & \small \nvm & \small Time & \small Action \\
+\hline
+\hline
+& any & Y & any & resume normal operation after reboot \\
+\hline
+& \cd\ & N & any & reconstruct using mirrored copy \\
+\hline
+& \on\ & N & NC & promote an existing \dn\ to \on\ \\
+& \dn\ & N & NC & reconstruct data to meet replication degree \\
+\hline
+\multirow{7}{*}{\rotatebox{90}{\mrmw\ Commit}} & \xn/\on\ & N & p1 & undo commit, \on{}s delete redo logs \\
+%& any & Y & any & continue commit \\
+%& \on\ & N & p1 & undo commit, \on{}s delete redo logs \\
+& \xn\ & N & p2 & redo commit, \on{}s send new data to \dn{}s \\
+& \on\ & N & p2 & redo commit, \xn\ sends new data to new \on\ \\
+& \dn\ & N & p2 & continue commit, \on\ sends data to new \dn\ \\
+& \xn\ & N & p3 & complete commit, \on{}s delete redo logs \\
+& \on/\dn\ & N & p3 & complete commit, new chunk reconstructed using \committed\ data \\
+\hline
+\multirow{5}{*}{\rotatebox{90}{MRSW}} & \xn\ & N & commit & undo commit, \on{}s send old data to \dn{}s \\
+& \on\ & N & commit & \xn\ redo commit from scratch\\
+& \xn\ & N & release & complete commit, release data \\
+& \on/\dn\ & N & release & complete commit, new chunk reconstructed using \committed\ data \\
+%& \xn\ & N &  & \\
+%& \xn\ & N &  & \\
+%\hline
+\end{tabular}
+\end{center}
+\mycaption{tbl-crash}{Crash and Recovery Scenarios.}
+{
+Columns represent crashing node, if \nvm\ is accessible after crash, time of crash, and actions taken at recovery.
+NC represents non-commit time.
+}
+\end{center}
+\vspace{-0.3in}
+\end{table}
+}

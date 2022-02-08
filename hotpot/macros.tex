@@ -1,0 +1,698 @@
+\newcommand{\horizbar}{\rule{\linewidth}{.5mm}}
+\newcommand{\app}[1]{{\sc #1}}
+ 
+\renewcommand{\em}{\it}
+
+  
+\newcommand{\BigO}[1]{${\cal O}(#1)$}
+\newcommand{\BigOmega}[1]{$\Omega(#1)$}
+\newcommand{\BigTheta}[1]{$\Theta(#1)$}
+ 
+\newcommand{\ceiling}[1]{\left\lceil #1 \right\rceil}
+\newcommand{\faM}{\lfloor \alpha M \rfloor}
+%\newcommand{\C}[2]{{#1 \choose #2}}
+
+\newcommand{\x}{$\times$}
+ 
+%\newcommand{\comment}[1]{}
+\newcommand{\ignore}[1]{}
+
+
+%\newcommand{\boldparagraph}[1]{\vspace*{-0ex}\paragraph{#1}}
+\newcommand{\boldparagraph}[1]{\vspace*{1ex}\noindent\textit{#1}\hspace{1em}}
+
+%%%%% SINGLE FIGURE
+\def\cfigure[#1,#2,#3]{
+\begin{figure}
+\vspace*{0mm}
+\begin{center}
+
+\includegraphics[width=3in]{#1} 
+ 
+\vspace*{-3mm}\caption[]{#2
+} \label{#3}
+ 
+\vspace*{-5mm}
+\end{center}
+%\horizbar
+%\vspace*{-2mm}
+\end{figure}}
+
+%%%%% SINGLE FIGURE 4in wide
+\def\cfigurefour[#1,#2,#3]{
+\begin{figure}
+\vspace*{0mm}
+\begin{center}
+
+\includegraphics[width=4in]{#1} 
+ 
+\vspace*{-3mm}\caption[]{#2
+} \label{#3}
+ 
+\vspace*{-5mm}
+\end{center}
+%\horizbar
+%\vspace*{-2mm}
+\end{figure}}
+
+%%%%% SINGLE FIGURE
+\def\cfiguretemp[#1,#2,#3]{
+\begin{figure}
+\vspace*{0mm}
+\begin{center}
+
+\includegraphics[width=3.5in]{#1} 
+ 
+\vspace*{-3mm}\caption[]{#2
+} \label{#3}
+ 
+\vspace*{-5mm}
+\end{center}
+%\horizbar
+\vspace*{-2mm}
+\end{figure}}
+
+%%%%% SINGLE WIDE FIGURE
+\def\wfigure[#1,#2,#3]{
+\begin{figure*}
+\vspace*{0mm}
+\begin{center}
+ \includegraphics[width=\textwidth]{#1} 
+ \vspace*{-3mm}\caption[]{#2
+} \label{#3}
+ 
+\end{center}
+%\horizbar
+\end{figure*}}
+
+%%%%% 3 FIGURES IN A ROW
+\def\threefigure[#1,#2,#3,#4,#5]{
+\begin{figure*}
+\vspace*{0mm}
+\begin{center}
+
+\begin{tabular}{ccc}
+\includegraphics[width=2in]{#1} & \includegraphics[width=2in]{#2} &  \includegraphics[width=2in]{#3} \\
+(a) & (b) & (c) \\
+\end{tabular}
+
+\vspace*{-3mm}\caption[]{#4
+} \label{#5}
+
+\vspace*{-5mm}
+\end{center}
+%\horizbar
+\vspace*{-2mm}
+\end{figure*}}
+
+%%%%%% DOUBLE FIGURE
+\def\dcfigure[#1,#2,#3,#4,#5,#6]{
+{
+\begin{figure*}
+\begin{center}
+\begin{minipage}[c]{\columnwidth}{
+\includegraphics[width=\columnwidth]{#1} 
+\vspace*{0mm}\caption[]{#2} \label{#3} \
+}\end{minipage}\hspace*{\columnsep}\
+\begin{minipage}[c]{\columnwidth}{
+\includegraphics[width=\columnwidth]{#4} 
+\vspace*{0mm}\caption[]{#5}\label{#6} \
+}\end{minipage}
+\end{center}
+\end{figure*}
+}
+}
+
+
+\def\tableByTable[#1,#2,#3,#4,#5,#6]{
+{
+\begin{table*}
+\begin{center}
+\begin{minipage}[c]{3in}{
+\centering
+{#1}
+\vspace*{0mm}\tabcaption[]{#2}\label{#3} \
+}\end{minipage}\hspace*{\columnsep}\
+\begin{minipage}[c]{3in}{
+\centering
+{#4}
+\vspace*{0mm}\tabcaption[]{#5}\label{#6} \
+}\end{minipage}
+\end{center}
+\end{table*}
+}
+}
+
+
+\def\figureByTable[#1,#2,#3,#4,#5,#6]{
+{
+\begin{figure*}
+\begin{center}
+\begin{minipage}[c]{3in}{
+\centering
+\includegraphics[width=\textwidth]{#1}
+\vspace*{0mm}\figcaption[]{#2} \label{#3} \
+}\end{minipage}\hspace*{\columnsep}\
+\begin{minipage}[c]{3.3in}{
+\centering
+{#4}
+\vspace*{0mm}\tabcaption[]{#5}\label{#6} \
+}\end{minipage}
+\end{center}
+\end{figure*}
+}
+}
+
+\def\tableByFigure[#1,#2,#3,#4,#5,#6]{
+{
+\begin{figure*}
+\begin{center}
+\begin{minipage}[c]{4.3in}{
+\centering
+{#1}
+\vspace*{0mm}\tabcaption[]{#2} \label{#3} \
+}\end{minipage}\hspace*{\columnsep}\
+\begin{minipage}[c]{2.2in}{
+\centering
+\includegraphics[width=\textwidth]{#4}
+\vspace*{-0.35in}\caption[]{#5}\label{#6} \
+}\end{minipage}
+\end{center}
+\end{figure*}
+}
+}
+
+% two figs pdfs in one column fig
+\def\doublecfigure[#1,#2,#3,#4]{
+{
+\begin{figure}
+\begin{center}
+\begin{minipage}[c]{1.5in}{
+\begin{center}
+\includegraphics[width=1.5in]{#1}%\\(a)
+\end{center}
+}\end{minipage}\hspace*{1em}\
+\begin{minipage}[c]{1.5in}{
+\begin{center}
+\includegraphics[width=1.5in]{#2}%\\(b)
+\end{center}
+}\end{minipage}
+\vspace*{0mm}\caption[]{#3} \label{#4} \
+\end{center}
+\end{figure}
+}
+}
+
+\def\qcfigure[#1,#2,#3,#4,#5,#6]{
+{
+\begin{figure*}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{3in}{
+\includegraphics[width=3in]{#1} 
+\vspace*{-3mm}
+}
+\end{minipage}\hspace*{0.5in}\
+\begin{minipage}[c]{3in}{
+\includegraphics[width=3in]{#2} 
+\vspace*{-3mm}
+}\end{minipage}
+
+\begin{minipage}[c]{3in}{
+\includegraphics[width=3in]{#3} 
+\vspace*{-3mm}
+}
+\end{minipage}\hspace*{0.5in}\
+\begin{minipage}[c]{3in}{
+\includegraphics[width=3in]{#4} 
+\vspace*{-3mm}
+}\end{minipage}
+\end{center}
+\caption[]{#5}\label{#6}
+\end{figure*}
+}
+}
+
+\def\twfigure[#1,#2,#3,#4,#5]{
+{
+\begin{figure*}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{6.5in}{
+\includegraphics[width=6.5in]{#1} 
+\vspace*{-3mm}
+}
+\end{minipage}
+
+\begin{minipage}[c]{6.5in}{
+\includegraphics[width=6.5in]{#2} 
+\vspace*{-3mm}
+}\end{minipage}
+
+\begin{minipage}[c]{6.5in}{
+\includegraphics[width=6.5in]{#3} 
+\vspace*{-3mm}
+}
+\end{minipage}
+\end{center}
+\caption[]{#4}\label{#5}
+\end{figure*}
+}
+}
+
+\def\dwfigure[#1,#2,#3,#4]{
+{
+\begin{figure*}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{6.5in}{
+\includegraphics[width=6.5in]{#1} 
+\vspace*{-3mm}
+}
+\end{minipage}
+
+\begin{minipage}[c]{6.5in}{
+\includegraphics[width=6.5in]{#2} 
+\vspace*{-3mm}
+}\end{minipage}
+
+\end{center}
+\caption[]{#3}\label{#4}
+\end{figure*}
+}
+}
+
+
+
+\def\dssfigure[#1,#2,#3,#4,#5,#6]{
+{
+\begin{figure*}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{4in}{
+\includegraphics[width=4in]{#1}
+\vspace*{-3mm}\caption[]{#2} \label{#3} \
+}\end{minipage}\hspace*{0.5in}\
+\begin{minipage}[c]{2in}{
+\includegraphics[width=2in]{#4}
+\vspace*{-3mm}\caption[]{#5}\label{#6} \
+}\end{minipage}
+\end{center}
+\vspace*{-0.4in}\
+\end{figure*}
+}
+}
+
+
+
+
+\def\dsfigure[#1,#2,#3,#4,#5,#6]{
+{
+\begin{figure*}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{3in}{
+\includegraphics[width=3in]{#1}
+\vspace*{-3mm}\caption[]{#2} \label{#3} \
+}\end{minipage}\hspace*{0.5in}\
+\begin{minipage}[c]{3in}{
+\hspace*{0.5in}\
+\includegraphics[height=3in]{#4}
+\vspace*{-3mm}\caption[]{#5}\label{#6} \
+}\end{minipage}
+\end{center}
+\vspace*{-0.4in}\
+\end{figure*}
+}
+}
+
+
+\def\dsyfigure[#1,#2,#3,#4,#5,#6]{
+{
+\begin{figure*}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{2.5in}{
+\includegraphics[height=2.5in]{#1}
+\vspace*{-3mm}\caption[]{#2} \label{#3} \
+}\end{minipage}\hspace*{0.5in}\
+\begin{minipage}[c]{2.5in}{
+\includegraphics[height=2.5in]{#4}
+\vspace*{-3mm}\caption[]{#5}\label{#6} \
+}\end{minipage}
+\end{center}
+\vspace*{-0.4in}\
+\end{figure*}
+}
+}
+
+\def\dyfigure[#1,#2,#3,#4,#5,#6]{
+{
+\begin{figure*}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{3in}{
+\includegraphics[height=3in]{#1} 
+\vspace*{-3mm}\caption[]{#2} \label{#3} \
+}\end{minipage}\hspace*{0.5in}\
+\begin{minipage}[c]{3in}{
+\includegraphics[height=3in]{#4} 
+\vspace*{-3mm}\caption[]{#5}\label{#6} \
+}\end{minipage}
+\end{center}
+\vspace*{-0.4in}\
+\end{figure*}
+}
+}
+
+%%%%%% DOUBLE FIGURE Y
+\def\dyoldfigure[#1,#2,#3,#4,#5,#6]{
+{
+\begin{figure*}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{3in}{
+\epsfysize=2.0in\
+\hspace{0.5in}\
+\epsfbox{#1}
+\vspace*{-3mm}\caption[]{#2} \label{#3} \
+}\end{minipage}\hspace*{0.25in}\
+\begin{minipage}[c]{3in}{
+\epsfysize=2.0in\
+\hspace{0.5in}\
+\epsfbox{#4}
+\vspace*{-3mm}\caption[]{#5}\label{#6} \
+}\end{minipage}
+\end{center}
+\vspace*{-0.4in}\
+\end{figure*}
+}
+}
+
+%%%%%% DOUBLE FIGURE Y IN A COLUMN!!
+\def\cfiguredouble[#1,#2,#3,#4]{
+\begin{figure}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{1.5in}{
+\epsfxsize=1.5in\
+\epsfbox{#1}
+}\end{minipage}\hspace*{0.1in}\
+\begin{minipage}[c]{1.5in}{
+\epsfxsize=1.5in\
+\vspace{0.1in}\epsfbox{#2}
+}\end{minipage}\vspace*{-0.10in} \caption[]{#3}\label{#4}
+\end{center}
+\vspace*{-0.4in}\
+\end{figure}
+}
+
+
+%%%%% Single programmable size figure
+\def\wpfigure[#1,#2,#3,#4]{
+\begin{figure*}
+\vspace*{4mm}
+\begin{center}
+
+\includegraphics[width=#4]{#1} 
+
+\vspace*{-3mm}\caption[]{#2
+} \label{#3}
+
+\vspace*{-5mm}
+\end{center}
+%\horizbar
+\end{figure*}}
+
+%%%%% Single programmable size figure, rotated
+\def\wprfigure[#1,#2,#3,#4,#5]{
+\begin{figure*}
+\vspace*{4mm}
+\begin{center}
+
+\includegraphics[width=#4, angle=#5]{#1} 
+
+\vspace*{-3mm}\caption[]{#2
+} \label{#3}
+
+\vspace*{-5mm}
+\end{center}
+%\horizbar
+\end{figure*}}
+
+
+
+
+%%%%% Adjacent, programmable-width figures, slid vertically by 9th
+%%%%% parameter
+\def\DoubleFigureWSlide[#1,#2,#3,#4,#5,#6,#7,#8,#9]{
+\begin{figure*}
+\vspace*{#9}
+\begin{center}
+\begin{minipage}{#4}
+\includegraphics[width=#4]{#1}
+\vspace*{-3mm}\caption{#2
+}\label{#3}
+\end{minipage}
+\hspace{2em}
+\begin{minipage}{#8}
+\includegraphics[width=#8]{#5}
+\vspace*{-3mm}\caption{#6
+}\label{#7}
+\end{minipage}
+\vspace*{-5mm}
+\end{center}
+\end{figure*}
+}
+
+
+%%%%% Adjacent, programmable-width figures
+\def\DoubleFigureW[#1,#2,#3,#4,#5,#6,#7,#8]{
+\begin{figure*}
+\vspace*{0in}
+\begin{center}
+\begin{minipage}{#4}
+\includegraphics[width=#4]{#1}
+\vspace*{-3mm}\caption{#2
+}\label{#3}
+\end{minipage}
+\hspace{2em}
+\begin{minipage}{#8}
+\includegraphics[width=#8]{#5}
+\vspace*{-3mm}\caption{#6
+}\label{#7}
+\end{minipage}
+\vspace*{-5mm}
+\end{center}
+\end{figure*}
+}
+
+
+
+\def\DoubleFigureWHack[#1,#2,#3,#4,#5,#6,#7,#8]{
+\begin{figure*}
+\vspace*{0in}
+\begin{center}
+\begin{minipage}{3in}
+\includegraphics[width=#4]{#1}
+\vspace*{-3mm}\caption{#2
+}\label{#3}
+\end{minipage}
+\hspace{2em}
+\begin{minipage}{3in}
+\includegraphics[width=#8]{#5}
+\vspace*{-3mm}\caption{#6
+}\label{#7}
+\end{minipage}
+\vspace*{-5mm}
+\end{center}
+\end{figure*}
+}
+
+
+
+
+
+
+%%%%%% DOUBLE FIGURE
+\def\ddcfigure[#1,#2,#3,#4]{
+\begin{figure*}
+\vspace*{0.2in}\
+\begin{center}
+\begin{minipage}[c]{\columnwidth}{
+\includegraphics[width=\columnwidth]{#1} 
+}\end{minipage}\hspace{0.5in}\
+\begin{minipage}[c]{\columnwidth}{
+\includegraphics[width=\columnwidth]{#2} 
+}\end{minipage} \caption[]{#3}\label{#4}
+\end{center}
+\end{figure*}
+}
+
+\def\ddcfigureSlide[#1,#2,#3,#4,#5]{
+\begin{figure*}
+\vspace*{#5}\
+\begin{center}
+\begin{minipage}[c]{3in}{
+\includegraphics[height=3in]{#1} 
+}\end{minipage}\hspace{0.5in}\
+\begin{minipage}[c]{3in}{
+\includegraphics[height=3in]{#2} 
+}\end{minipage}\vspace*{-0.10in} \caption[]{#3}\label{#4}
+\end{center}
+\vspace*{-0.4in}\
+\end{figure*}
+}
+
+\def\cxfigure[#1,#2,#3]{
+\begin{figure}
+\vspace*{4mm}
+\begin{center}
+ 
+\epsfxsize=2.5in\
+\epsfbox{#1}\
+ 
+\vspace*{-0.10in}\caption[]{#2
+} \label{#3}
+ 
+\vspace*{-5mm}
+\end{center}
+%\horizbar
+\vspace*{-2mm}
+\end{figure}}
+
+\newenvironment{panefigure}{\begin{figure}\begin{center}}{\end{center}\end{figure}}
+
+\newcommand{\pdfpane}[3]{
+\begin{minipage}{#1}
+\begin{center}
+\includegraphics[width=#1]{#2}\\(#3)
+\end{center}
+\end{minipage}
+}
+
+\newcommand{\figWidth}{\columnwidth}
+\newcommand{\figSep}{0.05in} 
+%\newcommand{\figSep}{\columnsep} 
+\newcommand{\figWidthOne}{3.05in} 
+\newcommand{\figWidthHalf}{5.85in} 
+\newcommand{\figWidthTwo}{3.7in} 
+\newcommand{\figWidthThree}{2in} 
+\newcommand{\figWidthFour}{1.3in} 
+\newcommand{\figWidthFive}{2.3in} 
+\newcommand{\figWidthSix}{2.3in} 
+\newcommand{\figHeight}{2.0in}
+\newcommand{\figHeightOne}{2.6in}
+\newcommand{\captionText}[2]{\textbf{#1} \textit{\small{#2}}}
+
+\newcommand{\beforecaption}{\vspace{-.15cm}\begin{spacing}{0.85}}
+\newcommand{\aftercaption}{\vspace{-.45cm}\end{spacing}}
+% \newcommand{\mycaption}[3]{{\beforecaption\caption{\label{#1}\footnotesize{\textbf{#2}} {\em #3}}\aftercaption}}
+% haryadi, change mycaption three to mycaptionthree
+%\newcommand{\mycaption}[3]{{\caption[#2]{{\bf #2.} {\em #3}}\label{#1}}}
+%\newcommand{\mycaption}[3]{\beforecaption\caption{\label{#1}{\small \bf #2} \em\scriptsize #3}\aftercaption}
+%\newcommand{\mycaption}[3]{\beforecaption\caption{\label{#1}{\bf #2} \em\footnotesize #3}\aftercaption}
+\newcommand{\mycaption}[3]{\caption{\label{#1}{\bf #2} \em\small #3}}
+
+
+%%%%% general
+
+% only foreign words should be italicized... (example given should not)
+\newcommand{\eg}{\textit{e.g.}}
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\etal}{\textit{et al.}}
+\newcommand{\etc}{\textit{etc.}}
+\newcommand{\adhoc}{\textit{ad hoc}}
+
+% units
+\newcommand{\KB}{\,KB}
+\newcommand{\MB}{\,MB}
+\newcommand{\GB}{\,GB}
+\newcommand{\TB}{\,TB}
+\newcommand{\GBs}{\,GB/s}
+\newcommand{\MBs}{\,MB/s}
+\newcommand{\KBs}{\,KB/s}
+\newcommand{\Kbs}{~Kbit/s}
+\newcommand{\gbps}{\,Gbps}
+\newcommand{\mbs}{~Mbit/s}
+\newcommand{\mus}{\mbox{$\mu s$}}
+\newcommand{\ms}{\mbox{$ms$}}
+
+%\newcommand{\fsync}{\texttt{fsync}}
+
+% axes
+\newcommand{\xaxis}{x-axis}
+\newcommand{\yaxis}{y-axis}
+
+
+\newcommand{\unix}{{\sc Unix}}
+\newcommand{\NULL}{{\sc NULL}}
+\newcommand{\sysread}{\texttt{read}}
+\newcommand{\syssync}{\texttt{sync}}
+\newcommand{\fsync}{\texttt{fsync}}
+\newcommand{\syswrite}{\texttt{write}}
+\newcommand{\sysseek}{\texttt{lseek}}
+\newcommand{\sysstat}{\texttt{stat}}
+\newcommand{\make}{\texttt{make}}
+\newcommand{\ioctl}{\texttt{ioctl}}
+\newcommand{\panic}{\texttt{panic}}
+\newcommand{\truncate}{\texttt{truncate}}
+\newcommand{\rmdir}{\texttt{rmdir}}
+\newcommand{\unlink}{\texttt{unlink}}
+\newcommand{\open}{\textit{open}}
+\newcommand{\close}{\textit{close}}
+\newcommand{\linkscount}{\texttt{linkscount}}
+\newcommand{\msync}{\textit{msync}}
+\newcommand{\mmap}{\textit{mmap}}
+\newcommand{\unmap}{\textit{munmap}}
+\newcommand{\map}{\textit{map}}
+\newcommand{\fetch}{\textit{gfetch}}
+\newcommand{\acquire}{\textit{acquire}}
+\newcommand{\commitxact}{\textit{commit}}
+\newcommand{\commit}{\textit{commit}}
+\newcommand{\barrier}{\textit{thread-barrier}}
+
+
+% dsnvm
+\newcommand{\dsnvm}{DSPM}
+\newcommand{\dsm}{DSM}
+\newcommand{\nvm}{PM}
+\newcommand{\hotpot}{Hotpot}
+\newcommand{\mrmw}{MRMW}
+\newcommand{\mrsw}{MRSW}
+\newcommand{\wfetch}{FETCH}
+\newcommand{\cd}{CD}
+\newcommand{\dr}{DR}
+\newcommand{\on}{ON}
+\newcommand{\dn}{DN}
+\newcommand{\xn}{CN}
+\newcommand{\master}{MN}
+\newcommand{\xactid}{CID}
+\newcommand{\dirty}{dirty}
+\newcommand{\committed}{committed}
+\newcommand{\redundant}{redundant}
+\newcommand{\ib}{IB}
+\newcommand{\sendreply}{\texttt{send-reply}}
+\newcommand{\atomicsendreply}{\texttt{atomic-send-reply}}
+\newcommand{\multisendreply}{\texttt{multicast-send-reply}}
+\newcommand{\journaled}{JOURNALED}
+\newcommand{\fsyncsafe}{FSYNC\_SAFE}
+\newcommand{\X}{{$\times$}}
+\newcommand{\pmfs}{PMFS}
+\newcommand{\tmpfs}{tmpfs}
+\newcommand{\Octopus}{Octopus}
+\newcommand{\Mojim}{Mojim}
+\newcommand{\dsmnoxact}{DSM-NoXact}
+\newcommand{\dsmxact}{DSM-Xact}
+\newcommand{\clflush}{\texttt{clflush}}
+\newcommand{\pcommit}{\texttt{pcommit}}
+\newcommand{\mfence}{\texttt{mfence}}
+\newcommand{\sfence}{\texttt{sfence}}
+\newcommand{\ra}{\textbf{R1.a}}
+\newcommand{\rb}{\textbf{R1.b}}
+\newcommand{\rcs}{\textbf{R2.a}}
+\newcommand{\rcm}{\textbf{R2.b}}
+\newcommand{\rdr}{\textbf{R3.r}}
+\newcommand{\rdu}{\textbf{R3.u}}
+\newcommand{\re}{\textbf{R3}}
+\newcommand{\rf}{\textbf{R4}}

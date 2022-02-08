@@ -1,0 +1,67 @@
+\section{Related Work}
+\label{sec:related}
+
+There have been a host of distributed shared memory systems and
+distributed storage
+systems~\cite{AdyaEtAl-Farsite,calder11-azure,DeCandia+07-Dynamo,Ghemawat03-GoogleFS,KubiEtAl00-Ocean,Petersen97-Bayou,Terry13-Pileus,Chun06-NSDI,Gibbons91-SPAA,Krieger90-HICSS,Zhang15-SOSP,Zhou92-IEEE,Stumm90-IEEE,Stumm90-IPDPS,HLRC,Shasta}
+over the past few decades.
+While some of \hotpot's coherence protocols may resemble existing DSM systems, none of them manages persistent data.
+There are also many single-node \nvm\ systems~\cite{MemoryPersistency,pmxact-asplos16,Delegated-persist,sosp09:bpfs,Dragojevic14-NSDI,Dulloor14-EuroSys,Xiaojian11-SC,HiNFS-Eurosys16,Kamino-EuroSys17,Coburn11-ASPLOS,Volos11-ASPLOS},
+but they do not support distributed environments.
+
+\Octopus~\cite{Octopus} is a user-level RDMA-based distributed \nvm\ file system developed in parallel with \hotpot.
+\Octopus\ manages file system metadata and data efficiently in a pool of PM-equipped machines. 
+\Octopus\ provides a set of customized file APIs including read and write
+but not any memory-mapped interfaces.
+\Octopus\ does not provide data reliability and high availability either.
+\hotpot's abstraction is memory based rather than file based,
+and it offers data reliability, availability, and different level of consistency.
+
+Grappa~\cite{Nelson15-ATC} is a DSM system that supports modern data-parallel applications.
+Instead of fetching remote memory to a local cached copy, Grappa executes functions at the remote side.
+\hotpot\ is a \dsnvm\ system and lets applications store persistent data.
+It fetches remote data for both fast local access and data replication.
+
+FaRM~\cite{Kalia14-SIGCOMM,Dragojevic14-NSDI} is an RDMA-based
+distributed system on battery-backed DRAM.
+RAMCloud is a low-latency distributed key-value store system that keeps a single copy of all data in DRAM~\cite{Ongaro11-RamCloud}
+%While \hotpot\ and RAMCloud both provide reliable memory-based storage systems,
+%RAMCloud provides a key-value interface to applications
+and replicates data on massive slower storages for fast recovery.
+%rather than a memory-like interface to applications.
+The major difference between \hotpot\ and FaRM or RAMCloud is that
+FaRM and RAMCloud both adds a software indirection layer for key-value stores
+which can cause significant latency overhead over native load/store operations
+and obscures much of the performance of the underlying \nvm.
+\hotpot\ uses a memory-like abstraction and directly stores persistent data in \nvm.
+\hotpot\ also performs data persistence and replication differently
+and uses a different network layer based on two-sided RDMA.
+
+Crail~\cite{crail} is an RDMA-based high-performance multi-tiered distributed storage system that integrates with the Spark ecosystem~\cite{XXX}.
+Crail mainly consists of a file system that manages tierd storage resources (\eg, DRAM, flash, disk) 
+and support flexible allocation policies across tiers.
+\hotpot\ is a pure \nvm-based system that exposes a memory-like interface. 
+
+PerDis~\cite{PerDis} and Larchant~\cite{Larchant,Larchant94} use a distributed file system below a DSM layer.
+%, data management,
+%data replication, and cache coherence, a set of challenges more demanding than these layered systems.
+Unlike these systems, \hotpot\ is a single-layer system that provides shared memory acces, data persistene, and reliability.
+%Unlike Crail, \hotpot\ leverages PM to combine DRAM and persistent storage into one layer, and
+%fulfills application's requirement at the same time.
+
+
+\if 0
+\textcolor{Red}
+{
+Pelly et al.~\cite{MemoryPersistency} proposes memory persistency, which defines
+the ordering of persists to PM. Kolli et al.~\cite{pmxact-asplos16,Delegated-persist}
+try to implement PM transactions more efficiently by reducing persist dependencies.
+In \hotpot, consistency is either guaranteed by a single 8-byte failure-atomic write without logging or CoW,
+or by local logging of distributed transactions.
+}
+\fi
+
+Our own previous work, Mojim~\cite{Zhang15-Mojim}, provides an efficient mechanism to replicate \nvm\
+over IB using a primary-backup protocol.
+\hotpot\ is a \dsnvm\ system that provides a shared-memory abstraction
+and integrates cache coherence and data replication.

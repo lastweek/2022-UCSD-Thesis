@@ -1,0 +1,4 @@
+workload	PowerGraph	Grappa	DSM-Noxact	DSM-xact	Hotpot
+4N4T		87.06		424.49	0		0		30.7
+7N4T		87.05		487	0		0		44.1
+7N8T		87.05		486.8	0		0		45.8

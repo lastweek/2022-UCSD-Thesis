@@ -1,0 +1,373 @@
+===========================================================================
+                           OSDI '16 Review #231A
+---------------------------------------------------------------------------
+             Paper #231: Distributed Shared Persistent Memory
+---------------------------------------------------------------------------
+
+How much do you want to see this paper in the conference?:
+                                     D. I do not want to see this paper at
+                                        OSDI.
+Is this paper likely to make readers think differently about the topic?:
+                                     C. Might change a few perceptions.
+Are others likely to build upon this work in their own projects?:
+                                     C. A few groups might build on this
+                                        work.
+How does this paper compare to others you have reviewed for OSDI 2016?:
+                                     E. Bottom 50% of submitted papers
+
+                         ===== Paper summary =====
+
+The authors describe a software distributed shared memory system for
+data center clusters.  Its argument for novelty is that data is not only
+replicated, but also placed in nonvolatile memory for robustness.  They
+provide both a load-store interface and three (simplistic) transactional
+interfaces.  They report good performance numbers for a distributed
+graph engine and a port of MongoDB.
+
+                        ===== Paper strengths =====
+
+Cross-cluster memory sharing remains an appealing concept.  Persistence
+is important.  Performance results on the tested applications look good.
+
+                       ===== Paper weaknesses =====
+
+Unclear semantics.  Questionable scalability.  Seems subject to the same
+limitations that hampered work on S-DSM in the late 90s.
+
+                   ===== Comments for the authors =====
+
+Having participated in the S-DSM craze of the 90s, I'm both a fan of the
+idea (and thus predisposed to want to like this paper) and a skeptic
+when it comes to performance.  The bar for new work in this area is
+pretty high, and I'm afraid I don't think this paper reaches it.
+
+The authors cast persistence -- leveraging of nonvolatile memory in
+particular -- as the principal innovation of their system.  Clearly
+persistence is very important.  Once data is replicated, however, it's
+not clear how much additional reliability is offered by using
+nonvolatile memory.  Clearly if a disaster (bomb, meteor, tsunami) takes
+out a whole data center (and data is not geographically replicated),
+then replication in DRAM won't help.  But in most of those cases NVM
+won't help either.  (Modern data centers don't generally suffer from
+sudden power failures.)  In my mind, the principal advantage of using
+NVM is that in the wake of a single-node system panic it may be possible
+to recover faster than one could if many GB of data had to be restored
+across the network -- but the paper doesn't talk about that.
+
+Many other aspects of Hotpot strike me as simplistic, nonscalable, or
+otherwise not ready for data-center-scale deployment.
+
+Table 1 describes three APIs.  The third (thread-barrier) isn't
+discussed in any detail.  The second seems to me to actually encompass
+three distinct APIs.  So all together we have
+  - load and store whatever you want.  Synchronization and coherence for
+    this API is not described, so far as I can tell; I don't understand
+    how the programmer is supposed to use this API correctly.
+  - multireader-multiwriter transactions.  The authors write that MRMW
+    transactions "allow multiple versions of dirty, uncommitted data in
+    concurrent transactions."  As far as I can tell, the commit protocol
+    prevents concurrent conflicting commits, but it does NOT provide
+    serializability.  What then is the programming model?
+  - multireader-singlewriter transactions.  These may be serializable
+    (the authors don't say, and there isn't enough detail in the paper
+    for me to be sure), but they also don't seem likely to scale.
+  - nontransactional commit.  From the description, I gather that this
+    is intended to provide failure atomicity without isolation.
+
+All three transactional APIs seem to require that a transaction specify,
+up front, all the data it will access.  This is of course a very
+restrictive programming model: it rules out any transaction whose later
+reads and writes are based on its early reads.
+
+Sec. 3.2 suggests that it should be easy to port multicore applications
+to Hotpot, but this seems unrealistic to me.  Though a bit unclear (as
+discussed above), the programming model is clearly different from that
+of a multicore.  Moreover performance in a cluster is likely to depend
+critically on locality, yet Hotpot appears to provide no way for the
+programmer to even talk about it ("Applications do not know where their
+data physically is or whether a memory access is local or remote."
+[Sec. 3.2]).
+
+Hotpot's persistency guarantees seem no clearer than its consistency
+guarantees.  The authors indicate that Hotpot flushes lines from cache
+to memory when persistence is desired, but this is not enough!  It's
+also important to consider that the hardware may flush lines early.  The
+key to ensuring consistency in the wake of a crash is to avoid acting on
+anything that has not yet persisted (because then new data may be
+visible after a crash when data on which it depends is not).  I
+recommend reading (and citing) the "Memory Persistency" paper of Pelley
+et al. (ISCA 2014).
+
+In Sec. 2.1, On the negative side, I'd note that direct (as opposed to
+mediated) access to shared state has the major disadvantage of potential
+metadata corruption by buggy programs.  This strikes me as a
+show-stopper for data shared across applications in a data center.  As
+soon as one maps (all of) persistent store into a program's address
+space, stray writes through bad pointers can trash anything.  One of the
+main benefits of traditional file systems and databases is that they
+safeguard metadata integrity.
+
+So in Sec. 2.4, I'd add two other major challenges:
+"ensuring consistency in the wake of a crash" and
+"tolerating program bugs."
+
+It's not clear whether the authors realize how much work has been done
+on RDMA-based S-DSM systems.  I'm surprised that Cashmere [ref. 37]
+isn't discussed, and HLRC [HPCA'98] and Shasta [ASPLOS'96] aren't even
+cited.  All three leveraged RDMA.  A Cashmere/Shasta comparison appeared
+at HPCA'99.  Given that coherence is maintained at the granularity of
+pages, how does Hotpot avoid the performance and false sharing problems
+that plagued these earlier systems?
+
+Sec. 1 states: "To the best of our knowledge, we are the first to
+integrate memory coherence and data replication."  That seems hard to
+believe.  At the very least, there are several distributed object
+systems in the literature that would seem to quality.
+
+The flat namespace for shared data doesn't seem scalable to the data
+center.  Modern processors provide 48 bits of both virtual and physical
+addresses.  That's 256TB -- a lot, certainly, but not enough to
+encompass everything that one might want to share.  And given that
+Hotpot encourage the used of ordinary pointers, 48 bits has to encompass
+all data across all applications -- much like a dynamic library system
+without PIC.
+
+Likewise, the use of reliable connection send-receive IB transport seems
+unlikely to maintain good performance on large numbers of nodes, given
+the limited queue pair caching capacity of current IB NICs.
+
+The flat symbolic name space for datasets also seems unscalable.  Why
+should this be ok for persistent data that we map into memory, when it
+isn't ok for persistent memory that we access via open/close/read/write?
+If memory sharing catches on, won't it displace much file system usage?
+
+The MRMW protocol described in Sec. 3.4.1 seems prone to livelock.
+
+Sec. 5.2: it's not clear to me to what extent the MongoDB experiment is
+evaluating the benefits of a shared memory programming model as opposed
+to simply avoiding the overhead of disk access.  In the comparison to
+PowerGraph, likewise, it's not clear whether one is seeing the advantage
+of a shared memory programming model or simply the benefits of a faster
+messaging layer.
+
+Sec. 5.1: I question whether "the difference is small" between NVM and
+DRAM performance -- especially when one must wait for cache flushes to
+complete (using s86 pcommit and sfence instructions).
+
+    ===== Questions for the authors to address in their rebuttal =====
+
+Am I right in guessing that the MRSW API is serializable but the MRMW
+API is not?  If so, how does one program successfully with the latter?
+
+What is the consistency model for the load-store API?
+
+===========================================================================
+                           OSDI '16 Review #231B
+---------------------------------------------------------------------------
+             Paper #231: Distributed Shared Persistent Memory
+---------------------------------------------------------------------------
+
+How much do you want to see this paper in the conference?:
+                                     C. I'm not enthusiastic about this
+                                        paper being in the program.
+Is this paper likely to make readers think differently about the topic?:
+                                     C. Might change a few perceptions.
+Are others likely to build upon this work in their own projects?:
+                                     D. It's difficult to see how anyone
+                                        could build on this paper.
+How does this paper compare to others you have reviewed for OSDI 2016?:
+                                     E. Bottom 50% of submitted papers
+
+                         ===== Paper summary =====
+
+This paper tackles the emerging area of architectures to incorporate
+nonvolatile persistent memories (or PMs in the paper's jargon). While
+there has been work in persistent heaps, whole system persistence, etc,
+this paper takes the perspective of distributed shared memory, adding
+persistence to that model, and in doing so, integrating cache coherence
+and replication. The paper presents a single design point with little
+justification for why or how this design point was chosen and the
+performance evaluation is quite superficial, so it's difficult to
+see what one would take away from it.
+
+                        ===== Paper strengths =====
+
+The system appears to perform well.
+
+The area is an important one.
+
+                       ===== Paper weaknesses =====
+
+The system is not described very precisely, so it was difficult to figure
+out exactly what it was doing in all cases.
+
+The benchmark results were not analyzed very deeply.
+
+                   ===== Comments for the authors =====
+
+I would recommend toning down the claims that you are the first to introduce
+the DSPM model -- it's certainly been bandied about quite a bit -- the first
+google search I did for "shared persistent memory" returned:
+
+http://www.enterprisetech.com/2014/09/10/shared-memory-clusters-observations-persistent-memory/
+
+This article, talking about The Machine, subtley dances around the exact
+issue you're addressing:
+
+http://www.nextplatform.com/2016/04/25/first-steps-program-model-persistent-memory/
+
+and the standards committees around NVM (PM) have been discussing the
+programming model and reliability issues.
+
+I'm confused -- why are there fewer shared accesses as thread count
+increases; my intuition would have been just the opposite -- with one
+thread, you can't have any shared accesses, so as you increase the number
+of threads, I would have expected the possibility of shared locations to
+increase, but that's not at all what Figure 1 and 2 suggest. What am I
+missing?  The steep dropoff at 25 threads for tensorflow and around 12
+threads for powergraph suggests (to me) that there is something special
+about that level of parallelism.
+
+There are many design decisions embedded in your design, but little discussion
+about why you made them and what you considered. For example, one of the
+features that is particularly interesting about the current NVMs is that they
+are byte addressable. Nonetheless, you move data among nodes in page-size
+units. I'm guessing you do that to let the VM system handle faults, but I
+wonder how much false sharing that produces? Did you consider other designs?
+What tradeoffs did you consider?
+
+So you tell us you use a hash table to manage the namespace, but you don't
+tell us anything about the implementation. That is, I assume it has to be
+persistent -- how does it get replicated?  What did you have to do in
+implementing the hash table to ensure that it's always consistent in PM?
+(That is, any memory store can become consistent at arbitrary points in time;
+I would imagine you need SFENCE at a minimum to ensure that what's in the PM
+is always consistent.)
+
+I assume DN is a data node, but define it after you first use it.
+
+Right now (I'm in section 3.3), this is the first and only thing
+said about maintaining consistency of data structures, "To make
+data or metadata persistent, Hotpot flushes CPU cache lines so that
+data is in the persistent PM instead of volatile CPU caches. Hotpot
+issues memory fences when the ordering of data persistence is
+required."  That's a bit on the light side -- getting PM allocation
+correct and consistent (without leaking memory) is subtle and not
+discussed anywhere.
+
+What is being committed in a non-transactional commit?
+
+What does this mean: "Hotpot will then mark the committed data in the
+transaction area as private undo copies." They were in the inactive
+committed and move to active commited? Or something else? In general,
+more precision would be nice in your descriptions. Here is how I understand
+begin:
+
+foreach page specified in the begin
+	<Assumed: Allocate space somewhere in the PM to store information
+	for the transaction? Where is this? How do you locate it after a crash?>
+
+	if the page resides locally, record its address in the txn area
+		Change its state?
+	if the page does not reside locally, make a local copy (from the ON)
+		record its address in the txn area
+		Make its state active committed?
+
+So what happens if a particular node has a transaction involving data for
+which it has a local copy (but is not the ON) and a commit from another
+node arrives?  It seems that you end up with concurrent writes to the
+data block. There is something about the ON blocking reads, but I don't
+understand how that happens, since thoes reads are just load instructions.
+		
+3.4.2 is the first time you suggest that begin has to go through the CD.
+Why is this necessary in the MRMW case?  Is this just an addition in the
+MRSW case? Doesn't the CD become a bottleneck?  Doesn't it have to maintain
+data for all transactions?
+
+I'm at 3.4.3, and I still don't understand what data is protected by
+non-transactional commits.  That is, if I never did a transaction,
+then I may have some arbitrary number of dirty blocks -- each of which
+became dirty via a store; how did hotspo ever learn of those blocks?
+Where is their location stored? How are those changes propagated? Without
+a begin, there is some gaping hole here that needs to be explained.
+
+This is an incorrect description of MongoDB: MongoDB [59] is a
+popular in-memory NoSql database that stores data in memory-mapped
+files and performs memory loads and stores for data access.  Mongo is not
+an in-memory database (and the sentence is self-contradictory, because
+you mention mmapped files, which suggests that it isn't in-memory). And
+for the past 1.5 years or so, it doesn't even use mmapped files.
+
+You don't really give us any explanation of where the performance win
+comes from -- that is you basicaly run the benchmarks and say, "We're
+faster." This doesn't give the reader much to take away. Also, you say
+that Hotpot produces 3 persistent copies while TMPFS gives you none, but
+since you're using DRAM as your NVM, one might argue that TMPFS could be
+placed on the NVM and woudl then be giving you at least 1 persistent copy.
+
+The PowerGraph use case is a bit odd, since PowerGraph isn't a persistent
+representation. I guess using PM is akin to providing checkpointing? In
+fact, I don't quite understand what you're doing here -- are you just using
+Hotpot as your communication substrate?
+
+    ===== Questions for the authors to address in their rebuttal =====
+
+I'm confused -- why are there fewer shared accesses as thread count
+increases; my intuition would have been just the opposite -- with one
+thread, you can't have any shared accesses, so as you increase the number
+of threads, I would have expected the possibility of shared locations to
+increase, but that's not at all what Figure 1 and 2 suggest. What am I
+missing?  The steep dropoff at 25 threads for tensorflow and around 12
+threads for powergraph suggests (to me) that there is something special
+about that level of parallelism.
+
+I'm confused -- why are there fewer shared accesses as thread count
+increases; my intuition would have been just the opposite -- with one
+thread, you can't have any shared accesses, so as you increase the number
+of threads, I would have expected the possibility of shared locations to
+increase, but that's not at all what Figure 1 and 2 suggest. What am I
+missing?  The steep dropoff at 25 threads for tensorflow and around 12
+threads for powergraph suggests (to me) that there is something special
+about that level of parallelism.
+
+===========================================================================
+                           OSDI '16 Review #231C
+---------------------------------------------------------------------------
+             Paper #231: Distributed Shared Persistent Memory
+---------------------------------------------------------------------------
+
+How much do you want to see this paper in the conference?:
+                                     C. I'm not enthusiastic about this
+                                        paper being in the program.
+Is this paper likely to make readers think differently about the topic?:
+                                     C. Might change a few perceptions.
+Are others likely to build upon this work in their own projects?:
+                                     B. It's quite likely that some groups
+                                        will find this paper useful in
+                                        their work.
+How does this paper compare to others you have reviewed for OSDI 2016?:
+                                     D. Top 50% but not top 25% of
+                                        submitted papers
+
+                         ===== Paper summary =====
+
+The paper proposes to provide an abstraction of a shared, persistent address space.  The proposed system, Hotpot, provides transactions and replication.
+
+                       ===== Paper weaknesses =====
+
+The paper tackles a lot of different issues.  As a result, no single issue is dealt with thoroughly.  The paper also overreaches in claiming it is the first persistent DSM.
+
+                   ===== Comments for the authors =====
+
+While byte-addressable non-volatile memory technologies are new, the idea of persistent distributed shared memory is not.  For example, see Marc Shapiro's work on PerDis and Larchant, and the large body of work on distributed objects.  The recent FaRM project is also very relevant.  The main difference between Hotpot and some of the distributed object work is providing native load/store access by using the page table to generate faults, but this technique is standard to almost all DSM systems.
+
+The paper's approach of contrasting memory coherence and data replication is confusing, and its claim to be the first to unify these concepts is an overreach.  This is a particular problem because the paper repeatedly says that Hotpot's key idea is to integrate memory coherence and data replication, and it's not clear what that means.  I think the authors are using memory coherence to refer to cache-coherent SMP systems, and are using data replication to refer to distributed caches for persistent data (such as distributed file caches).  But these two domains are both based on all the same principles, so the fifth paragraph of sec. 1 is not quite right.  Both use replication and must work to provide coherency.  Both can use passive or proactive replication (for example, prefetching in a cache-coherent SMP is proactive).  Both can throw away clean cached data, as long as the data exists somewhere else (such as the memory below the cache, or a home node of a distributed file system).  The differences are better characterized as applying the same techniques in different settings: CPU caches or file caches.  Paragraph 6-7 eventually make this clearer, but the paper later persists in claiming a new merger of these concepts (contribution 2 at the end of sec. 1), and this is an overreach because it is well known that the same principles underlie all types of replicated caching systems.
+
+The paper tackles a lot of different issues, which are nicely listed in sec. 2.4.  While I like the ambitious scope of the system, trying to deal with all these in one paper ends up shortchanging each issue.  For example, the naming issues are interesting but not fully addressed by Hotpot.  Does Hotpot guarantee a unique virtual address range per dataset?  If so, who manages the global virtual address space, and are you worried about running out of space?  If not, what happens if applications map two datasets that have the same virtual address?
+
+How does Hotpot perform data communication and data copying at byte granularity?  It uses page faults to detect accesses, so how does it identify the range of bytes that are being accessed?  This is an important issue because the evaluation shows that Hotpot's main advantage is sending less data over the network (sec. 5.3).
+
+minor
+
+Table 1 and Figure 5 using different API names (begin-xact and xact_begin).
+

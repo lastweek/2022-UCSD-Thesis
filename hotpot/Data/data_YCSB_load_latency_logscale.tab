@@ -1,0 +1,6 @@
+workload	latency
+PMFS-Journaled	1.4228933788
+PMFS-FsyncSafe	2.3197856096
+Tmpfs-Journaled	1.390589476
+Tmpfs-FsyncSafe	0.6144605939
+Hotpot	0.8535156968
