@@ -1,0 +1,67 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Hardware Resource Disaggregation.}
+There have been a few hardware disaggregation proposals from academia and industry,
+including Firebox~\cite{FireBox-FASTKeynote}, HP "The Machine"~\cite{HP-TheMachine,HP-MemoryOS}, dRedBox~\cite{dRedBox-DATE},
+and IBM Composable System~\cite{IBM-Composable}.
+Among them, dRedBox and IBM Composable System package hardware resources in one big case 
+and connect them with buses like PCIe.
+The Machine's scale is a rack and it connects SoCs with NVMs with a specialized coherent network.
+FireBox is an early-stage project and is likely to use high-radix switches to connect  customized devices.
+The disaggregated cluster we envision to run \lego\ on is one that hosts hundreds to thousands of
+non-coherent, heterogeneous hardware devices, connected with a commodity network.
+
+\paragraph{Memory Disaggregation and Remote memory.}
+Lim \etal\ first proposed the concept of hardware disaggregated memory
+with two models of disaggregated memory: using it as network swap device 
+and transparently accessing it through memory instructions~\cite{Lim09-disaggregate,Lim12-HPCA}.
+Their hardware models still use a monolithic server at the local side. 
+\lego' hardware model separates processor and memory completely. %is different.
+
+Another set of recent projects utilize remote memory without changing 
+monolithic servers~\cite{Dragojevic14-FaRM,Nelson15-ATC,remote-region-atc18,GU17-NSDI,Novakovic16-SOCC,hotpot-socc17}.
+For example, InfiniSwap~\cite{GU17-NSDI} transparently swaps local memory to remote memory via RDMA.
+These remote memory systems help improve the memory resource packing in a cluster.
+However, as discussed in \S\ref{sec:motivation}, unlike \lego, these solutions cannot solve other limitations 
+of monolithic servers like the lack of hardware heterogeneity and elasticity. 
+
+\paragraph{Storage Disaggregation.}
+Cloud vendors usually provision storage at different physical machines~\cite{deepview-nsdi18,url:aws-storage,url:vmware-vSAN}.
+Remote access to hard disks is a common practice, because their high latency and low throughput
+can easily hide network overhead~\cite{petal-asplos96,blizzard-nsdi14,Parallax-hotos15,Legtchenko-hotstorage17}.
+While disaggregating high-performance flash is a more challenging task~\cite{FlashDisaggregation,url:facebook-lighting}.
+Systems such as ReFlex~\cite{ReFlex}, Decibel~\cite{decibel-nsdi17}, and PolarFS~\cite{PolarFS-VLDB18},
+tightly integrate network and storage layers to minimize software overhead in the face of fast hardware.
+Although storage disaggregation is not our main focus now,
+we believe those techniques can be realized in future \lego\ easily.
+
+\paragraph{Multi-Kernel and Multi-Instance OSes.}
+Multi-kernel OSes like Barrelfish~\cite{Baumann-SOSP09,Barrelfish-DC}, Helios~\cite{Helios-SOSP}, Hive~\cite{Hive-SOSP}, and fos~\cite{fos-SOCC}
+run a small kernel on each core or programmable device in a monolithic server,
+and they use message passing to communicate across their internal kernels.
+Similarly, multi-instance OSes like Popcorn~\cite{popcorn-eurosys15} and Pisces~\cite{Pisces-hpdc15} run multiple Linux kernel instances
+on different cores in a machine. % to provide heterogeneous support and performance isolation.
+Different from these OSes, \lego\ runs on and manages a distributed set of hardware devices;
+it manages distributed hardware resources using a two-level approach and handles device failures (currently only \mcomponent).
+In addition, \lego\ differs from these OSes in how it splits OS functionalities, where it executes the split kernels,
+and how it performs message passing across components.
+Different from multi-kernels' message passing mechanisms which are performed over buses or using shared memory in a server, 
+\lego' message passing is performed using a customized RDMA-based RPC stack over InfiniBand or RoCE network.
+Like \lego, fos~\cite{fos-SOCC} separates OS functionalities and run them on different processor cores that share main memory.
+Helios~\cite{Helios-SOSP} runs {\em satellite kernels} on heterogeneous cores and programmable NICs that are not cache-coherent.
+We took a step further by disseminating OS functionalities to run on individual, network-attached hardware devices. % and run split kernel at hardware controllers.
+Moreover, \lego\ is the first OS that separates memory and process management and runs virtual memory system completely at network-attached memory devices.
+
+\paragraph{Distributed OSes.}
+There have been several distributed OSes built in late 80s and early 90s~\cite{Amoeba-Status,Amoeba-Experience,Sprite,MOSIX,V-System,Accent-SOSP,DEMOS-SOSP,Charlotte}.
+Many of them aim to appear as a single machine to users and focus on improving inter-node IPCs. 
+Among them, the most closely related one is Amoeba~\cite{Amoeba-Status,Amoeba-Experience}.
+It organizes a cluster into a shared process pool and disaggregated specialized servers.
+Unlike Amoeba, \lego\ further separates memory from processors and different hardware components are
+loosely coupled and can be heterogeneous instead of as a homogeneous pool.
+There are also few emerging proposals to build distributed OSes in datacenters~\cite{Wolfgang-hotcloud18,Schwarzkopf-apsys13}, 
+\eg, to reduce the performance overhead of middleware.
+\lego\ achieves the same benefits of minimal middleware layers by only 
+having \lego\ as the system management software for a disaggregated cluster
+and using the lightweight \vnode\ mechanism.

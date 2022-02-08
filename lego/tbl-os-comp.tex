@@ -1,0 +1,30 @@
+{
+\begin{table*}[th]\footnotesize
+\begin{center}
+\begin{tabular}{ l | c | c | c | c | c | c | c | c | c }
+\small OS & \small Res. Dis. & \small Hetero & \small Elastic & \small Limited h/w & \small Distributed & \small Failure & \small Msging & \small Linux ABI & \small Abstraction \\
+\hline
+\lego\ & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & Dist \\
+Linux & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \cmark & Single \\
+Barrelfish & \xmark & \cmark & \cmark & \xmark & \xmark & \xmark & \cmark & \xmark & Single\\
+Helios & \xmark & \cmark & \xmark & \cmark & \xmark & \xmark ? & \cmark & \xmark & Single \\
+fos & \xmark & \cmark & \cmark & \xmark & \cmark & \xmark & \cmark & \xmark & Single \\
+Amoeba & \cmark\ * & \xmark & \cmark & ? & \cmark & \cmark & \cmark & \xmark & Single\\ 
+Sprite & \xmark & \xmark & \xmark & \xmark & \cmark & \cmark &  & \xmark & Single \\
+L4 & \xmark & & & \xmark & \xmark & & & \xmark & Single \\
+Corey & \xmark & & & \xmark & \xmark & & \cmark & \xmark & Single \\
+Hive & \xmark & ? & ? & \xmark & \cmark ? & \cmark & \xmark & \xmark & Single \\
+\end{tabular}
+\end{center}
+\vspace{-0.1in}
+\mycaption{tbl-os-comp}{\lego\ Comparison to Related OSes.}
+{
+Comparison in the support for resource disaggregation, hetereogeneity, elastiticy 
+designing with hardware constraints, handling distributed nature, handling failure, 
+support for unmodified Linux ABI, and whether it appears as a distributed set of nodes 
+or a single OS image.
+* Amoeba manages pool of resources.
+}
+%\vspace{-0.1in}
+\end{table*}
+}

@@ -1,0 +1,24 @@
+{
+\begin{table*}[th]\scriptsize
+\begin{center}
+\begin{tabular}{ l | c | c | c | c | c | c | c | c}
+ & \footnotesize Server & \footnotesize CPU & \footnotesize DRAM (32\GB) & \footnotesize HDD & \footnotesize SSD & \footnotesize RDMA NIC (40Gbps) & \footnotesize Switch (36x40Gbps) &
+	\footnotesize Total \\
+\hline
+Unit Cost & \$6500 & \$530 & \$760 & \$360 & \$380 &\$320 & \$7400 & N/A \\
+Monolithic & 100 & (200) & (400) & (100) & (100) & 100 & 3  & \$704,200\\
+Disaggregation & 0 & 100 & 200 + 50 & 0 & 100 & 125 & 4 & \$350,600 \\
+\end{tabular}
+\end{center}
+\vspace{-0.2in}
+\mycaption{tbl-cost}{Cost Comparison.}
+{
+%Collected from~\cite{Dell-R740,Intel-Xeon,Mellanox-ConnectX-3Pro}.
+%Cost comparison of monolithic server and disaggregated hardware.
+Numbers without \$ sign in the bottom two rows mean the number of units a configuration needs.
+Numbers in paranthesis mean the number of units monolithic servers have inside the server package.
+}
+%\vspace{-0.1in}
+\end{table*}
+%\vspace{-0.1in}
+}

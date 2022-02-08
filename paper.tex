@@ -4,75 +4,6 @@
 % -----------------------------------
 % https://github.com/ucsd-thesis/ucsd-thesis
 %
-%
-% ----------------------------------------------------------------------
-% WARNING: 
-%
-%   This template has not endorced by OGS or any other official entity.
-%   The official formatting guide can be obtained from OGS.
-%   It can be found on the web here:
-%   http://grad.ucsd.edu/_files/academic-affairs/Dissertations_Theses_Formatting_Manual.pdf
-%
-%   No guaranty is made that this LaTeX class conforms to the official UCSD guidelines.
-%   Make sure that you check the final document against the Formatting Manual.
-%  
-%   That being said, this class has been routinely used for successful 
-%   publication of doctoral theses.  
-%
-%   The ucsd.cls class files are only valid for doctoral dissertations.
-%
-%
-% ----------------------------------------------------------------------
-% GETTING STARTED:
-%
-%   Lots of information can be found on the project wiki:
-%   http://code.google.com/p/ucsd-thesis/wiki/GettingStarted
-%
-%
-%   To make a pdf from this template use the command:
-%     pdflatex template
-%
-%
-%   To get started please read the comments in this template file 
-%   and make changes as appropriate.
-%
-%   If you successfully submit a thesis with this package please let us
-%   know.
-%
-%
-% ----------------------------------------------------------------------
-% KNOWN ISSUES:
-%
-%   Currently only the 12pt size conforms to the UCSD requirements.
-%   The 10pt and 11pt options make the footnote fonts too small.
-%
-%
-% ----------------------------------------------------------------------
-% HELP/CONTACT:
-%
-%   If you need help try the ucsd-thesis google group:
-%   http://groups.google.com/group/ucsd-thesis
-%
-%
-% ----------------------------------------------------------------------
-% BUGS:
-%
-%   Please report all bugs at:
-%   https://github.com/ucsd-thesis/ucsd-thesis/issues
-%
-%
-% ----------------------------------------------------------------------
-% More control of the formatting of your thesis can be achieved through
-% modifications of the included LaTeX class files:
-%
-%   * ucsd.cls    -- Class file
-%   * uct10.clo   -- Configuration files for font sizes 10pt, 11pt, 12pt
-%     uct11.clo                            
-%     uct12.clo
-%
-% ----------------------------------------------------------------------
-
-
 
 % Setup the documentclass 
 % default options: 12pt, oneside, final
@@ -132,7 +63,11 @@
 \usepackage{setspace}
 \doublespace
 \usepackage[font=small, width=0.9\textwidth]{caption}
+\usepackage{subcaption}
 \usepackage[capposition=bottom]{floatrow} %force captions below figure per OGS requirement
+
+\usepackage{soul}
+\usepackage{ulem}
 
 %% SUBFIG - Use this to place multiple images in a
 %    single figure.  Subfig will handle placement and
@@ -197,7 +132,7 @@
 \usepackage{array}  % Enables "m" tabular environment http://ctan.org/pkg/array
 \usepackage{booktabs}  % Enables \toprule  http://ctan.org/pkg/array
 
-
+\input{macros}
 
 \begin{document}
 
@@ -206,7 +141,7 @@
 %  All of the front matter.
 %  This includes the title, degree, dedication, vita, abstract, etc..
 %  Modify the file template_frontmatter.tex to change these pages.
-\include{template_frontmatter}
+\include{paper_frontmatter}
 
 
 
@@ -304,7 +239,7 @@ What to do about things \cite{Martin_1983}.  What did he say \cite{Rilling_Insel
 %\setlength{\bibindent}{-\bibleftmargin}  % unindent the first line
 %\def\baselinestretch{1.0}  % force single spacing
 %\setlength{\bibitemsep}{0.16in}  % add extra space between items
-\bibliography{template}  %% This looks for the bibliography in template.bib 
+\bibliography{paper}  %% This looks for the bibliography in template.bib 
 %                          which should be formatted as a bibtex file.
 %                          and needs to be separately compiled into a bbl file.
 \singlespace  %to force bibilography environment to use single spacing for each entry 

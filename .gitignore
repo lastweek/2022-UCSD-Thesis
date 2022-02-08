@@ -1,0 +1,14 @@
+*.
+!.gitignore
+
+*.aux
+*.bbl
+*.blg
+*.deps
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.toc
+*.synctex

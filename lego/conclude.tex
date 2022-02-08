@@ -1,0 +1,33 @@
+\section{Discussion and Conclusion}
+\label{sec:conclude}
+
+We presented \lego, the first OS designed for hardware resource disaggregation.
+\lego\ demonstrated the feasibility of resource disaggregation and its advantages in 
+better resource packing, failure isolation, and elasticity, all without changing Linux ABIs.
+\lego\ and resource disaggregation in general can help the adoption of new hardware
+and thus encourage more hardware and system software innovations.  
+
+\lego\ is a research prototype and has a lot of room for improvement.
+For example, we found that the amount of parallel threads an \mcomponent\ can 
+use to process memory requests largely affect application throughput. 
+Thus, future developers of real \mcomponent{}s can consider use 
+large amount of cheap cores or FPGA to implement memory monitors in hardware.
+
+We also performed an initial investigation in load balancing 
+and found that memory allocation policies across \mcomponent{}s can largely affect application performance.
+However, since we do not support memory data migration yet, 
+the benefit of our load-balancing mechanism is small.
+We leave memory migration for future work.
+In general, large-scale resource management of a disaggregated cluster is 
+an interesting and important topic, but is outside of the scope of this paper.
+
+\if 0
+organizing as cache
+no coherence across processors or memory
+users know the nature of distributed computation, but not that memory, storage are disaggregated
+help hardware and system software innovations
+Linux
+user interface programming model
+new abstraction
+focus on mechanism, leave policy for future
+\fi

@@ -1,0 +1,23 @@
+\section*{Abstract}
+
+The monolithic server model where a server is the unit of deployment, operation, and failure 
+is meeting its limits in the face of several recent hardware and application trends. 
+To improve resource utilization, elasticity, heterogeneity, and failure handling in datacenters, 
+we believe that datacenters should break monolithic servers into {\em disaggregated, network-attached hardware components}. 
+Despite the promising benefits of hardware resource disaggregation, 
+no existing OSes or software systems can properly manage it.
+
+We propose a new OS model called the {\em \splitkernel} to manage disaggregated systems. 
+Splitkernel disseminates traditional OS functionalities into loosely-coupled {\em \microos{}s},
+each of which runs on and manages a hardware component.
+A \splitkernel\ also performs resource allocation and failure handling of a distributed set of hardware components.
+Using the \splitkernel\ model, we built {\em \lego}, 
+a new OS designed for hardware resource disaggregation. 
+\lego\ appears to users as a set of distributed servers.
+Internally, a user application can span multiple processor, memory, and storage hardware components.
+%Internally, \lego\ cleanly separates processor, memory, and storage devices 
+%both at the hardware level and the OS level.
+We implemented \lego\ on x86-64 and evaluated it by emulating hardware components using commodity servers. 
+Our evaluation results show that \lego' performance is comparable to monolithic Linux servers,
+while largely improving resource packing and reducing failure rate over monolithic clusters.
+

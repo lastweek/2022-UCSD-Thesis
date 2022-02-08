@@ -1,0 +1,3 @@
+#NR_workers	Piggyback+List+FIFO List+FIFO	List+LRU	Bitmap+FIFO
+1_worker	1.738		1.843		2.012		2.064
+4_worker	1.673		1.715		1.937		1.915

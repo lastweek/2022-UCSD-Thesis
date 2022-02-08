@@ -1,0 +1,52 @@
+\section{The Splitkernel OS Architecture}
+\label{sec:design}
+
+We propose {\em \splitkernel}, a new OS architecture for resource disaggregation. 
+Figure~\ref{fig-architecture} illustrates \splitkernel's overall architecture.
+The \splitkernel\ disseminates an OS into pieces of different functionalities,
+each running at and managing a hardware component.
+All components communicate by message passing over a common network,
+and \splitkernel\ globally manages resources and component failures.
+Splitkernel is a general OS architecture we propose for hardware resource disaggregation.
+There can be many types of implementation of \splitkernel.
+Further, we make no assumption on the specific hardware or network type in a disaggregated cluster a \splitkernel\ runs on.
+Below, we describe four key concepts of the \splitkernel\ architecture.
+
+\noindent{\textit{\uline{Split OS functionalities.}}}
+Splitkernel breaks traditional OS functionalities into {\em \microos{}s}.
+Each \microos\ manages a hardware component, virtualizes and protects its physical resources.
+Monitors in a \splitkernel\ are loosely-coupled and 
+they communicate with other \microos{}s to access remote resources. 
+For each \microos\ to operate on its own with minimal dependence on other \microos{}s,
+we use a stateless design by sharing no or minimal {\em states}, or metadata,
+across \microos{}s.
+
+\noindent{\textit{\uline{Run \microos{}s at hardware components.}}}
+We expect each non-processor hardware component in a disaggregated cluster to have a controller that 
+can run a \microos.
+A hardware controller can be a low-power general-purpose core, an ASIC, or an FPGA.
+Each \microos\ in a \splitkernel\ can use its own implementation to manage the hardware component it runs on.
+This design makes it easy to integrate heterogeneous hardware in datacenters ---
+to deploy a new hardware device, its developers only need to build the device,
+implement a \microos\ to manage it, % and communicate with the rest of \splitkernel,
+and attach the device to the network. 
+Similarly, it is easy to reconfigure, restart, and remove hardware components.
+
+\noindent{\textit{\uline{Message passing across non-coherent components.}}}
+Unlike other proposals of disaggregated systems~\cite{HP-TheMachine} that rely on coherent interconnects~\cite{GenZ,ccix,OpenCAPI},
+a \splitkernel\ runs on general-purpose network layer like Ethernet and 
+neither underlying hardware nor the \splitkernel\ provides cache coherence across components.
+We made this design choice mainly because maintaining coherence for our targeted cluster scale 
+would cause high network bandwidth consumption.
+Instead, all communication across components in a \splitkernel\ is through {\em network messaging}.
+A \splitkernel\ still retains the coherence guarantee that hardware already provides within a component (\eg, cache coherence across cores in a CPU),
+and applications running on top of a \splitkernel\ can use message passing to implement their desired level of coherence for their data across components.
+
+\noindent{\textit{\uline{Global resource management and failure handling.}}}
+One hardware component can host resources for multiple applications and its failure can affect all these applications.
+In addition to managing individual components, the \splitkernel\ also needs to 
+globally manage resources and failure.
+To minimize performance and scalability bottleneck,
+the \splitkernel\ only involves global resource management occasionally for coarse-grained decisions, 
+while individual \microos{}s make their own fine-grained decisions.
+The \splitkernel\ handles component failure by adding redundancy for recovery.

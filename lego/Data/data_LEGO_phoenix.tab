@@ -1,0 +1,8 @@
+#
+# Phoenix on different systems
+# 256M 512M 1024M 64-way 2 worker
+
+#	Lego		Linux-ssd	Linux-ramdisk	InfiniSwap
+1	1.7380		5.6042          1.4731		4.5014
+2	1.3358		2.3803          1.2083		2.4987
+3	1.1676		1.2135          1.0898		1.8650

@@ -1,0 +1,175 @@
+\documentclass[10pt,times,twocolumn]{z2-article}
+
+%
+% OSDI
+%
+%\documentclass[letterpaper,twocolumn,10pt]{article}
+%\usepackage{usenix,epsfig,endnotes}
+
+
+%\documentclass[11pt,times,twocolumn]{article} %\documentclass[11pt]{article} 
+
+%\usepackage{hyperref,url}%,bibunits}
+%\urlstyle{rm}
+\usepackage[usenames]{color}
+\usepackage{times}
+\usepackage{oneinchmargins}
+\usepackage{tightenum}
+\usepackage{enumitem}
+\usepackage{ulem}
+\usepackage[numbers,sort]{natbib}
+
+\usepackage[hidelinks]{hyperref}
+
+%
+
+\usepackage{setspace}
+%\usepackage{epsf}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{times}
+%\usepackage{algorithm}
+%\usepackage{algorithmic}
+\usepackage{amsmath}
+\usepackage[compact]{titlesec}
+\usepackage{url}
+\usepackage{nonfloat}
+\usepackage{subcaption}
+\urlstyle{rm}
+%\usepackage{algorithmic}
+% \titlespacing*{\section}{0em}{-0ex}{-2ex}
+% \titlespacing*{\subsection}{0em}{-0ex}{-2ex}
+% \titlespacing*{\subsubsection}{0em}{-0ex}{-2ex}
+%\setstretch{0.98}
+
+\usepackage{multirow}
+
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\newcommand*\circled[1]{\tikz[baseline=-3pt]{
+            \node[shape=circle,draw,inner sep=1pt,minimum size=10pt] (char) {\small #1};}}
+
+
+\usepackage{amssymb}% http://ctan.org/pkg/amssymb
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+
+%\setstretch{2.2}
+
+\setlength{\rightmargin}{0.0in}
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+\setlength{\textwidth}{6.4in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+
+
+  \let\oldthebibliography=\thebibliography
+  \let\endoldthebibliography=\endthebibliography
+  \renewenvironment{thebibliography}[1]{%
+    \begin{oldthebibliography}{#1}%
+      \setlength{\parskip}{0ex}%
+      \setlength{\itemsep}{0ex}%
+  }%
+  {%
+    \end{oldthebibliography}%
+  }
+
+%\setlength{\rightmargin}{0.0in}
+%\setlength{\topmargin}{-0.5in}
+%\setlength{\textheight}{9.6in}
+%\setlength{\textwidth}{7.0in}
+%\setlength{\oddsidemargin}{-0.275in}
+%\setlength{\evensidemargin}{-0.275in}
+
+%\newcommand{\ignore}[1]{}
+%\setlength{\rightmargin}{-0.3in}
+%\setlength{\topmargin}{-0.6in}
+%\setlength{\textheight}{9.8in}
+%\setlength{\textwidth}{7.5in}
+%\setlength{\oddsidemargin}{-0.55in}
+%\setlength{\evensidemargin}{-0.55in}
+
+%\setlength{\topmargin}{-0.5in}
+%\setlength{\textheight}{9.2in}
+%\setlength{\textwidth}{6.9in}
+%\setlength{\oddsidemargin}{-0.25in}
+%\setlength{\evensidemargin}{-0.25in}
+
+
+\usepackage{listings}
+  \usepackage{courier}
+ \lstset{
+         basicstyle=\footnotesize\ttfamily, % Standardschrift
+         %numbers=left,               % Ort der Zeilennummern
+         numberstyle=\tiny,          % Stil der Zeilennummern
+         %stepnumber=2,               % Abstand zwischen den Zeilennummern
+         numbersep=5pt,              % Abstand der Nummern zum Text
+         tabsize=2,                  % Groesse von Tabs
+         extendedchars=true,         %
+         breaklines=true,            % Zeilen werden Umgebrochen
+         keywordstyle=\color{red},
+    		frame=b,         
+ %        keywordstyle=[1]\textbf,    % Stil der Keywords
+ %        keywordstyle=[2]\textbf,    %
+ %        keywordstyle=[3]\textbf,    %
+ %        keywordstyle=[4]\textbf,   \sqrt{\sqrt{}} %
+         stringstyle=\color{white}\ttfamily, % Farbe der String
+         showspaces=false,           % Leerzeichen anzeigen ?
+         showtabs=false,             % Tabs anzeigen ?
+         xleftmargin=17pt,
+         framexleftmargin=17pt,
+         framexrightmargin=5pt,
+         framexbottommargin=4pt,
+         %backgroundcolor=\color{lightgray},
+         showstringspaces=false      % Leerzeichen in Strings anzeigen ?        
+ }
+ \lstloadlanguages{% Check Dokumentation for further languages ...
+         %[Visual]Basic
+         %Pascal
+         C
+         %C++
+         %XML
+         %HTML
+         %Java
+ }
+
+\sloppy
+\input{macros}
+%\newcommand{\ignore}[1]{}
+\input{remark}
+%% Leave this on, so we can see them!!!
+\remarktrue
+\newcommand{\shortenum}{\vspace*{-0.1in}}
+%\newcommand{\shortsec}{\vspace*{-0.2in}}
+%\newcommand{\sparagraph}[1]{\vspace*{-0.2in}\paragraph{#1}}
+%\newcommand{\sparagraph}[1]{\vspace*{-0.15in}\paragraph{#1}}
+\newcommand{\sparagraph}[1]{\vspace*{0.0in}\paragraph{#1}}
+
+% add below for confidential distribution
+%\usepackage{draftwatermark}
+%\SetWatermarkText{DO NOT DISTRIBUTE}
+%\SetWatermarkScale{0.4}
+
+\usepackage{url}
+\def\UrlBreaks{\do\/\do-}
+
+\begin{document}
+
+\pagestyle{plain}
+
+
+%\input{summary}
+%\clearpage
+%\pagestyle{myheadings}
+%\pagenumbering{arabic}
+
+%\newenvironment{smallitemize}{\begin{list}{$\bullet$}{\topsep0.0in\itemsep0.0in\parsep0.0in\partopsep0.0in\itemindent0.1in\leftmargin0.1in}}{\end{list}}
+%\newenvironment{smallitemize}{\begin{list}{$\bullet$}{\topsep0.1in\itemsep0.1in\parsep0.1in\partopsep0.1in\itemindent0.1in\leftmargin0.1in}}{\end{list}}
+%\newenvironment{smallitemize}{\begin{list}{$\bullet$}{\topsep0.05in\itemsep0.05in\parsep0.0in\partopsep0.05in\itemindent0.05in\leftmargin0.05in}}{\end{list}}
+%{\topsep{0in}\itemsep{0.1in}\itemindent{0.1in}}
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+

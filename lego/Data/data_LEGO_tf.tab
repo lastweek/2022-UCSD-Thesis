@@ -1,0 +1,8 @@
+#
+# TensorFlow on different systems
+# 128M 256M 512M
+
+#	Lego		Linux-ssd	nbdX-ssd	Linux-ramdisk	InfiniSwap
+1	1.2917		4.1432		3.2559		3.8994		1.3894
+2	1.1741		1.1080		1.3052		1.1712		1.1092
+3	1.1647		1.0641		1.0553		1.0085		1.0144

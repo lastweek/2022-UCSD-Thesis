@@ -1,0 +1,12 @@
+#
+# TensorFlow on different systems
+# 128M 256M 512M 64-way 2 worker
+#
+# CIFAR-10
+#
+# Lego is 4worker-list
+
+#	Lego		Linux-ssd	Linux-ramdisk	Infiniswap
+1	2.132		5.520		4.480		2.912
+2	1.682		2.502		2.161		2.548
+3	1.414		1.372		1.273		1.227
