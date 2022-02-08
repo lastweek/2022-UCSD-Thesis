@@ -1,5 +1,5 @@
 \section{Data Durability, Consistency, and Reliability}
-\label{sec:xact}
+\label{sec:hotpot:xact}
 
 Being distributed shared memory and distributed storage at the same time,
 \dsnvm\ should ensure both correct shared memory accesses to \nvm\
@@ -11,7 +11,7 @@ Although each of these three properties have been explored before,
 as far as we know, \hotpot\ is the first system that integrates all of them in one layer.
 \hotpot\ also has the unique requirement of low software overhead to retain the performance benefit of \nvm.
 
-\begin{itemize}[leftmargin=*]
+\begin{itemize}
 \item{\em Cache coherence.} 
 In \hotpot, application processes on different nodes cache remote data in their local \nvm\ for fast accesses.
 \hotpot\ provides two consistency levels across cached copies: 
@@ -45,7 +45,7 @@ then presents the \mrmw\ and \mrsw\ modes and their atomic commit protocols, %an
 and ends with the discussion of \hotpot's recovery mechanisms under different crash scenarios.
 
 \subsection{Single-Node Persistence and Consistency}
-\label{sec:singleconsistency}
+\label{sec:hotpot:singleconsistency}
 
 Before ensuring user data's global reliability and consistency in \dsnvm,
 \hotpot\ first needs to make sure that data on a single node can properly sustain power crashes (\rcs)~\cite{Memory-Persistency}.
@@ -53,7 +53,7 @@ Before ensuring user data's global reliability and consistency in \dsnvm,
 \ie, \clflush, \mfence\ (note that we do not include the deprecated \pcommit\ instruction~\cite{Deprecating-PCOMMIT}).
 
 After a node crashes, if its \nvm\ is still accessible, \hotpot\ will use the \nvm\ content to recover;
-otherwise, \hotpot\ will use other nodes to reconstruct data on a new node (Section~\ref{sec:recovery}).
+otherwise, \hotpot\ will use other nodes to reconstruct data on a new node (Section~\ref{sec:hotpot:recovery}).
 For the former case, \hotpot\ needs to guarantee that user data in \dsnvm\ is in a consistent state after crash.
 \hotpot\ also needs to ensure that its own metadata is persistent and is consistent with user data.
 
@@ -65,12 +65,12 @@ a pre-allocated beginning area of \nvm.
 These metadata can be reconstructed by re-examining system states after recovery.
 Thus, \hotpot\ does not make these metadata persistent.
 
-\input{fig-tran-1}
+\input{hotpot/fig-tran-1}
 
 Similar to traditional file systems and databases, 
 it is important to enforce {\em ordering} of metadata and data persistence
 in order to recover to a consistent state.
-For single-node non-commit operations (we defer the discussion of commit operations to Sections \ref{sec:mrmw} and \ref{sec:mrsw}), 
+For single-node non-commit operations (we defer the discussion of commit operations to Sections \ref{sec:hotpot:mrmw} and \ref{sec:hotpot:mrsw}), 
 \hotpot\ uses a simple shadow-paging mechanism to ensure that the consistency of metadata and data.
 Specifically, we associate each physical memory page with a metadata slot
 and use a single 8-byte index value to locate both the physical page and its metadata.
@@ -83,7 +83,7 @@ Since most architectures support atomic 8-byte writes, this operation atomically
 %and \hotpot\ can always recover local data to a consistent state after crashes.
 
 \subsection{\mrmw\ Mode}
-\label{sec:mrmw}
+\label{sec:hotpot:mrmw}
 \hotpot\ supports two levels of concurrent shared-\nvm\ accesses and uses different protocols to commit data.
 The \mrmw\ mode allows multiple concurrent versions of dirty, uncommitted data 
 to support great parallelism.
@@ -99,12 +99,12 @@ based on traditional two-phase commit protocols~\cite{Samaras93,Gray78,Lampson81
 \hotpot\ needs to ensure cache coherence, crash consistency, and data replication all in one protocol.
 Figure~\ref{fig-mrmw} illustrates an example of \mrmw. 
 
-\input{fig-tran-2}
+\input{hotpot/fig-tran-2}
 
 \noindent{\bf Commit phase 1.} 
 When a node receives a \commitxact\ call (we call this node {\em \xn}), it checks if data specified in the \commitxact\ call is dirty
 and commits only the dirty pages.
-\xn\ persistently records the addresses of these dirty pages for recovery reasons (Section~\ref{sec:recovery}).
+\xn\ persistently records the addresses of these dirty pages for recovery reasons (Section~\ref{sec:hotpot:recovery}).
 \xn\ also assigns a unique ID ({\em \xactid}) for this \commitxact\ request and persistently records the \xactid\ and its state of starting phase 1. 
  
 Afterwards, \xn\ sends the committing data to its \on{}s 
@@ -122,7 +122,7 @@ This is the phase that \hotpot\ differs most from traditional distributed commit
 
 \xn\ sends a command to all the involving \on{}s to indicate the beginning of phase 2.  
 %This command indicates that the \on{}s can safely begin commit phase 2 and specifies the application's desired replication degree.  
-Each \on{} then performs two tasks in one multicast operation (Section~\ref{sec:network}): 
+Each \on{} then performs two tasks in one multicast operation (Section~\ref{sec:hotpot:network}): 
 updating \dn{}s' cached copies of the committing data and making extra replicas.
 \on\ looks up its metadata to find what \dn{}s have a cached copy.
 If these \dn{}s alone cannot meet the replication degree, \on{} will choose new \dn{}s that do not have
@@ -175,7 +175,7 @@ Since all local dirty pages are the COW of old \committed\ pages,
 and does not need to create any other redo log as in remote \on's phase 1.
 
 \subsection{MRSW Mode}
-\label{sec:mrsw}
+\label{sec:hotpot:mrsw}
 
 The \mrsw\ mode allows only one writer to a \nvm\ page at a time
 to trade parallelism for stronger consistency. 

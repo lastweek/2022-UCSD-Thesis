@@ -1,6 +1,6 @@
 \section{\hotpot\ Architecture and Abstraction}
-\label{sec:design}
-\label{sec:abstraction}
+\label{sec:hotpot:design}
+\label{sec:hopot:abstraction}
 
 We built {\em \hotpot}, a kernel-level \dsnvm\ system that %manages \dsnvm\ and
 %manages distributed shared persistent memory
@@ -12,25 +12,18 @@ This section presents the overall architecture of \hotpot\ and its abstraction t
 
 We built most of \hotpot\ as a loadable kernel module in Linux 3.11.0 
 with only a few small changes to the original kernel. 
-\hotpot\ has around 19K lines of code, out of which 6.4K lines are for a customized network stack (Section~\ref{sec:network}).
+\hotpot\ has around 19K lines of code, out of which 6.4K lines are for a customized network stack (Section~\ref{sec:hotpot:network}).
 \hotpot\ is available at {\url https://github.com/WukLab/Hotpot}.
-
-\if 0
-This section describes \hotpot's overall architecture and abstraction,
-how \hotpot\ manages user data and its own metadata, 
-\hotpot's data consistency and reliability solutions,
-and \hotpot's resource management mechanisms and network layer.
-\fi
 
 \hotpot\ sits in the kernel space and manages \nvm{}s in a set of distributed nodes, or {\em \hotpot\ nodes}.
 \hotpot\ provides applications with an easy-to-use, memory-based abstraction that encapsulates 
 both memory and persistent data access in a transparent way.
-Figure~\ref{fig-architecture} presents \hotpot's architecture.
+Figure~\ref{fig-hotpot-architecture} presents \hotpot's architecture.
 \hotpot\ uses a {\em Central Dispatcher (\cd)} 
 to manage node membership and initialization tasks (\eg, create a dataset).
 All data and metadata communication after a dataset has been created takes place between \hotpot\ nodes and does not involve the \cd.
 
-\input{fig-architecture}
+\input{hotpot/fig-architecture}
 
 \subsection{Application Execution and Data Access Abstraction}
 Most data-intensive applications are multithreaded 
@@ -44,7 +37,7 @@ We give users full flexibility in choosing their initial thread and workload dis
 However, such user-chosen distributions may not be optimal, especially as workloads change over time.
 To remedy this situation, 
 \hotpot\ provides a mechanism to adaptively move data closer to computation based on workload behavior, 
-as will be discussed in Section~\ref{sec:migration}.
+as will be discussed in Section~\ref{sec:hopot:migration}.
 
 
 \hotpot\ provides a global virtual memory address space to each application.
@@ -52,8 +45,8 @@ Application threads running on a node can perform native memory load and store i
 to access both local and remote \nvm.
 The applications do not know where their data physically is or whether a memory access is local or remote.
 Internally, a virtual memory address can map to a local physical page if the page exists locally or 
-generate a page fault which will be fulfilled by \hotpot\ by fetching a remote page (more in Section \ref{sec:readwrite}). 
-Figure~\ref{fig-addressing} presents an example of \hotpot's global virtual address space.
+generate a page fault which will be fulfilled by \hotpot\ by fetching a remote page (more in Section \ref{sec:hotpot:readwrite}). 
+Figure~\ref{fig-hotpot-addressing} presents an example of \hotpot's global virtual address space.
 Unlike an I/O-based interface, \hotpot's native memory interface can best exploit \nvm{}s' low-latency, DRAM-like performance, and byte addressability.
 
 On top of the memory load/store interfaces, \hotpot\ provides a mechanism for applications to 
@@ -63,13 +56,13 @@ and helper functions for distributed thread synchronization.
 %We will discuss these three APIs in detail in Section~~\ref{sec:xact}.
 Table~\ref{tbl-apis} lists \hotpot\ APIs.
 We also illustrate \hotpot's programming model with a simple program in Figure~\ref{fig-code-eg}.
-We will explain \hotpot's data commit semantics in Section~\ref{sec:xact}.
+We will explain \hotpot's data commit semantics in Section~\ref{sec:hotpot:xact}.
 
-\input{tbl-interfaces}
-\input{fig-addressing}
+\input{hotpot/tbl-interfaces}
+\input{hotpot/fig-addressing}
 
 \subsection{Persistent Naming}
-\label{sec:naming}
+\label{sec:hopot:naming}
 To be able to store persistent data and to allow applications to re-open them after closing or failures, 
 \hotpot\ needs to provide a naming mechanism that can sustain power recycles and crashes. 
 
@@ -91,10 +84,10 @@ The \open\ and \mmap\ APIs in Table~\ref{tbl-apis} let applications create or op
 map it into the application's virtual memory address space.
 Afterwards, all data access is through native memory instructions.
 
-\input{fig-code-eg}
+\input{hotpot/fig-code-eg}
 
 \subsection{Consistent and Persistent Pointers} 
-\label{sec:addressing}
+\label{sec:hotpot:addressing}
 
 \hotpot\ applications can use \dsnvm\ as memory and store arbitrary data structures in it. 
 One resulting challenge is the management of pointers in \dsnvm.

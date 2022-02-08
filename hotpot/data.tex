@@ -1,8 +1,8 @@
 \section{Data Management and Access}
-\label{sec:data}
+\label{sec:hotpot:data}
 
 This section presents how \hotpot\ manages user data in \dsnvm. 
-We postpone the discussion of data durability and reliability to Section~\ref{sec:xact}.
+We postpone the discussion of data durability and reliability to Section~\ref{sec:hotpot:xact}.
 
 \subsection{\nvm\ Page Morphable States}
 One of \hotpot's design philosophies is to use one layer for both memory and storage 
@@ -50,16 +50,16 @@ First, %besides serving read data,
 besides serving read data and ensure the coherence of cached copies.
 Second, \hotpot\ does not fix which node owns a chunk
 and the location of \on\ adapts to application workload behavior dynamically.
-Such flexibility is important for load balancing and application performance (see Section~\ref{sec:migration}).
+Such flexibility is important for load balancing and application performance (see Section~\ref{sec:hotpot:migration}).
 
 \subsection{Data Reads and Writes}
-\label{sec:readwrite}
+\label{sec:hotpot:readwrite}
 
 \hotpot\ minimizes software overhead to improve application performance.
 It is invoked only when a page fault occurs or when 
-applications execute data persistence operations (see Section~\ref{sec:xact} for details of data persistence operations).
+applications execute data persistence operations (see Section~\ref{sec:hotpot:xact} for details of data persistence operations).
 
-\input{fig-data-eg}
+\input{hotpot/fig-data-eg}
 When a page fault happens because of read, 
 it means that there is no valid local page.
 \hotpot\ first checks if there is any local \redundant\ page.
@@ -91,7 +91,7 @@ can further reduce \nvm\ wear.
 We do not focus on \nvm\ wear in this paper and leave such optimizations for future work.
 
 \subsection{\nvm\ Page Allocation and Eviction}
-\label{sec:eviction}
+\label{sec:hotpot:eviction}
 Each \hotpot\ node manages its own physical \nvm\ space and performs \nvm\ page allocation and eviction.
 Since physical pages do not need to be consecutive,
 we use a simple and efficient allocation mechanism by maintaining a free page list
@@ -115,7 +115,7 @@ For pages that will drop below the user-defined replication degree after the evi
 the \on\ will make a new \redundant\ page at another node. %, if the eviction violates user-specified reliability requirements.
 
 \subsection{Chunk \on\ Migration}
-\label{sec:migration}
+\label{sec:hotpot:migration}
 An \on{} serves both page read and data commit requests that belong to the chunks it owns.
 Thus, the location of \on\ is important to \hotpot's performance.
 Ideally, the node that performs the most reads and commits of data in a chunk 
@@ -172,7 +172,7 @@ can potentially improve performance.
 First, we use spatial locality to estimate the likelihood a node is going to access an \redundant\ page 
 by the number of pages this node has read in the chunk that contains the \redundant\ page.
 The second consideration is to prevent thrashing.
-When a node runs out of space, it will first evict \redundant\ pages (Section~\ref{sec:eviction})
+When a node runs out of space, it will first evict \redundant\ pages (Section~\ref{sec:hotpot:eviction})
 and assigning \redundant\ pages to such nodes will cause thrashing.
 Thus, \hotpot\ compares the total \nvm\ free space of a node and avoids assigning 
 \redundant\ pages to nodes with space pressure.

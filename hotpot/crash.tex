@@ -1,5 +1,5 @@
 \subsection{Crash Recovery}
-\label{sec:recovery}
+\label{sec:hotpot:recovery}
 
 \hotpot\ can safely recover from different crash scenarios
 without losing applications' data.
@@ -16,7 +16,7 @@ Table~\ref{tbl-crash} summarizes various crash scenarios and \hotpot's recovery 
 
 %\subsubsubsection{Crash During Transaction Commit}
 
-\input{tbl-crash}
+\input{hotpot/tbl-crash}
 
 \noindent{\bf Recovering \cd\ and \master.}
 \cd\ maintains node membership and dataset name mappings.
@@ -38,7 +38,7 @@ If the \nvm\ in the crashed node is accessible after the crash (we call it {\em 
 lets applications access data in \nvm.
 % provides the data in \nvm\ to applications,
 %which can choose to resume from where they left over~\cite{Narayanan12-ASPLOS}.
-As described in Section~\ref{sec:singleconsistency}, \hotpot\ ensures crash consistency of a single node.
+As described in Section~\ref{sec:hotpot:singleconsistency}, \hotpot\ ensures crash consistency of a single node.
 Thus, \hotpot\ can always recover to a consistent state 
 when \nvm\ survives a crash.
 \hotpot\ can sustain arbitrary number of with-\nvm\ failures concurrently. 
@@ -101,10 +101,9 @@ by letting all \on{}s delete their redo logs and send old data to \dn{}s to over
 %to only contact the nodes that owns pages that have been acquired by the failed \xn.
 
 During commit, \hotpot\ only supports either \xn\ no-\nvm\ failure or \on\ no-\nvm\ failure.
-%Although concurrent \xn\ and \on\ no-\nvm\ failures during commit can lead to inconsistent state,
 We choose not to support concurrent \xn\ and \on\ no-\nvm\ failures during commit,
 because doing so largely simplifies \hotpot's commit protocol and improves its performance.
-\hotpot's commit process is fast (under 250\mus\ with up to 16 nodes, see Section~\ref{sec:results}).
+\hotpot's commit process is fast (under 250\mus\ with up to 16 nodes, see Section~\ref{sec:hotpot:results}).
 Thus, the chance of \xn\ and \on\ both fail and lose their \nvm\ during commit is very small.
 \hotpot\ always supports \dn\ no-\nvm\ failures during commit regardless of whether there are concurrent \xn\ or \on\ failure.
 

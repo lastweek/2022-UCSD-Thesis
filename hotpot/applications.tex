@@ -1,5 +1,5 @@
 \section{Applications and Evaluation}
-\label{sec:app}
+\label{sec:hotpot:app}
 
 This section presents the performance evaluation of two applications and a set of microbenchmarks.
 We ran all experiments on a cluster of 17 machines, each with two Intel Xeon CPU E5-2620 2.40GHz
@@ -15,7 +15,7 @@ on application performance than the cost of flushing data from CPU caches to \nv
 included in \hotpot\ and can measure accurately.
 
 \subsection{Systems in Comparison}
-\label{sec:comparesys}
+\label{sec:hotpot:comparesys}
 We compare \hotpot\ with one in-memory file system, two \nvm-based file systems, 
 one replicated \nvm-based system, and three distributed shared memory systems.
 Below we briefly describe these systems in comparison.
@@ -47,7 +47,7 @@ and use a home node for each memory page to serve remote read and to store which
 similar to HLRC~\cite{Li89-ACM,HLRC}.
 We open source both these DSM systems together with \hotpot.
 
-\input{tbl-ycsb}
+\input{hotpot/tbl-ycsb}
 
 \dsmxact\ guarantees release consistency using a transaction interface that is similar to \hotpot's \mrsw\ mode. 
 Applications first call a transaction begin API to specify the data that they want to write.
@@ -72,7 +72,7 @@ Different from traditional DSM systems and our DSM systems, Grappa moves computa
 
 
 \subsection{In-Memory NoSQL Database}
-\label{sec:mongodb}
+\label{sec:hotpot:mongodb}
 MongoDB~\cite{MongoDB} is a popular distributed NoSQL database that supports several different storage engines
 including its own storage engine that is based on memory-mapped files (called MMAPv1).
 Applications like MongoDB can largely benefit from having a fast means to store and access persistent data. 
@@ -120,7 +120,7 @@ and inefficient process of making data persistent.
 \fi
 
 
-\input{fig-graph}
+\input{hotpot/fig-graph}
 
 YCSB~\cite{Cooper10-CloudCom} is a key-value store benchmark 
 that imitates web applications' data access models. 
@@ -180,7 +180,7 @@ Compare to the IPoIB used in PowerGraph and Grappa's own network stack,
 \hotpot's RDMA stack is more efficient.
 
 Our implementation of \dsmxact\ and \dsmnoxact\ use the same network stack as \hotpot,
-but \hotpot\ still outperforms \dsmnoxact\ and TODO.
+but \hotpot\ still outperforms \dsmnoxact\.
 \dsmnoxact\ ensures cache coherence on every write and thus incurs much higher performance overhead than \hotpot\ and \dsmxact.
 
 To further understand the performance differences, we traced the network traffic of these three systems.

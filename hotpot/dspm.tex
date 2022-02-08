@@ -1,7 +1,7 @@
 \section{Distributed Shared Persistent Memory}
-\label{sec:dspm}
+\label{sec:hotpot:dspm}
 
-The datacenter application and hardware trends described in Section~\ref{sec:motivation} 
+The datacenter application and hardware trends described in Section~\ref{sec:hotpot:motivation} 
 clearly point to one promising direction of using \nvm\ in datacenter environments --- 
 as distributed, shared, persistent memory (\dsnvm).
 A \dsnvm\ system manages a distributed set of \nvm{}-equipped machines  
@@ -31,22 +31,22 @@ but we expect that when developers want to make their applications durable,
 they should have the knowledge of when and what data they want make durable.
 
 \subsection{\dsnvm\ Challenges}
-\label{sec:challenges}
+\label{sec:hotpot:challenges}
 Building a \dsnvm\ system presents several new challenges.
 
-First, {\em what type of abstraction should \dsnvm\ offer to support both direct memory accesses and data persistence (Section~\ref{sec:abstraction})}?
+First, {\em what type of abstraction should \dsnvm\ offer to support both direct memory accesses and data persistence (Section~\ref{sec:hotpot:abstraction})}?
 To perform native memory accesses, application processes should use virtual memory addresses. 
 But virtual memory addresses are not a good way to {\em name} persistent data.
-\dsnvm\ needs a naming mechanism that applications can easily use to retrieve their in-memory data after reboot or crashes (Section~\ref{sec:naming}).
+\dsnvm\ needs a naming mechanism that applications can easily use to retrieve their in-memory data after reboot or crashes (Section~\ref{sec:hotpot:naming}).
 Allowing direct memory accesses to \dsnvm\ also brings another new problem:
-pointers need to be both persistent in \nvm\ and consistent across machines (Section~\ref{sec:addressing}).
+pointers need to be both persistent in \nvm\ and consistent across machines (Section~\ref{sec:hotpot:addressing}).
 
-Second, {\em how to efficiently organize data in \dsnvm\ to deliver good application performance (Section~\ref{sec:data})?}
+Second, {\em how to efficiently organize data in \dsnvm\ to deliver good application performance (Section~\ref{sec:hotpot:data})?}
 To make \dsnvm's interface easy to use and transparent, 
 \dsnvm\ should manage the physical \nvm\ space for applications and handle \nvm\ allocation.
 \dsnvm\ needs a flexible and efficient data management mechanism to deliver good performance to different types of applications.
 
-Finally, {\em \dsnvm\ needs to ensure both distributed cache coherence and data reliability at the same time} (Section~\ref{sec:xact}).
+Finally, {\em \dsnvm\ needs to ensure both distributed cache coherence and data reliability at the same time} (Section~\ref{sec:hotpot:xact}).
 The former requirement ensures the coherence of multiple cached copies at different machines under concurrent accesses and is usually enforced in a distributed memory layer.
 The latter provides data reliability and availability when crashes happen and is implemented in distributed storage systems or distributed databases.
 \dsnvm\ needs to incorporate both these two different requirements in one layer in a correct and efficient way.

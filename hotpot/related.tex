@@ -1,5 +1,5 @@
 \section{Related Work}
-\label{sec:related}
+\label{sec:hotpot:related}
 
 There have been a host of distributed shared memory systems and
 distributed storage
@@ -49,17 +49,6 @@ Unlike these systems, \hotpot\ is a single-layer system that provides shared mem
 %Unlike Crail, \hotpot\ leverages PM to combine DRAM and persistent storage into one layer, and
 %fulfills application's requirement at the same time.
 
-
-\if 0
-\textcolor{Red}
-{
-Pelly et al.~\cite{MemoryPersistency} proposes memory persistency, which defines
-the ordering of persists to PM. Kolli et al.~\cite{pmxact-asplos16,Delegated-persist}
-try to implement PM transactions more efficiently by reducing persist dependencies.
-In \hotpot, consistency is either guaranteed by a single 8-byte failure-atomic write without logging or CoW,
-or by local logging of distributed transactions.
-}
-\fi
 
 Our own previous work, Mojim~\cite{Zhang15-Mojim}, provides an efficient mechanism to replicate \nvm\
 over IB using a primary-backup protocol.
