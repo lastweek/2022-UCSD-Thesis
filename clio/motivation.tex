@@ -182,7 +182,7 @@ which has a stark difference from a hardware-based virtual memory system.
 %In fact, we started our virtual memory design from LegoOS's but ended up finding 
 %that none of its design or implementation fit a hardware environment. 
 For example, LegoOS uses a thread pool that handles incoming memory requests by looking up a hash table for address translation and permission checking.
-This software approach is the major performance bottleneck in LegoOS (\S\ref{sec:results}),
+This software approach is the major performance bottleneck in LegoOS (\S\ref{sec:clio:results}),
 violating \textbf{R3}.
 %have to redesign every factor of it.
 %still relies on host CPU and cannot be easily adapted to a hardware-based virtual memory system.

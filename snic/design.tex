@@ -83,8 +83,6 @@ We put chained \nt{}s (called an {\em \nt\ chain}) in one \nt\ region (\eg, \nt{
 Instead of connecting each \nt\ to a central scheduler (as what PANIC~\cite{panic-osdi20} does), we connect each region to the scheduler.
 Doing so allows us to use a much smaller crossbar between the \nt\ regions and the central scheduler, thereby reducing hardware complexity and area cost (\textbf{G7}).
 
-\input{snic/fig-nt-sched-eg}
-
 Furthermore, we leverage \nt\ chains to reduce the scheduling overhead and improve the scalability of the central scheduler.
 Our idea is to {\em reserve} credits for an {\em entire} \nt\ chain as much as possible and then execute the chain as a whole; only when that is not possible, we fall back to a mechanism that may involve the scheduler in the middle of a chain. 
 Doing so reduces the need for a packet to go through the scheduler after every \nt, thereby improving both the packet's processing latency and the central scheduler's scalability (\textbf{G5}).
@@ -106,6 +104,8 @@ The second type concurrently executes the {\em same packet} at multiple {\em dif
 We infer what \nt{}s can run in parallel in an \nt\ DAG (\eg, in Figure~\ref{fig-nt-example}, \nt{}1 and \nt{}2 can run in parallel with \nt{}3 for user1).
 We expect a fair amount of opportunities to explore \nt-level parallelism, as previous work found that 53.8\% NF pairs can run in parallel~\cite{NFP-sigcomm17}.
 To execute a packet at several \nt{}s concurrently, the scheduler makes copies of the packet header and sends them to these \nt{}s concurrently. To obey the order of \nt{}s that users specify, we maintain a {\em synchronization buffer} to store packet headers after they return from an \nt{}'s execution and before they could go to the next stage of \nt{}s (Figure~\ref{fig-sched}).
+
+\input{snic/fig-nt-sched-eg}
 
 \subsection{\nt\ (De-)Launching Mechanism}
 \label{sec:snic:ntsched}

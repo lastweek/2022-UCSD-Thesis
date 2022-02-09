@@ -1,11 +1,9 @@
 \section{Evaluation Results}
 \label{sec:snic:results}
 
-\input{snic/fig-eval1}
-
 We implemented \snic\ on the HiTech Global HTG-9200 board~\cite{htg9200}. 
 Each board has nine 100\Gbps\ ports, 10\GB\ on-board memory, and a Xilinx VU9P chip with 2,586K LUTs and 43\MB\ BRAM.
-We implemented most of \snic's data path in SpinalHDL~\cite{spinalhdl} and \snic's control path in C (running in a MicroBlaze SoftCore~\cite{microblaze-xilinx} on the FPGA).
+We implemented most of \snic's data path in SpinalHDL~\cite{SpinalHDL} and \snic's control path in C (running in a MicroBlaze SoftCore~\cite{microblaze-xilinx} on the FPGA).
 Most data path modules run at 250 MHz.
 In total, \snic\ consists of 8.5K SLOC (excluding any \nt\ code).
 The core \snic\ modules consume less than 5\% resources of the Xilinx VU9P chip, leaving most of it for \nt{}s (see Appendix for full report).
@@ -17,6 +15,8 @@ Our deployment testbed is a rack with a 32-port 100\Gbps\ Ethernet switch, two H
 R740 servers, each equipped with a Xeon Gold 5128 CPU and an NVidia 100\Gbps\ ConnectX-4 NIC, and two Xilinx 10\Gbps\ ZCU106 boards running as Clio~\cite{clio-arxiv} disaggregated memory devices.
 Each \snic\ uses one port to connect to the ToR switch and one port to connect to the other \snic.
 Depending on different evaluation settings, an \snic{}'s downlinks connect to two servers or two Clio devices.
+
+\input{snic/fig-eval1}
 
 \subsection{Overall Performance and Costs}
 \label{sec:snic:eval-overview}
@@ -56,8 +56,6 @@ Our scheduler achieves a small, fixed delay of 16 cycles, or 64\,ns with the FPG
 %The synchronization buffer has an overhead of 4 cycles, or 16\,ns.
 To put things into perspective, commodity switch's latency is around 0.8 to 1\mus.  
 
-\input{snic/fig-eval2}
-
 \bolditpara{Distributed \snic{}s.}~~
 To understand the effect of distributed \snic\ pool, we compare the two pool topology with a single \snic\ (no distributed support).
 Figure~\ref{fig-sim-dist-nic} shows the performance and OpEx cost.
@@ -75,6 +73,8 @@ Figure~\ref{fig-topology-cmp} shows the latency comparison.
 The intermediate-pool topology where we connect the \snic{}s using a ring has a range of latency depending on whether the traffic only goes through the immediately connected \snic\ (single-\snic) or needs to be redirected to another \snic\ when the immediate \snic\ is overloaded. 
 Because of the ring connection, this other \snic's distance to the immediately connected \snic\ determines the additional latency incurred (intermediate-best and worst).
 In contrast, the switch-attached topology has a constant latency, even when one or multiple \snic{}s are overloaded. This is because the traffic always goes through the switch which directs it to the right \snic.
+
+\input{snic/fig-eval2}
 
 \subsection{Deep Dive into \snic\ Designs}
 \label{sec:snic:deepdive}
