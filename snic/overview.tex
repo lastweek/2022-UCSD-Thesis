@@ -1,39 +1,21 @@
 \section{SuperNIC Overview}
-\label{sec:overview}
+\label{sec:snic:overview}
 
-%As discussed in \S\ref{sec:related}, although different existing network solutions provide some features of network disaggregation and consolidation, none of them meet all our target goals, thus necessitating the design of a new network solution.
-This section gives a high-level overview of the overall architecture of the \snic\ platform and how to use it. %We defer the detailed description of \snic\ design to \S\ref{sec:design} and \S\ref{sec:dist}.
+This section gives a high-level overview of the overall architecture of the \snic\ platform and how to use it.
 
 \bolditpara{Overall Architectures.}~~
-We support two ways of attaching an \snic\ pool in a rack (Figure~\ref{fig-topology}).
+We support two ways of attaching an \snic\ pool in a rack (Figure~\ref{fig-snic-topology}).
 In the first architecture, the \snic\ pool is an intermediate layer between endpoints (servers or devices) and the ToR switch.
 Each \snic\ uses one port to connect to the ToR switch.
 Optionally, all the \snic{}s can be directly connected to each other, \eg, with a ring topology.
 All remaining ports in the \snic\ connect endpoints.
 We expect each of these endpoint-connecting links to have high bandwidth (\eg, 100\Gbps) and the uplink to the switch to have the same or slightly higher bandwidth (\eg, 100\Gbps\ or 200\Gbps). 
-%Differently, today's multi-host NICs break one link into several sub-links each with a fixed portion of the original link's bandwidth.\notearvind{This is the thing that the reviewer complained about.  Apparently, BF3 has a pcie switch at the ingress that removes this problem. We could skip making this point - but I think that reviewer is not on the SIGCOMM PC!}
-%The sum of the link bandwidth at each endpoint that connects to an \snic\ can and should exceed the link bandwidth between the \snic\ and the ToR switch. 
-%This is because different endpoints' loads peak at different times (\S\ref{sec:motivation-server}), and after \snic's consolidation, the aggregated traffic would mostly fit the \snic's uplink, as shown in Figure~\ref{fig-fb-alibaba}.
 %
 The second architecture attaches \snic{}s to the ToR switch, and endpoints directly attach to the ToR switch.
 In this architecture, the ToR switch re-directs incoming or outgoing traffic to one or more \snic{}s. 
 %and balances load when doing the redirection.
 Note that for both architectures, the actual implementation could either package the network pool with the ToR switch to form a new ``switch box'' or be separated out as an pluggable pool. 
 
-
-\if 0
-\snic\ is a data-center-scale solution. %Any endpoint in a data center can be the sender and/or the receiver, and any 
-An endpoint could either connect to an \snic\ or directly to a ToR switch.
-A given \snic\ can connect different types of endpoints.
-However, there is a potential benefit in connecting similar endpoints to an \snic.
-Doing so offers more opportunity for resource consolidation, as similar endpoints (\eg, memory devices) are likely to use the same set of \nt{}s (\eg, encryption).
-%On the other hand, the same type of endpoints are more likely to receive similar workloads (\eg, a replicated write sent to two memory devices) that could result in synchronized traffic peak and burden the \snic.
-
-When an \snic\ fails, or its link to the ToR switch fails, if other links and the basic switching functionalities are still alive, the \snic\ would turn into a passthrough device, forwarding \nt{}s to other \snic{}s for processing.
-When the entire \snic\ fails, the endpoints connected to it will be disconnected to the rest of the data center.
-This failure could be viewed as equivalent to traditional ToR switch failure but with a smaller failure domain (only the endpoints under the failed \snic\ instead of the whole rack).
-Data centers that desire stronger reliability~\cite{pangu-nsdi21} could use a multi-homed solution by connecting each endpoint to two \snic{}s.
-\fi
 
 \bolditpara{Requirements for endpoints and the last hop.}~~
 For basic connectivity, an endpoint needs to have the equivalence of physical and link layers.
@@ -60,26 +42,6 @@ We use Priority Flow Control (PFC) for the one-hop flow control and add simple r
 Unlike a traditional reliable link layer, our {\em point-to-point} reliable link layer is lightweight, %(only 37\% more resources than an unreliable link layer with our implementation), 
 as it only needs to maintain one logical flow and a small retransmission buffer for the small Bandwidth-Delay Product (BDP) of the last hop (64\KB\ in our prototype).
 
-\if 0
-%\fixme{TODO: Need to revisit the following three paragraphs depending on how much is implemented and evaluated. Also this is a place to shorten if we need more space.}
-We envision three types of endpoints and different network features for them.
-The first type is regular servers.
-Servers could choose to offload a transport protocol, network functions, and/or application-specific tasks to \snic\ to save CPU cycles and/or to accelerate performance.
-Since servers have plenty of memory (larger than or similar to what an \snic\ has), they are more fit to store data than \snic{}s.
-One interesting architecture we explore is to offload a reliable transport to \snic\ but to have the server still buffer un-acknowledged packets until receiving an ACK from the receiver (which we refer to as an {\em end-to-end buffer}).
-%In this case, \snic\ will discard packets after they leave the \snic, saving its memory for other tasks.
-
-The second type is disaggregated devices that only serve as a request handler (\eg, a memory device that accepts memory alloc/read/write operations~\cite{clio-arxiv,ATC20-pDPM}). 
-Such a device often has limited processing power and would offload most tasks such as a transport protocol, network functions like encryption, and device-specific functionalities like replication to \snic. 
-Since it never serves as a request originator, there is no need to maintain any packet store, and a failure could be handled by having the client retry the entire request~\cite{clio-arxiv,homa-sigcomm18,1RMA-sigcomm20}.
-
-The final type is disaggregated devices that could serve as request initiators (\eg, a disaggregated CPU or GPU device) but have little memory (because memory is disaggregated to memory devices~\cite{LegoOS}).
-When offloading \nt{}s to \snic{}s, they do not have significant memory to maintain end-to-end buffers like regular servers.
-On the other hand, if they do not buffer packets at all and rely on \snic\ to buffer un-acknowledged packets, errors can still happen when packets are not successfully delivered to the \snic. 
-We propose a {\em one-hop buffer}---buffering a packet at the device only until the next hop (\ie, the \snic) acknowledges.
-Doing so reduces the amount of time each packet is maintained and the overall memory consumption.
-\fi
-
 \bolditpara{Using SuperNIC.}~~
 To use the \snic\ platform, users first write and deploy \nt{}s.
 %The user can use any endpoints in the data center as the sender and the receiver (even if the endpoint is not connected to an \snic\ and connects directly to a ToR switch).
@@ -93,4 +55,3 @@ Future implementation could extend \snic{}s to support p4 programs running on RM
 After all the \nt{}s that a user desires have been deployed, the user specifies one or multiple user-written or compiler-generated~\cite{clicknp-sigcomm16,NFP-sigcomm17} DAGs of the execution order of deployed \nt{}s. Users could also add more DAGs at run time. Compared to existing works which let users specify an NF DAG when deploying NFs~\cite{e2-sosp15,flowtags-nsdi14,clicknp-sigcomm16}, we allow more flexible usages and sharing of deployed \nt{}s. %Different from traditional NF execution flows that execute NFs in sequence, we allow multiple \nt{}s to execute in parallel. 
 The \snic\ stores user-specified DAGs in its memory and assigns a unique identifier (UID) to each DAG.
 At run time, each packet carries a UID, which \snic\ uses to fetch the DAG.
-

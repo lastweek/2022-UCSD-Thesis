@@ -8,6 +8,8 @@ processors, 128 GB DRAM, and one 40 Gbps Mellanox ConnectX-3 InfiniBand network 
 a Mellanox 40 Gbps InfiniBand switch connects all of the machines. 
 The Linux version we used for comparison is v4.9.47.
 
+\input{lego/fig-associativity}
+
 \subsection{Micro- and Macro-benchmark Results}
 \noindent{\textit{\uline{Network performance.}}}
 Network communication is at the core of \lego' performance.
@@ -51,7 +53,6 @@ With better SSD sequential read performance, network cost has a higher impact.
 \lego\ requires one RTT between \pcomponent\ and \mcomponent\ to perform write 
 and two RTTs (\pcomponent\ to \mcomponent, \mcomponent\ to \scomponent) for fsync.
 
-\input{lego/fig-latency-excache-m}
 \noindent{\textit{\uline{PARSEC results.}}}
 We evaluated \lego\ with a set of workloads from the PARSEC benchmark suite~\cite{PARSEC},
 including BlackScholes, Freqmine, and StreamCluster.
@@ -70,6 +71,7 @@ because the single worker thread at the \mcomponent\ becomes the bottleneck to a
 %This result suggests that stream processing is a good fit to \lego.
 %Finally, for these PARSEC workloads, the number of \mcomponent s have no or small effects.
 
+\input{lego/fig-latency-excache-m}
 \subsection{Application Performance}
 \label{sec:appresults}
 We evaluated \lego' performance with two real, unmodified applications, 

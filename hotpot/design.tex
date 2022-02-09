@@ -1,6 +1,6 @@
 \section{\hotpot\ Architecture and Abstraction}
 \label{sec:hotpot:design}
-\label{sec:hopot:abstraction}
+\label{sec:hotpot:abstraction}
 
 We built {\em \hotpot}, a kernel-level \dsnvm\ system that %manages \dsnvm\ and
 %manages distributed shared persistent memory
@@ -13,7 +13,6 @@ This section presents the overall architecture of \hotpot\ and its abstraction t
 We built most of \hotpot\ as a loadable kernel module in Linux 3.11.0 
 with only a few small changes to the original kernel. 
 \hotpot\ has around 19K lines of code, out of which 6.4K lines are for a customized network stack (Section~\ref{sec:hotpot:network}).
-\hotpot\ is available at {\url https://github.com/WukLab/Hotpot}.
 
 \hotpot\ sits in the kernel space and manages \nvm{}s in a set of distributed nodes, or {\em \hotpot\ nodes}.
 \hotpot\ provides applications with an easy-to-use, memory-based abstraction that encapsulates 
@@ -37,7 +36,7 @@ We give users full flexibility in choosing their initial thread and workload dis
 However, such user-chosen distributions may not be optimal, especially as workloads change over time.
 To remedy this situation, 
 \hotpot\ provides a mechanism to adaptively move data closer to computation based on workload behavior, 
-as will be discussed in Section~\ref{sec:hopot:migration}.
+as will be discussed in Section~\ref{sec:hotpot:migration}.
 
 
 \hotpot\ provides a global virtual memory address space to each application.

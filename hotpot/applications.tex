@@ -47,8 +47,6 @@ and use a home node for each memory page to serve remote read and to store which
 similar to HLRC~\cite{Li89-ACM,HLRC}.
 We open source both these DSM systems together with \hotpot.
 
-\input{hotpot/tbl-ycsb}
-
 \dsmxact\ guarantees release consistency using a transaction interface that is similar to \hotpot's \mrsw\ mode. 
 Applications first call a transaction begin API to specify the data that they want to write.
 Transaction begin only succeeds if no other writer is writing to any of the transaction data.
@@ -70,6 +68,8 @@ we also compare \hotpot\ with Grappa~\cite{Nelson15-ATC},
 a recent DSM system that supports modern data-parallel applications. 
 Different from traditional DSM systems and our DSM systems, Grappa moves computation to data instead of fetching data to where computation is.
 
+
+\input{hotpot/tbl-ycsb}
 
 \subsection{In-Memory NoSQL Database}
 \label{sec:hotpot:mongodb}
@@ -106,22 +106,6 @@ We run \Octopus\ and \Mojim\ with the \fsyncsafe\ write concern.
 while \Mojim\ and \hotpot\ use their own replication mechanisms to make three replicas of all data 
 (\Mojim\ uses one node as the primary node and the other two nodes as backup nodes).
 
-\if 0
-We first evaluate a simple microbenchmark that inserts key-value pairs to MongoDB. 
-Each insert operation contains 10 key-value pairs, with each pair containing 100 bytes of randomly generated data.
-Figure~\ref{fig-ycsbload} presents the average latency (in log scale) of key-value pair insertions. 
-MongoDB on \hotpot\ outperforms the both write concerns on \pmfs.
-\pmfs\ performs worse mainly because of its file system layer software overhead 
-and inefficient process of making data persistent.
-%uses a more efficient network layer. 
-%\journaled\ write concern needs to make journal persistent
-%and \fsyncsafe\ write concern makes the whole data file persistent at every write.
-%This performance gain is mainly due to \hotpot's efficient replication protocol and networking stack.
-\fi
-
-
-\input{hotpot/fig-graph}
-
 YCSB~\cite{Cooper10-CloudCom} is a key-value store benchmark 
 that imitates web applications' data access models. 
 Figure~\ref{tbl-ycsb} summarizes the number of different operations in the YCSB workloads.
@@ -146,6 +130,8 @@ each memory operation within the memory-mapped file goes through the FUSE file s
 \hotpot\ and \Mojim\ both support native memory instructions and incurs no indirection overhead.
 Finally, even though Mojim's replication protocol is simpler and faster than \hotpot's,
 \hotpot\ outperforms Mojim because Mojim only supports write on one node while \hotpot\ supports write on all nodes.
+
+\input{hotpot/fig-graph}
 
 \subsection{Distributed (Persistent) Graph}
 Graph processing is an increasingly important type of applications in modern 

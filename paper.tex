@@ -61,9 +61,14 @@
 
 \usepackage{multirow}
 
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\newcommand*\circled[1]{\tikz[baseline=-3pt]{
+            \node[shape=circle,draw,inner sep=1pt,minimum size=10pt] (char) {\small #1};}}
+
 %% AMS PACKAGES - Chances are you will want some or all 
 %    of these if writing a dissertation that includes equations.
-%  \usepackage{amsmath, amscd, amssymb, amsthm}
+\usepackage{amsmath, amscd, amssymb, amsthm}
 
 %% BONUS MATH
 %  \usepackage{mathtools} 
@@ -185,73 +190,18 @@
 % Of course, if you prefer, you can just start with
 %   \chapter{My First Chapter Name}
 % and start typing away.  
-\chapter{Introduction}
-This is only a test.
-\section{A section}
-Test.
-
-\subsection{A Figure Example}
-\label{ssec:figure_example}
-
-This subsection shows a sample figure.
-
-\begin{figure}[h] 
-  \centering
-  \includegraphics[width=0.5\textwidth]{sandiego}
-  \caption[A picture of San Diego. Short figure caption must be \protect{$< 4$} lines in the list of figures]
-{A picture of San Diego.  Short figure caption must be \protect{$< 4$} lines in the list of figures and match the start of the main figure caption verbatim. Note that figures must be on their own line (no neighboring text) and captions must be single-spaced and appear \protect\textit{below} the figure.  Captions can be as long as you want, but if they are longer than 4 lines in the list of figures, you must provide a short figure caption.\index{SanDiego}}
-  \label{fig:sandiego}
-\end{figure}
-
-\subsection{A Table Example}
-
-While in Section \ref{ssec:figure_example} Figure \ref{fig:sandiego} we had a majestic figure, here we provide a crazy table example.
-
-
-%%%% TABLE 1 %%%%
-\vspace{0.25in}
-\begin{table}[!ht]
-\caption[A table of when I get hungry.  Short table caption must be \protect{$< 4$} lines in the list of tables]{A table of when I get hungry. Short table caption must be \protect{$< 4$} lines in the list of tables and match the start of the main table caption verbatim.  Note that tables must be on their own line (no neighboring text) and captions must be single-spaced and appear \protect\textit{above} the table.  Captions can be as long as you want, but if they are longer than 4 lines in the list of figures, you must provide a short figure caption.}
-
-\vspace{-0.25in}
-\begin{center}
-\begin{tabular}{|p{1in}|p{2in}|p{3in}|}
-
-\hline
-Time of day & Hunger Level & Preferred Food \\
-
-\hline
-8am & high & IHOP (French Toast) \\
-
-\hline
-noon & medium & Croutons (Tomato Basil Soup \& Granny Smith Chicken Salad) \\
-
-\hline
-5pm & high & Bombay Coast (Saag Paneer) or Hi Thai (Pad See Ew) \\
-
-\hline
-8pm & medium & Yogurt World (froyo!) \\
-
-\hline
-\end{tabular}
-\end{center}
-\label{tab:analysis3}
-\end{table}
-
+\input{intro}
 \input{hotpot}
 \input{legoos}
 \input{clio}
 \input{supernic}
-
-
-\chapter{Conclusion}
-TODO.
+\input{conclusion}
 
 %% APPENDIX
-\appendix
-\chapter{Final notes}
-What to do about things \cite{Martin_1983}.  What did he say \cite{Rilling_Insel_1999}.
-  Remove me in case of abdominal pain.
+%\appendix
+%\chapter{Final notes}
+%What to do about things \cite{Martin_1983}.  What did he say \cite{Rilling_Insel_1999}.
+%  Remove me in case of abdominal pain.
 
 
 
@@ -266,7 +216,7 @@ What to do about things \cite{Martin_1983}.  What did he say \cite{Rilling_Insel
 %\def\baselinestretch{1.0}  % force single spacing
 %\setlength{\bibitemsep}{0.16in}  % add extra space between items
 
-\bibliography{local,paper,clio/local,clio/paper,snic/local,snic/paper}
+\bibliography{local,paper,hotpot/all,hotpot/local,hotpot/paper,clio/local,clio/paper,snic/local,snic/paper}
 
 \singlespace  %to force bibilography environment to use single spacing for each entry 
               %double spacing between entries remains

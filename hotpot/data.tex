@@ -4,6 +4,8 @@
 This section presents how \hotpot\ manages user data in \dsnvm. 
 We postpone the discussion of data durability and reliability to Section~\ref{sec:hotpot:xact}.
 
+\input{hotpot/fig-data-eg}
+
 \subsection{\nvm\ Page Morphable States}
 One of \hotpot's design philosophies is to use one layer for both memory and storage 
 and to integrate distributed memory caching and data replication.
@@ -59,7 +61,6 @@ Such flexibility is important for load balancing and application performance (se
 It is invoked only when a page fault occurs or when 
 applications execute data persistence operations (see Section~\ref{sec:hotpot:xact} for details of data persistence operations).
 
-\input{hotpot/fig-data-eg}
 When a page fault happens because of read, 
 it means that there is no valid local page.
 \hotpot\ first checks if there is any local \redundant\ page.

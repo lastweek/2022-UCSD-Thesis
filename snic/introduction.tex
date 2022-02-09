@@ -1,11 +1,8 @@
 \section{Introduction}
-\label{sec:intro}
+\label{sec:snic:intro}
 
 {\em Hardware resource disaggregation} is a solution that decomposes full-blown, general-purpose servers into segregated, network-attached hardware resource pools, each of which can be built, managed, and scaled independently. With disaggregation, different resources can be allocated from any device in their corresponding pools, exposing vast amounts of resources to applications and at the same time improving resource utilization. Disaggregation also allows data-center providers to independently deploy, manage, and scale different types of resources.
 Because of these benefits, disaggregation has gained significant traction from both academia~\cite{LegoOS,FireBox-FASTKeynote,ATC20-pDPM,Nitu18-EUROSYS,DDC-hotcloud20,aifm-osdi20,semeru,kona,infiniswap,fastswap} and industry~\cite{HP-TheMachine,IntelRackScale,alibaba-polardb,facebook-disaggregation,SnowFlake-NSDI20}.
-%Existing disaggregated systems have focused on separating three types of resources: compute~\cite{LegoOS,disagg-gpu}, memory (or persistent memory)~\cite{LegoOS,HP-TheMachine,Lim09-disaggregate,remote-region-atc18,ATC20-pDPM,semeru,infiniswap,fastswap,hotpot-socc17}, and storage~\cite{PolarFS-VLDB18,SnowFlake-NSDI20,hailstorm-asplos20,ana-eurosys16}.
-%These efforts have seen real success, and more data centers have started to adopt disaggregation at the production-scale~\cite{Ali-SinglesDay}.
-%For example, Alibaba listed their disaggregated storage solution as a key enabling factor of serving 544,000 orders per second during their shopping festival~\cite{Ali-SinglesDay}.
 
 While increasing amounts of effort go into disaggregating compute~\cite{LegoOS,disagg-gpu}, memory (or persistent memory)~\cite{LegoOS,HP-TheMachine,Lim09-disaggregate,remote-region-atc18,ATC20-pDPM,semeru,infiniswap,fastswap,hotpot-socc17}, and storage~\cite{PolarFS-VLDB18,SnowFlake-NSDI20,hailstorm-asplos20,ana-eurosys16,gimbal}, the fourth major resource, \textit{network}, has been completely left out.
 At first glance, ``network'' cannot be disaggregated from either a traditional monolithic server or a disaggregated device (in this paper collectively called {\em endpoints}), as they both need to be attached to the network.        
@@ -22,13 +19,13 @@ This paper, for the first time, proposes the concept of {\em network disaggregat
 %systematically answers a set of key questions in network disaggregation.
 
 %\bolditpara{Proposal: disaggregated network resource pool.}
-At the core of our network-disaggregation proposal is the concept of a rack-scale disaggregated {\em network resource pool}, which consists of a set of hardware devices that can execute \nt{}s and collectively provide ``network'' as a service (Figure~\ref{fig-topology}), similar to how today's disaggregated storage pool provides data storage service to compute nodes. 
+At the core of our network-disaggregation proposal is the concept of a rack-scale disaggregated {\em network resource pool}, which consists of a set of hardware devices that can execute \nt{}s and collectively provide ``network'' as a service (Figure~\ref{fig-snic-topology}), similar to how today's disaggregated storage pool provides data storage service to compute nodes. 
 Endpoints can offload (\ie, disaggregate) part or all of their \nt{}s to the network resource pool.
 After \nt{}s are disaggregated, we further propose to {\em consolidate} them by aggregating a rack's endpoint \nt{}s onto a small set of network devices.
 %\notearvind{might need to generalize to a network pool}
 %, thereby reducing the total number of network .
 
-We foresee two architectures of the network resource pool within a rack. The first architecture inserts a network pool between endpoints and the ToR switch by attaching a small set of endpoints to one network device, which is then connected to the ToR switch (Figure~\ref{fig-topology} (a)). The second architecture attaches the pool of network devices to the ToR switch, which then connects to all the endpoints (Figure~\ref{fig-topology} (b)). 
+We foresee two architectures of the network resource pool within a rack. The first architecture inserts a network pool between endpoints and the ToR switch by attaching a small set of endpoints to one network device, which is then connected to the ToR switch (Figure~\ref{fig-snic-topology} (a)). The second architecture attaches the pool of network devices to the ToR switch, which then connects to all the endpoints (Figure~\ref{fig-snic-topology} (b)). 
 
 %\bolditpara{Motivating: what are the potential benefits of disaggregating and consolidating \nt{}s?}
 %Same as disaggregating other resources like storage, 
@@ -41,12 +38,9 @@ This is especially helpful for heterogeneous disaggregated clusters where a full
 %The final and important benefit comes from consolidation.
 (5) The network pool only needs to provision hardware resources for the peak \textit{aggregated} bandwidth in a rack instead of each endpoint provisioning for its own peak, reducing the overall CapEx cost.
 
-%Several industry products are already adopting similar architectures, \eg, multi-host NIC~\cite{bluefield} (for the first architecture) and NIC-enhanced programmable switches~\cite{arubacx10000} (for the second architecture).
-%\note{I'm confused on why the ToR has to be a smart/programmable switch, not made clear in it's explanation in first half of paragraph}.
-%Network disaggregation would be a new usage case of these architectures. However, it requires new features that no existing systems fully support.
-Before these benefits can be exploited in a real data center, network disaggregation needs to first meet several goals, which no existing solutions fully support (see \S\ref{sec:related}).
+Before these benefits can be exploited in a real data center, network disaggregation needs to first meet several goals, which no existing solutions fully support (see \S\ref{sec:snic:related}).
 
-\input{fig-topology}
+\input{snic/fig-topology}
 
 %\bolditpara{Building: what are the key requirements of network disaggregation and consolidation?}
 First, each disaggregated network device should meet endpoints' original performance goals even when handling a much larger (aggregated) load than what each endpoint traditionally handles.
@@ -105,18 +99,6 @@ Finally, for \textbf{distributed \snic{}s}, we automatically scale out \nt{}s be
 For example, with the switch-attached pool architecture, we use the ToR switch to balance all traffic across \snic{}s.
 With the intermediate pool architecture, we further support a peer-to-peer, \snic-initiated load migration when one \snic\ is overloaded.
 
-\if 0
-When one \snic\ is overloaded and needs to accommodate too much network bandwidth, on-chip hardware resources, or off-chip memory space, traditional solutions would drop packets/\nt{}s or provision more hardware resources. The former impacts application performance, and the latter results in resource wastage when loads are not at their peaks. 
-Our idea is to utilize other \snic{}s to handle load spikes, based on the observation that not all \snic{}s under a rack would run at their peak load at the same time. Essentially, with distributed \snic{}s, we provision for the maximum aggregated bandwidth in a rack instead of the sum of peak loads under each \snic.
-Specifically, to support overloaded network bandwidth or on-chip hardware resources at an \snic, we create an \nt\ at another \snic\ that has a lighter load. 
-The current \snic\ then only serves as a simple pass-through device to redirect packets to the new \snic.
-%, with the latter sending packets to the next hop after processing them.
-To support overloaded memory space at an \snic, our virtual memory system transparently swaps memory to/from an \snic{} with less memory pressure.
-\fi
-
-\input{fig-osdi16-net-trace}
-
-
 We prototype \snic\ with FPGA using two 100\Gbps, multi-port HiTech Global HTG-9200 boards~\cite{htg9200}.
 %The data plane runs on FPGA directly, while the control plane runs in software cores deployed on FPGA.
 We build three types of \nt{}s to run on \snic:
@@ -133,116 +115,3 @@ We evaluate \snic\ and the ported applications with micro- and macro-benchmarks 
 Overall, \snic\ achieves 52\% to 56\% CapEx and OpEx cost savings with only 4\% performance overhead compared to a traditional non-disaggregated per-endpoint SmartNIC scenario.
 %Our results running a Facebook key-value trace~\cite{Atikoglu12-SIGMETRICS} show that \snic's consolidation of four endhosts and two \nt{}s saves 64\% costs compared to no consolidation, with only 1.3\% performance overhead.
 Furthermore, the customized key-value store caching and replication functionalities on \snic\ improves throughput by 1.31\x\ to 3.88\x\ and latency by 1.21\x\ to 1.37\x\ when compared to today's remote memory systems with no \snic.
-%We will open source \snic\ upon the publication of this paper.
-
-
-
-
-
-\if 0
-There is a trend in disaggregating datacenters,
-in which monolithic servers are segregated into cpu, memory, disk
-resource pools and connected to the network directly.
-Disaggregation makes it easy to manage and scale each resource pool independently.
-While increasing amount of effort go into disaggregating compute,
-memory, and storage, the fourth major resource in datacenter, network,
-has been completely left out. No work has attempted to disaggregate the network.
-At first glance, network cannot be disaggregated from either
-a traditional monolithic server or a disaggregated device, as
-they both need to be attached to the network
-and each endpoint is provisioned with its own network interface (i.e., NIC)
-and the associated network stack. This raises the question:
-
-\textit{Should we and how can we disaggregate the network?}
-
-We answer this question in the affirmative:
-we should disaggregate and then consolidate the network.
-In our preliminary study,
-we find both regular server and disaggregated clusters have bursty network traffic
-while the networking resource is highly under-utilized.
-The root cause is that network is tightly coupled with
-other resources (e.g., compute or memory) and hence,
-making it impossible to
-provision the right amount of networking resource for individual endpoints.
-Similar to traditional disaggregation,
-if we can disaggregate the networking resource and further
-aggregate them into a network resource pool,
-it could enjoy easier management, scaling, and resource packing.
-We envision this is applicable and beneficial
-for two types of endpoints: regular monolithic servers
-and disaggregated devices.
-
-We propose to \textit{disaggregate} network functionalities
-from individual endpoints in a rack
-and \textit{consolidate} them into a \textbf{\textit{network resource pool}}.
-%
-Crucially, the consolidation enables statistical multiplexing of resources that
-allows us to move away from provisioning for peak utilization
-on a per-node basis to provisioning for the
-expected peak utilization for a cluster of nodes.
-Also, consolidating network functionalities into a separate
-pool makes it easy for datacenter operators to manage them.
-%
-Three types of network functionalities are moved:
-\textit{1)} packet processing logic in NIC hardware,
-\textit{2)} software network stacking running at host CPU,
-and \textit{3)} advanced application-specific network functions.
-%
-As a result, individual endpoints no longer need to provision
-hardware and software resources for networking,
-they can directly use services exposed by the network resource pool.
-%
-In other words, the network resource pool essentially provides
-\textbf{\textit{network-as-a-service}} to the rest of the datacenter.
-
-
-Network disaggregation and consolidation presents several new challenges.
-%
-First, network has always been an integral part for any computer systems design.
-Hence, it is challenging to extract the network functions
-while ensuring correctness and performance.
-%
-Second, a key question is how to implement the network resource pool.
-In order to meet the goals of disaggregation,
-the pool must be flexible, power-efficient, high-performance, easy to manage, and secure.
-Disaggregated datacenter poses several unique challenges
-like the exploded number of network ports and the mix of heterogeneous devices
-\fi
-
-
-
-\if 0
-In this paper, we will focus on the second challenge.
-We take a detailed survey on all emerging network devices
-and evaluate whether they are qualified to make the network resource pool.
-In specific, we review
-\textit{programmable switch}~\cite{netcache-sosp17,incbricks-asplos17,distcache-fast19,pegasus-osdi20,hpcc-sigcomm19,netlock-sigcomm20,cheetah-sigmod20,racksched-osdi20,tea-sigcomm20},
-\textit{circuit switch}~\cite{helios-sigcomm10,mordia-sigcomm13,reactor-nsdi14,rotornet-sigcomm17,sirius-sigcomm20,dRedBox-DATE,shoal-nsdi19},
-\textit{coherent fabrics}~\cite{GenZ,OpenCAPI,CCIX,CXL},
-\textit{middleboxes}~\cite{walfish-osdi04,comb-nsdi12,aplomb-sigcomm20},
-\textit{NFV}~\cite{clickos-nsdi14,e2,netbricks,resq-nsdi18,metron-nsdi18,flowblaze-nsdi19,panic-osdi20,azure-nsdi18},
-and \textit{multi-host NICs}~\cite{Intel-RedRockCanyon,Mellanox-Multihost}.
-
-After a rigorous examination, we find none of them meets all our goals.
-In response, we propose \sysname, a new network device specifically
-designed for network disaggregation and consolidation.
-A set of SuperNICs make a disaggregated network resource pool,
-which sits in between endpoints and a ToR switch.
-All the SuperNICs are connected together through a ring or a torus (see Figure~\ref{fig-topology}).
-We expect it to have high performance, flexible abstractions,
-safe and efficient consolidation, adaptive scaling, and failure handling.
-
-
-Overall, our contributions are:
-\begin{itemize}
-\vspace{-0.05in}
-\item To the best of our knowledge, we are the first to
-disaggregate and consolidate network in datacenters.
-\vspace{-0.05in}
-\item We review various emerging networking devices.
-\vspace{-0.05in}
-\item We propose SuperNIC, a new device specifically tailored for network disaggregation and consolidation.
-\end{itemize}
-
-\fi
-

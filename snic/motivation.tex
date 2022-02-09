@@ -1,9 +1,9 @@
 \section{Motivation and Related Works}
-\label{sec:motivation}
+\label{sec:snic:motivation}
 
 \subsection{Benefits of Network Disaggregation}
-\label{sec:benefits}
-As discussed in \S\ref{sec:intro}, disaggregating network functionalities into a separate pool has several key benefits for data centers, some of which are especially acute for future disaggregated, heterogeneous data centers~\cite{LegoOS,last-cpu-hotos, FratOS-eurosys}.
+\label{sec:snic:benefits}
+As discussed in \S\ref{sec:snic:intro}, disaggregating network functionalities into a separate pool has several key benefits for data centers, some of which are especially acute for future disaggregated, heterogeneous data centers~\cite{LegoOS,last-cpu-hotos, FratOS-eurosys}.
 
 \bolditpara{Flexible management and low development cost.}
 Modern data centers are deploying an increasing variety of network tasks to endpoints, usually in different forms (\eg, software running on a CPU, fixed-function tasks built as ASIC in a NIC, software and programmable hardware deployed in a SmartNIC). 
@@ -29,21 +29,16 @@ To understand network behavior in server-based data centers, we analyze two sets
 
 We first perform a consolidation analysis where we calculate the sum of peaks in each individual endhost's traffic (sum of peak) and the peak of aggregated traffic within a rack and across the entire data center (peak of sum). 
 These calculations model the cases of no disaggregation, disaggregation and consolidation at the rack level and at the data-center level.
-%The former informs us about the total amount of network resources that needs to be provisioned if each endhost provisioned for its own peak, and the latter corresponds to the amount of resources a disaggregated network pool needs to provision.
 Figure~\ref{fig-fb-alibaba} shows this result for the two data centers. 
 For both of them, a rack-level consolidation consumes one magnitude fewer resources than no consolidation.
 
 We then analyze the load spikes in these traces
-%Our first finding is that \fixme{XXX}\% and \fixme{XXX}\% spikes are at least one and two seconds long.
 by comparing different endhosts' spikes and analyzing whether they spike at similar or different times, which will imply how much chance there is for efficient consolidation.
 Specifically, we count how much time in the entire 1-day trace $X$ number of endhosts spike together.
 Figure~\ref{fig-spike-var} shows that 55\% of the time only one or two servers spike together, and only 14\% of the time four or more servers spike together.
 This result shows that servers mostly spike at different times, confirming the large potential of consolidation benefits.
-%\ryan{We analyze the portion of time N servers are spiking for a given time period. Figure~\ref{fig-spike-var} shows that 55\% of the time 1 to 2 servers are peaking. And only 14\% of the time do 4 servers peak concurrently.
-%Overall, it confirms that although individual server's traffic is spiky, the correlation among servers is low and the number of servers concurrently peaking is small.}
-%
-%Both data centers exhibit high burstiness, and bursts happen at different times for different end hosts. % 
-%Other prior work has also reported similar findings~\cite{netkernel-atc20,Gao16-OSDI}.
+
+\input{snic/fig-osdi16-net-trace}
 
 \bolditpara{Disaggregated cluster traffic analysis.}
 Resource disaggregation introduces new types of network traffic that used to be within a server, \eg, a CPU device accesses data in a remote memory device. 
@@ -55,374 +50,21 @@ We further perform a similar analysis using sum of peaks vs. peak of aggregated 
 Consolidating just five endhosts already results in 1.1\x\ to 2.4\x\ savings with these traces.
 
 
-
-
-
 \subsection{Limitations of Alternative Solutions}
-\label{sec:related}
+\label{sec:snic:related}
 
 The above analysis makes a case for disaggregating and consolidating network tasks from individual servers and devices.
 A question that follows is \textit{where} to host these \nt{}s and whether existing solutions could achieve the goals of network disaggregation and consolidation.
-%\notearvind{I will refine this a bit more and see whether Gimbal should be incorporated here or somewhere else.}
 
-%\noteys{different from the p4 switch, the aruba switch seems another type of programmable switch that maybe able to support more complex ops}
 %
 The first possibility is to host them at a \textbf{programmable ToR switch}. Programmable switches allow for configurable data planes, but they typically support only a small amount of computation at high line rates. SmartNICs, on the other hand, handle more stateful and complex computations but at lower rates. Transport protocol processing and encrypted communications are examples of complex network tasks better supported by a SmartNIC than a programmable switch. Moreover, existing programmable switches lack proper multi-tenancy and consolidation support~\cite{Wang-HotCloud20}. As a consequence, most data center designs require the use of SmartNICs even in the presence of programmable switches, and our proposal simply disaggregates SmartNIC-like capabilities into a consolidated tier.
 
 
 Another possibility is upcoming \emph{multi-host SmartNICs} (e.g., Mellanox BlueField3) that are enhancements of today's \textbf{multi-host NICs}~\cite{ocp-nic,Intel-RedRockCanyon}. These NICs connect to multiple servers via PCIe connections and provide general-purpose programmable cores. Our work identifies three key extensions to such devices. (1) Our approach enables a greater degree of aggregation as we enable coordinated management of a distributed pool of network devices. (2) Moreover, in the case of these multi-host SmartNICs, \nt{}s that cannot be mapped to the NIC's fixed functions have to be offloaded as software. In contrast, \snic\ allows the acceleration of \nt{}s in hardware, enabling higher performance while tackling issues related to runtime reconfigurability of hardware. (3) Our approach provides adaptive mechanisms for adjusting to workloads and providing fair allocation of resources across applications. It is also worth noting that (1) and (3) can by themselves be used in conjunction with commercial multi-host SmartNICs to achieve a different software-based instantiation of our vision.
-%\noteys{"multi-host SmartNICs support NT offloading only in software", not quite true. those smartNICs have ASIC NFs and FPGA (like IPU). its better to mention MH-NIC are generally used to offload software NTs.}\notearvind{Reworded it a bit. Specified the possibility of fixed functions. Also narrowly defined it as SmartNICs with programmable cores. BTW, I don't think I have seen a MH-Innova, which would be the closest to our system.}
 
 \textbf{Middleboxes} are a traditional way of running network functions inside the network either through hardware black-box devices that cannot be changed after deployment~\cite{aplomb-sigcomm20,comb-nsdi12,walfish-osdi04} or through server-based Network Function Virtualization (NFV) that enables flexible software-based middleboxes~\cite{clickos-nsdi14,e2-sosp15,metron-nsdi18,NFP-sigcomm17,parabox-sosr17}, but at the cost of lower performance~\cite{netbricks,netvm-nsdi14}.  Our deployment setting differs from traditional datacenter middleboxes: we target "nearby" disaggregation, as in the endhost or SmartNIC tasks are disaggregated to a nearby entity typically located on the same rack. Consequently, our mechanisms are co-designed to take advantage of this locality (e.g., we use simple hardware mechanisms for flow control between the end-host and the disaggregated networking unit). Further, we target network functionality that is expected either at the endhost itself or at the edge of the network, such as endhost transport protocols, applying network virtualization, enhancing security, which all require nearby disaggregation and are also not typically targeted by middleboxes. We do note that our dynamic resource allocation mechanisms are inspired by related NFV techniques, but we apply them in the context of reconfigurable hardware devices.
-
-
-%\yiying{Also mention our distributed pooling idea which is not in any of the above existing solutions (maybe need to mention works that use distributed programmable switches/SmartNICs if any)}
-
-
-%Apart from our \snic\ proposal, there are several options.
-
-% The first possibility is to host them at the \textbf{ToR switch}.
-% This approach lets endpoints go through only one hop to the ToR switch, compared to two hops with approaches that use a middle layer like \snic.
-% However, it requires ToR switches to be programmable and have more ports to connect to disaggregated devices, both of which add monetary costs and requires changes to the data-center network infrastructure~\cite{zhao-nsdi19,zhang-nsdi19}.
-% Moreover, existing programmable switches lack proper multi-tenancy and consolidation support~\cite{Wang-HotCloud20}.  %such as flexible space and time sharing
-%\yizhou{maybe build the relation to in-network computing (INC)? traditional pswitch work like netchain/netkv/ATP offload certain app functionlaties to the network. it is a specific case of network-disaggregation-and-consolidation. And we are proposing a larger-scope and more generic scheme.}
-
-
-
-% \textbf{Middleboxes} are a traditional way of running network functions inside the network.
-% Traditional hardware middleboxes are specialized black-box devices that cannot be changed after deployment~\cite{aplomb-sigcomm20,comb-nsdi12,walfish-osdi04}. Network Function Virtualization uses regular servers to build flexible software-based middleboxes~\cite{clickos-nsdi14,e2-sosp15,metron-nsdi18,NFP-sigcomm17,parabox-sosr17}, but at the cost of running at lower performance~\cite{netbricks,netvm-nsdi14}. 
-% \snic\ has the benefits of both: it is flexible as it supports offloading a wide range of \nt{}s and can be reconfigured at run time, and it also achieves high-bandwidth line rate processing.
-
-%Increasing amount of data centers attach \textbf{SmartNICs} and \textbf{specialized ASIC/FPGA devices} like Intel IPU~\cite{intel-ipu}, Amazon Nitro~\cite{aws-nitro}, and Microsoft Catapult~\cite{Catapult-v2} to single servers.
-%These devices can host offloaded network functions and other customized tasks. However, they do not support the consolidation of multiple endpoints.
-
-\if 0
-Optical circuit switch is an emerging solution to build disaggregated datacenters as it offers high port count and consumes much less energy than traditional electrical packet switches~\cite{shoal-nsdi19,helios-sigcomm10,sirius-sigcomm20, sipml-sigcomm21}. Circuit switch reconfigures and reconnects physical connections among ports. As a result, it has no computation on its data path, thus not able to consolidate any network functions.
-\fi
 
 Finally, there are emerging \textbf{interconnections designed for disaggregated devices} such as Gen-Z~\cite{GenZ} and CXL~\cite{CXL}.
 These solutions mainly target the coherence problem where the same data is cached at different disaggregated devices.
 The transparent coherence these systems provide requires new hardware units at every device, in addition to a centralized manager.
 \snic\ supports the disaggregation and consolidation of all types of network tasks and does not require specialized units at endpoints.
-
-%In summary, although different existing network solutions provide some features of network disaggregation and consolidation, none of them meet all our target goals, thus necessitating the design of a new network solution.
-%\input{tbl-related-work}
-
-
-
-
-
-
-
-\if 0
-\subsection{for Server-Based Datacenters}
-\label{sec:motivation-server}
-%scale, computation tax, underutilization etc.
-
-%Today, each server runs a full network stack (either in the host CPU or in a NIC), and many start to execute complex network functions and application-specific tasks~\cite{flexnic-asplos16,snap-sosp19}.
-%(\eg, FlexNIC~\cite{flexnic} demonstrates the benefits of application-specific network handling and iPipe~\cite{iPipe} factors out a distributed application into a collection of actor-based NFs). 
-%Network stacks in today's data centers could consume 30\%-40\% host CPU cycles with the presence of a high-speed network~\cite{tonic-nsdi20}.
-%However, network communication only happens for a small amount of time during application execution, and not all network functions are always invoked. 
-%
-To understand network behavior in real, server-based data centers, we analyze two sets of traces: a Facebook trace that consists of Web, Cache, and Hadoop workloads~\cite{facebook-sigcomm15}, and an Alibaba trace that hosts latency-critical and batch jobs together~\cite{alibaba-trace}. 
-Both data centers exhibit high burstiness, and bursts happen at different times for different end hosts. Other prior work has also reported similar findings~\cite{netkernel-atc20,Gao16-OSDI}. We omit the CDF and timeline plots due to space constraints. 
-We perform a similar consolidation analysis as the disaggregated memory traces, as shown in Figure~\ref{fig-fb-alibaba}. 
-%Specifically, we first measure the peak load of every end host and then sum all these peaks across the whole data center (or in Facebook's case, an entire workload). This case uses no consolidation (\ie, today's scheme) and the sum is the total amount of resources that a data center needs to provision.
-In addition to the sum of individual-endhost peaks and the peak of aggregated traffic across the entire data center (or, in Facebook's case, an entire workload),
-%we model the case where each rack's network traffic could be handled in a consolidated way (\eg, with \snic{}s). We first
-we sum the traffic under a rack %for each time point and then measure the peak of the summed traffic. Afterwards, we 
-and sum all the per-rack peaks.
-%Finally, we model the unrealistic case of consolidating the entire data-center's traffic by summing the traffic of the whole data center at each time point and then measuring the peak of the sums.
-For both Facebook and Alibaba, rack-level consolidation consumes one to two orders of magnitude fewer resources than no consolidation.
-
-
-\if 0
-We measure the duration of high-intensity communications or bursts at 25\mus\ granularity.
-%We say that a switch's egress link is \textit{hot} if, for the measurement period, its utilization exceeds 50\%. An unbroken sequence of hot samples indicates a \textit{burst}. 
-Figure~\ref{fig-burst_duration} presents the CDF of burst durations across three workloads.  We observe that a significant fraction of these bursts are only one sampling period long. The 90th percentile duration is less than 200\mus\ for all three rack types.
-%, with Web racks having the lowest 90th percentile burst duration at 50us (two sampling periods). Hadoop racks have the longest tail of the three, but even then, almost all bursts concluded within 0.5\,ms.
-The results indicate that bursts not only exist, almost all high utilization at the edge of the data center network is part of a burst, and that the durations of these high-intensity communications is short.
-\fi
-
-In addition to the bursty traffic patterns that are conducive to the consolidation benefits of \sysname,
-the under-utilization of network functions in today's network devices is another major motivation for \sysname. 
-For example, existing NICs are bloated with features that are not utilized in the common case~\cite{SmartNIC-nsdi18,Caulfield-2018}. 
-Wang et al.~\cite{Wang-HotCloud20} reported that state-of-the-art programmable switches have low resource utilization (common NFs consume less than 1\%), 
-and even a complex application consumes only a small fraction of resources (\eg, NetChain~\cite{netchain-nsdi18} uses 3\% MAT resources). 
-Over time, vendors keep adding more features into their network device products to meet the diverse requirements from different customers, resulting in significant resource waste that could otherwise be avoided by \sysname's consolidation solution. 
-
-% Crucially, for both cases above, the consolidation enables statistical multiplexing of resources that allows us to move away from provisioning for peak utilization on a per-node basis to provisioning for the expected peak utilization on a rack basis.
-Finally, consolidating network tasks into a separate pool makes it easy for datacenter operators to manage them (\eg, monitoring, reconfiguring, and upgrading).
-
-%The offloading of the network stack and host-side network functions (\eg, Open vSwitch) to the \snic{} has associated cost savings as we can substitute the use of expensive x86 cores with cheaper circuitry at the \snic.  Moreover, in all of these cases, network consolidation allows us to provision less networking associated compute resources at the \snic{} when compared to the traditional non-consolidated deployment. 
-
-
-\subsection{for Disaggregated Datacenters}
-
-Resource disaggregation is a data-center architecture that organizes different hardware resources into separate, network-attached pools.
-While today's data centers use regular servers to form these pools~\cite{alibaba-polardb,SnowFlake-NSDI20,Borg-eurosys20}, 
-future data centers could benefit from using specialized {\em devices} to build such pools, \eg, a memory pool consisting of network-attached memory~\cite{clio-arxiv} or Optane boards~\cite{HP-TheMachine,ATC20-pDPM}.
-Three practical and key technical hurdles need to be solved before data centers can readily deploy such device-based disaggregated resource pools. Network disaggregation solves all of them.
-
-
-%More data centers are migrating to a disaggregated architecture where different resources are managed as individual, network-attached pools~\cite{Alibaba,Facebook,snowflake-nsdi20,google-paper,XXX}.
-%Nodes in a resource pool can both be a regular server (\eg, a server dedicated to provide data storage~\cite{snowflake-nsdi20,XXX}) or a network-attached device (\eg, a persistent-memory device board~\cite{HP-TheMachine,XXX}).
-%There is a growing demand for deploying specialized devices (such as memory devices, network-attached NVMes, and key-value storage devices) inside the data center. 
-
-%Network disaggregation is especially useful in building and deploying such disaggregated devices by solving three key problems at the same time.
-First, when a monolithic server is replaced with multiple network-attached disaggregated devices (\eg, one CPU processor, one memory device, one storage device to replace a server), the number of network endpoints could increase to hundreds per rack~\cite{shoal-nsdi19}. % and an order of magnitude more than what a ToR switch could handle).
-If all these devices directly connect to a ToR switch, the rack needs to use an expensive, high-port-count ToR switch or multiple low-port-count ToR switches (and the resulting increased scale of the entire switch hierarchy~\cite{zhang-nsdi19,zhao-nsdi19}).
-%, and all the network infrastructure above ToR switches may also need to be upgraded.
-With our proposed architecture, devices in a rack connect to a small set of \snic{}s that then can be accommodated by today's data-center ToR switch.
-%, thus requiring no network infrastructure changes in existing data centers.
-
-Second, building different types of disaggregated devices involves adding standard networking functionalities like a reliable transport layer to each of them, with many of them also desiring various customized network functions.
-Disaggregated devices will come in many forms, some with a software processor~\cite{LegoOS}, some with only hardware units~\cite{ATC20-pDPM}, and some with both software and hardware~\cite{clio-arxiv}. Designing and implementing network tasks in each type of disaggregated device will be a daunting job. Moreover, it likely will involve adding additional hardware units to the devices.
-By building \nt{}s once for a single type of hardware (\ie, \snic), we could significantly save development and CapEx costs.
-%that would otherwise be required at every disaggregated device.
-%three types of costs in a disaggregated device:
-%{\em development cost} to build network stacks in heterogeneous hardware (\eg, ASIC, FPGA, general-purpose processor),
-%{\em CapEx cost} for additional hardware network units in each device,
-%and {\em energy cost} to run the network stacks there.
-%
-%Finally, when each device hosts its own network functionalities (and in heterogeneous hardware), 
-%managing them will be difficult for data center providers.
-%For example, to change the configuration of a network policy or to add a new network
-%function to a set of disaggregated devices, each of them needs to change their network
-%stack, which is hard and sometimes impossible as devices are often 
-%manufactured by different vendors and have their (locked-in) hardware 
-%implementations. 
-%Network disaggregation makes it easy for operators to manage network functionalities for heterogeneous devices.
-
-Finally, resource disaggregation introduces new types of network traffic that used to be within a server, \eg, a CPU device accesses a remote memory device to read/write data. 
-If not handled properly, such traffic could add a huge burden to the data-center network~\cite{sirius-sigcomm20}.
-To understand this type of traffic, we analyzed a set of disaggregated-memory network traces collected by Gao et al. using five endhosts~\cite{Gao16-OSDI}.
-Figure~\ref{fig-OSDI16NetTrace} plots the CDF and the timeline of network traffic from four workloads.
-These workloads all exhibit fluctuating loads, with some having clear patterns of high and low load periods.
-We further compare the case where we provision network resources for the peak load of every workload and the case where we could consolidate and only provision for the aggregated network demand (\ie, sum of peaks vs. peak of aggregated traffic).
-Consolidating just five endhosts already results in 1.1\x\ to 2.4\x\ savings with these traces.
-%Overall, network consolidation allows us to provision for the {\em aggregated peak}, saving both CapEx and OpEx costs.
-%The traffic is collected every five seconds.
-
-\fi
-
-
-\if 0
-\section{Network Disaggregation and Consolidation}
-
-%\NOTE{
-%This section is similar to the sec2.2 in the proposal.
-%1) Define the idea of "Network Disaggregation and Consolidation".
-%Define a set of Key Goals: perf, cost, programmbility, consolidation and so on.
-%2) present related fields.
-%}
-We propose to disaggregate and consolidate network functionalities.
-The core of \sysname\ is a disaggregated network pool that sits in between endpoints and a ToR switch.
-This pool consists of a set of \textit{SuperNICs} (\textit{\snic}s), each of which connects to the ToR switch (up link) and a small set of end hosts (down links).
-In addition, all the \snic{}s are connected together through a ring or a torus.
-We aim to support three broad types of end hosts:
-regular servers, \textit{passive} disaggregated devices which only receive and handle network requests (\eg, a storage device that handles file I/O requests), 
-and \textit{active} disaggregated devices which could both initiate and receive network requests (\eg, a memory device that handles memory read/write requests and swaps or flushes its memory data to a storage device).
-
-\textbf{Architecture.}
-
-\textbf{Goals.} A general set of goals, which we should show
-that related work cannot meet.
-
-\textbf{Related Work}
-\TODO{Optional. We could describe
-one system here as an example, leave the whole thing
-to Related Work Section.}
-
-\TODO{
-Network disaggregation and consolidation is a concept.
-SuperNIC is just one implementation choice.
-So, before we dive into SuperNIC, we must explain
-why SuperNIC, why other solutions cannot work.
-Specifically, why not use pSwitch to realize this idea?
-Why not use multihost NIC to do this?
-We don't need a lengthy exploration here.
-}
-
-\fi
-
-\if 0
-\subsection{Resource Disaggregation}
-
-A monolithic server has been the unit of deployment and operation
-in datacenters for decades. This long-standing server-centric architecture
-has several key limitations:
-\textit{a) Inefficient resource utilization}. With a server being the physical
-boundary of resource allocation, it is difficult to fully utilize all resources
-in a datacenter. Reports show Google and Alibaba's datacenter usually only
-have 40\%-60\% utilization~\cite{legoOS,Borg-eurosys20}. One of the main
-reasons is the constraint that CPU and memory for a job have to be allocated
-from the same physical machine.
-\textit{b) Poor hardware elasticity}.
-It is difficult to add, move, remove, and reconfigure
-hardware components after they have been installed in
-a monolithic server~\cite{FB-Wedge100}.
-However, such plans have to be adjusted frequently because of
-today's speed of change in application requirements.
-\textit{c) Coarse failure domain}.
-The failure unit of monolithic servers is coarse.
-When a hardware component within a server fails, the whole
-server is often unusable.
-\textit{d) Bad support for heterogeneity}.
-Driven by application needs, new hardware technologies
-are finding their ways into datacenters (e.g., FPGA, GPU, and TPU).
-However, datacenters often need to purchase
-new servers to host certain hardware.
-Other parts of the new servers can go underutilized~\cite{legoOS}.
-
-Resource Disaggregation breaks the monolithic server model,
-in which hardware resources in traditional servers are disseminated
-into network-attached hardware devices.
-Each device has a controller and a network interface,
-can operate on its own, is an independent, failure-isolated entity.
-The disaggregated approach largely increases the flexibility of a datacenter.
-Applications can freely use resources from any hardware device,
-which makes resource allocation easy and efficient.
-Different types of hardware resources can scale independently.
-It is easy to add, remove, or reconfigure devices.
-New types of hardware devices can easily be deployed in a datacenter
-— by simply enabling the hardware to talk to the network and adding a
-new network link to connect it.
-Finally, hardware resource disaggregation enables fine-grain failure isolation,
-since one device failure will not affect the rest of a cluster
-
-Disaggregation has been a very active research area for the past decade.
-It was first proposed in early 2010s for memory disaggregation~\cite{Lim09-disaggregate}.
-Over the years, researchers have further explored
-disaggregation's impact on
-operating system~\cite{legoOS}, storage~\cite{snowflake-nsdi20},
-persistent memory~\cite{ATC20-pDPM},
-data structure~\cite{aifm-osdi20},
-failure model~\cite{disaggregation-hotcloud20}, and many more.
-Overall, prior research focuses on the \textit{infrastructure},
-as in integrating disaggregation with various existing systems,
-thereby lays a solid system-level foundation.
-Researchers now gradually shift their focus onto higher level components,
-such as programming framework, security, and the focus of this paper, network.
-Ultimately, to prepare a complete ecosystem for future disaggregated datacenters.
-
-\subsubsection{Challenges for Network Design}
-
-One of the base designs for disaggregation is that each device has an attached network interface.
-However, the fourth major computation resource in datacenter, network, has been completely left out in the process of disaggregation.
-The network is facing unprecedented challenges and we think
-the disaggregation idea would not be practical if those challenges are not addressed properly
-
-First, when splitting a monolithic server into multiple network-attached
-devices, the number of network endpoints will dramatically increase
-(potentially hundreds or even thousands of devices per rack~\cite{shoal-nsdi19}).
-Attaching those devices directly to Top-of-Rack (ToR) switches are not feasible,
-because it would increase the number of ToRs and subsequently spine and core switches dramatically in a Clos-based topology.
-This poses a huge impact on existing datacenter networks, in terms of cost, power, and physical upgrade capability,
-collectively called the \textit{network scale tax}~\cite{sirius-sigcomm20}.
-
-Second, with the increasing degree of heterogeneity,
-it is hard to deploy and run a consistent network stack across all those
-heterogeneous disaggregated devices (e.g., ASIC, FPGA, and general-purpose CPUs).
-Each device would need a network stack to have reliable connection with others.
-Normally the network stack runs on top of a CPU or a programmable NIC,
-but this is often not possible for heterogeneous devices.
-In addition, driven by application demand, datacenters have the need to update their network
-protocols especially congestion control algorithms very frequently~\cite{swift-sigcomm20}.
-Thus, the network stack used by disaggregated devices should be universal, consistent
-across devices, and easy to upgrade on the field.
-
-Third, the network must provide low latency and high bandwidth for disaggregated devices and their applications.
-With emerging applications like distributed ML training running directly on top of disaggregated devices,
-network traffic is generated and consumed by hardware directly and hence, is expected
-to grow even faster then the current trend (doubling every year~\cite{sirius-sigcomm20}).
-Prior work~\cite{legoOS} shows that the network latency should be as low as 5 us to have reasonable performance (i.e., around 20\% slowdown).
-
-\subsection{Current Datacenter Network Limitations}
-
-The network in traditional server clusters are facing numerous
-issues and challenges as well. 
-
-As datacenters are moving to 100 Gbps network,
-the CPU utilization of software network stacks becomes increasingly prohibitive.
-Despite numerous efforts to improve their performance, software network stacks
-tend to consume 30-40\% of CPU cycles~\cite{tonic-nsdi20}.
-
-Another major hurdle and motivation for consolidating network resources
-is the difficulty of provisioning the right amount of network resources
-for individual end hosts (for both regular servers and disaggregated devices).
-We will present out preliminary study on this part.
-For regular-server clusters, we use traces we have collected from different
-workloads (namely Web, Cache, and Hadoop) running inside Facebook datacenters.
-We measure the duration of high-intensity communications or bursts at 25 us granularity.
-Figure~\ref{fig-burst_duration} presents the CDF of burst duration across three
-workloads. We observe that a significant fraction of these bursts are only one
-sampling period long.
-The 90th percentile duration is less than 200 us for all three rack types.
-The results indicate that bursts not only exist, almost all high utilization
-at the edge of the datacenter network is part of a burst, and that the duration
-of these high-intensity communications is short.
-Other prior work has also reported similar findings~\cite{NetKernel-ATC20}.
-
-Disaggregated cluster introduces new types of network traffic,
-where devices access other types of devices over the network
-(e.g., compute devices accessing remote memory devices).
-We use a set of remote memory-swap traces collected by Gao et al.~\cite{Gao16-OSDI}
-to model traffic in disaggregated cluster (CDF and time in Figure~\ref{fig-OSDI16NetTrace}).
-We observe similar patterns as regular-server clusters, i.e., burst but under-utilized.
-
-In addition to the traffic patterns, under-utilization of network
-functionalities in today's network devices is another major issue.
-For example, existing NICs are bloated with features are not utilized~\cite{Caulfield-2018,firestone-nsdi18}.
-Wang et al.~\cite{wang-hotcloud20} reports that state-of-the-art programmable switches have
-low resource utilization, and even a complex application would consume only a small
-fraction of resources. In general, vendors keep adding more features into
-their network device products to meet the diverse requirements from different
-customers, resulting in huge resource waste that could otherwise avoided
-by network disaggregation and consolidation.
-
-%\input{tbl-related-work}
-
-\subsection{Disaggregate and Consolidate Network}
-
-To tackle the new network design challenges posed by resource disaggregation
-and the limitations of current networks, we propose to disaggregate
-and then consolidate the network computation resource into a \textit{network resource pool}.
-
-In this paper, we focus one three types of network functionalities:
-1) packet processing logic in NIC hardware,
-2) software network stack running at processing units,
-3) advanced application-specific network functions.
-
-For disaggregated devices, network disaggregation removes
-those network functionalities from the device and replaces a complex NIC
-with a simpler one. This step \textit{decouples}
-the core device from network and hence, allow them to change and scale independently.
-
-After disaggregation, the network functionalities are further consolidated
-into a datacenter-wide network resource pool. This pool provides services
-for both disaggregated devices and regular servers.
-Essentially, the network resource pool provides \textit{network-as-a-service}.
-
-To the best of our knowledge, no work has attempted
-to disaggregate the network before.
-At first glance, the network cannot be disaggregated from
-either a traditional server or a disaggregated device,
-as they both need to be attached to the network and each
-endpoint is provisioned with its own network interface and associated
-network stacks. So can we disaggregate and then consolidate network?
-
-To answer this question, we need to find out whether
-a) it is possible to decouple the network functionalities,
-and b) how to build the network resource pool.
-In this paper, we focus on the second question.
-We review emerging network devices and evaluate whether they
-could meet the goals of consolidation and whether they are good
-candidates for implementing the network resource pool.
-
-% \subsection{Transports}
-% \subsection{Congestion Control}
-% \subsection{Network Functions}
-% \subsection{Application-Specific Computing}
-
-\fi

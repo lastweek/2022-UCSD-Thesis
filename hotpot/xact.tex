@@ -65,8 +65,6 @@ a pre-allocated beginning area of \nvm.
 These metadata can be reconstructed by re-examining system states after recovery.
 Thus, \hotpot\ does not make these metadata persistent.
 
-\input{hotpot/fig-tran-1}
-
 Similar to traditional file systems and databases, 
 it is important to enforce {\em ordering} of metadata and data persistence
 in order to recover to a consistent state.
@@ -81,6 +79,8 @@ After making all the above data and metadata persistent, \hotpot\ changes the in
 from pointing to the old \committed\ page to pointing to the new \dirty\ page.
 Since most architectures support atomic 8-byte writes, this operation atomically moves the system to a new consistent state with both the new data and the new metadata.
 %and \hotpot\ can always recover local data to a consistent state after crashes.
+
+\input{hotpot/fig-tran-1}
 
 \subsection{\mrmw\ Mode}
 \label{sec:hotpot:mrmw}
@@ -98,8 +98,6 @@ We designed a three-phase commit protocol for the \mrmw\ mode
 based on traditional two-phase commit protocols~\cite{Samaras93,Gray78,Lampson81} but differs in that
 \hotpot\ needs to ensure cache coherence, crash consistency, and data replication all in one protocol.
 Figure~\ref{fig-mrmw} illustrates an example of \mrmw. 
-
-\input{hotpot/fig-tran-2}
 
 \noindent{\bf Commit phase 1.} 
 When a node receives a \commitxact\ call (we call this node {\em \xn}), it checks if data specified in the \commitxact\ call is dirty
@@ -173,6 +171,8 @@ In this case, the \xn\ performs the \commitxact\ operation locally.
 Since all local dirty pages are the COW of old \committed\ pages,
 \xn\ already has an undo and a redo copy of the committing data
 and does not need to create any other redo log as in remote \on's phase 1.
+
+\input{hotpot/fig-tran-2}
 
 \subsection{MRSW Mode}
 \label{sec:hotpot:mrsw}

@@ -1,43 +1,6 @@
 \section{Conclusion}
-\label{sec:conclude}
+\label{sec:snic:conclude}
 
 We propose network disaggregation and consolidation by building SuperNIC, a new networking device specifically for a disaggregated datacenter.
 Our FPGA prototype demonstrates the performance and cost benefits of \snic.
 Our experience also reveals many new challenges in a new networking design space that could guide future researchers.
-%Our experience also reveals new challenges in network hardware design, packet and network-task scheduling, multi-tenant sharing, and distributed network systems.
-
-\if 0
-Resource disaggregation breaks the monolithic
-servers into segregated hardware resource pools,
-each of which can be built, managed, and scaled independently.
-Based on our preliminary study,
-we find that network would be the major obstacle 
-to deploy either disaggregated datacenters,
-or high-speed regular server datacenters.
-Network, the fourth major computing resource in datacenter,
-has been completely left out in the disaggregation process.
-In response, we propose to disaggregate network from
-endpoints, then further consolidate them into a datacenter-scale
-network resource pool. This pool provides \textit{network-as-a-service}
-to the rest of the datacenter, consisting of three types of network computation.
-
-In this paper, we have reviewed all emerging network devices
-that are possible solutions for network consolidation.
-Unfortunately, none of them satisfies our goals.
-As a result, we take a step further and propose
-\sysname, a new programmable network device.
-\sysname\ connects to endpoints via the down link
-and connects to the ToR switch via the up link.
-A set of \sysname{}s form the network resource pool
-and provide dynamic services to the endpoints connected to it.
-
-We believe that datacenters will undergo major renovations
-in the next decade to accommodate the diverse hardware
-and high-demand applications.
-Network disaggregation and consolidation is one of the keys to achieve that.
-Programmable switch, circuit switch, and NFV all have enjoyed
-their rapid growth in the past decade, but as we our review shows,
-they are not the right tools for the next decade.
-\fi
-
-\textbf{\textit{This work does not raise any ethical issues.}}

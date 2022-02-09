@@ -1,9 +1,6 @@
 \section{Disaggregate Hardware Resource}
 \label{sec:lego:motivation}
 
-\input{lego/fig-resource-anal}
-\input{lego/fig-architecture}
-
 This section
 motivates the hardware resource disaggregation architecture
 and discusses the challenges in managing disaggregated hardware.
@@ -26,6 +23,8 @@ a significant amount of jobs are being evicted at the same time in these traces
 One of the main reasons for resource under-utilization in these production clusters is 
 the constraint that CPU and memory for a job have to be allocated from 
 the same physical machine.
+
+\input{lego/fig-resource-anal}
 
 \noindent{\textit{\uline{Poor hardware elasticity.}}}
 It is difficult to add, move, remove, or reconfigure hardware components
@@ -117,6 +116,7 @@ IBM Composable System~\cite{IBM-Composable},
 and Berkeley Firebox~\cite{FireBox-FASTKeynote}.
 
 \subsection{OSes for Resource Disaggregation}
+
 Despite various benefits hardware resource disaggregation promises, 
 it is still unclear how to manage or utilize disaggregated hardware in a datacenter.
 Unfortunately, existing OSes and distributed systems cannot work well with this new architecture.
@@ -127,6 +127,8 @@ Recent disaggregated systems like soNUMA~\cite{Scaleout-numa} take this approach
 However, this approach incurs high network latency and bandwidth consumption with remote device management,
 misses the opportunity of exploiting device-local computation power,
 and makes processors the single point of failure.
+
+\input{lego/fig-architecture}
 
 Multi-kernel solutions~\cite{Baumann-SOSP09,Barrelfish-DC,Helios-SOSP,fos-SOCC,Hive-SOSP} (Figure~\ref{fig-multikernel}) 
 view different cores, processors, or programmable devices within a server separately 
