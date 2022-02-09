@@ -1,22 +1,13 @@
 \section{\sys\ Implementation}
-\label{sec:impl}
+\label{sec:clio:impl}
 
-Apart from challenges discussed in \S\ref{sec:design}, our implementation of \sys\ also needs to overcome several practical challenges, for example, how can different hardware components most efficiently work together in \sysboard, how to minimize software overhead in \syslib. 
+Apart from challenges discussed in \S\ref{sec:clio:design}, our implementation of \sys\ also needs to overcome several practical challenges, for example, how can different hardware components most efficiently work together in \sysboard, how to minimize software overhead in \syslib. 
 This section describes how we implemented \sysboard\ and \syslib, focusing on the new techniques we designed to overcome these challenges.
 Currently, \sys\ consists of 24.6K SLOC (excluding computation offloads and third-party IPs).
 They include 5.6K SLOC in SpinalHDL~\cite{SpinalHDL} and 2K in C HLS for FPGA hardware, and 17K in C for \syslib\ and ARM software.
 We use vendor-supplied interconnect and DDR IPs, and an open-source MAC and PHY network stack~\cite{Corundum-FCCM20}.
 
 \ulinebfpara{\sysboard\ Prototyping.}~~
-%\label{sec:impl}
-\if 0
-By design (Figure~\ref{fig-coremem}), a \sysboard\ consists of an data path ASIC, a small FPGA, and a few low-power cores,
-a network interface (at least one port of 100\Gbps\ or higher), and an array of off-chip DRAMs of at least hundreds of GBs.
-All components except the DRAMs are expected to be integrated into a single chip.
-The ASIC is dedicated to fixed logics including \sys's virtual memory fast path and network system (L1+L2 MAC).
-The software cores run the virtual memory and offloads' slow paths.
-The FPGA runs offloads' fast paths.
-\fi
 We prototyped \sysboard\ with a low-cost (\$2495 retail price) Xilinx MPSoC board~\cite{ZCU106} and build the hardware fast path (which is anticipated to be built in ASIC) with FPGA.
 All \sys's FPGA modules run at 250\,MHz clock frequency and 512-bit data width.
 They all %(network, pre-processor, core memory) are able to 
@@ -38,8 +29,6 @@ Unfortunately, no board on the market offers the combination of small FPGA/ARM (
 and large memory and high-speed network ports. %high-speed network and/or large amounts of on-board DRAM with small processing units,
 %but building one only requires board-level changes.
 
-%A \sys\ memory board includes a small FPGA, some ARM cores, and some DRAM chips.
-%Figure~\ref{fig-board} shows an overview of \sys's board design.
 Nonetheless, certain features of this board are likely to exist in a real \sysboard,
 and these features guide our implementation.
 Its ARM processor and the FPGA connect through an interconnect that has high bandwidth (90\GB/s) but high delay (40\mus).
@@ -52,27 +41,12 @@ With this board, the ARM's access to on-board DRAM is much slower than the FPGA'
 A better design would connect the ARM directly to the DRAM, 
 but it will still be slower for the ARM to access on-board DRAM than its local on-chip memory.
 
-%We use our prototype board's FPGA to implement both the ASIC and the FPGA in our design.
-%(\ie,  clock cycle down the pipeline).
-%(II is the number of clock cycles between the start time of consecutive loop iterations,
-%and it decides the maximum achievable throughput).
-%Achieving an II of one is not easy and requires careful pipeline design in all the modules.
-%which we omit because of space constraint. %do not have paper space to cover.
-%As a result, our FPGA path can achieve a maximum of 128\Gbps\ throughput. 
-
-%Below, we pick some techniques used in our prototyping implementation that will still be applicable in a real \sysboard.
-%Physical links between ARM and FPGA and between ARM and on-board DRAM are slow both in latency.
-%First, thanks to our overall design of a performance-deterministic and low-tail-latency fast path,
-%we can carefully allocate small, bounded buffers in the pipeline to 
-%handle slower operations like PTE fetch (which takes one DRAM access time).
-%
-
 To mitigate the problem of slow accesses to on-board DRAM from ARM,
 we maintain shadow copies of metadata at ARM's local DRAM.
 %to avoid the much higher (79\x\ in our experiment) cost of going to the on-board DRAM.
 For example, we store a {\em shadow} version of the page table in ARM's local memory,
 so that the control path can read page table content faster.
-When the control path needs to perform a virtual memory space allocation, it reads the shadow page table to test if an address would cause an overflow (\S\ref{sec:addr-trans}).
+When the control path needs to perform a virtual memory space allocation, it reads the shadow page table to test if an address would cause an overflow (\S\ref{sec:clio:addr-trans}).
 We keep the shadow page table in sync with the real page table by updating both tables when adding, removing, or updating the page table entries.
 %
 %first, we shift operations involving ARM off the performance-critical path.
@@ -87,14 +61,13 @@ and post responses to a TX ring buffer.
 
 %matching future high-bandwidth networks.
 \sysboard's network stack builds on top of standard, vendor-supplied Ethernet physical and link-layer IPs, with just an additional thin checksum-verify and ack-generation layer on top.
-This layer uses much fewer resources compared to a normal RDMA-like stack (\S\ref{sec:results-cost}).
+This layer uses much fewer resources compared to a normal RDMA-like stack (\S\ref{sec:clio:results-cost}).
 %
 We use lossless Ethernet with Priority Flow Control (PFC) for less packet loss and retransmission. Since PFC has issues like head-of-line blocking~\cite{DCQCN-sigcomm15,hpcc-sigcomm19,alibaba-rdma-nsdi21,IRN}, we rely on our congestion and incast control to avoid triggering PFC as much as possible.
 
 Finally, to assist \sys\ users in building their applications, we implemented a simple software simulator
 of \sysboard\ which works with \syslib\ for developers to test their code without the need to run an actual \sysboard.
 
-%\if 0
 \ulinebfpara{\syslib\ Implementation.}~~
 Even though we optimize the performance of \sysboard, the end-to-end application performance can still be hugely impacted if the host software component (\syslib) is not as fast.
 Thus, our \syslib\ implementation aims to provide low-latency performance by adopting several ideas (e.g., data inlining, doorbell batching) from recent low-latency I/O solutions~\cite{ERPC,Kalia14-RDMAKV,Kalia16-ATC,Tsai17-SOSP,Shinjuku,Shenango,demikernel-sosp21}.
@@ -107,174 +80,3 @@ and a low-level device driver layer that interacts with the NIC (similar to DPDK
 %We use per-thread inline polling.
 For synchronous APIs, we let the requesting thread poll the NIC for receiving the response right after each request.
 For asynchronous APIs, the application thread proceeds with other computations after issuing the request and only busy polls when the program calls \poll.
-%\fi
-
-\if 0
-Requests coming into the board first go through a thin network stack followed by a command pre-processor. 
-The pre-processor serves as a coordinator across different components.
-It uses a match-and-action table (MAT) to decide which component to route the request to.
-It then detects conflicts among operations with different destination components 
-and properly sequences them to deliver a specific synchronization guarantee.
-%The action part of the MAT specifies what operations would cause a conflict and how to sequence them.
-That is, we use the pre-processor to guarantee inter-component synchronization
-and leave intra-component synchronization to each individual component.
-For example, to ensure the consistency between virtual memory metadata operations (handled by ARM)
-and data operations (handled by an FPGA component) in a session,
-the pre-processor blocks the session's metadata (data) operations when the session has an in-flight data (metadata) operation
-to the same virtual page.
-%But to maximize performance, the pre-processor sends out all non-blocked requests as soon as they arrive.
-
-After the pre-processor, metadata requests go to ARM and data requests go to the {\em core-memory} FPGA component.
-When these components finish processing the requests, they send the results in reply messages
-back to the clients (via the network TX stack).
-%the reply to the post-processor
-%(co-located with the pre-processor in the same component),
-%which will form replies and forward them to the network stack's TX (sending) stack.
-
-
-\subsection{Virtual Memory System Data Plane}
-\label{sec:dataplane}
-%emphasize difference from virt mem sys in software
-We implemented the virtual memory data plane in a {\em core memory} module on FPGA (Figure~\ref{fig-coremem} and Appendix).
-It performs two main functions: virtual-to-physical address translation and DRAM data access.
-Although at a high level, these functionalities are similar to traditional software-based virtual memory systems,
-implementing them in hardware with our cost and performance goals (\textbf{R1}, \textbf{R2}, \textbf{R3}) is challenging.
-%we face unique hardware challenges in working with small FPGA area, clock frequency budgets,
-%and the goals of reaching 100\Gbps\ network line rates and single-digit microsecond latency.
-To achieve these goals, we design the data-plane pipeline to have {\em deterministic performance} %smooth with minimal stalls 
-by moving slower operations off the performance-critical path and by bounding the length of them. 
-As a result, each virtual memory read/write request requires \textbf{at most two DRAM accesses} 
-on the performance-critical path (one being the data access itself), 
-and the whole pipeline with page fault handling takes only \textbf{three FPGA cycles}. 
-%two of which are on the performance critical path).
-To achieve the cost goal, we store all data and large metadata in off-chip DRAM, but minimize the performance impact
-of accessing DRAM by either making these operations asynchronous or infrequent (through on-chip caching).
-
-We propose a new overflow-free hash-based page table design that bounds address translation to at most one DRAM access.
-%Bounding address translation to at most one DRAM access 
-This design not only delivers excellent performance 
-but also largely reduces the complexity (and thus FPGA area cost) of our core memory pipeline. % (because \zhiyuan{XXX}). 
-We store the entire page table of a process in a DRAM hash table whose hash buckets each has a fixed number of slots (\eg, 8 slots per bucket).
-To look up a virtual memory address, we compute its hash value (using the {\em lookup3}~\cite{lookup3-wiki} hash function) 
-and fetch the entire bucket (with all its slots) in a single DRAM read.
-Normally, a hash table with fixed slots will have an overflow problem because of hash conflicts (\eg, in a Xilinx FPGA key-value store~\cite{FPGA-KV}).
-We use a novel technique to {\em proactively avoid} hash overflow at virtual address allocation time (see \S\ref{sec:metadataplane}).
-To further improve address translation performance, we cache hot page table entries (PTEs) on chip (in FPGA BRAM),
-use CAM (content-addressable-memory) to look up the cache,
-and use LRU for replacement, similar to traditional TLB design.
-%Under our current implementation, the PTE cache is shared across application processes.
-%But it is fairly easy to change it to provide isolation between processes (\eg, for performance or security).
-
-When a request arrives from the XBar, its header (\pid, virtual address, size) goes to the {\em address translation pipeline},
-and its data goes to the {\em data access pipeline}.
-The address translation pipeline first looks up the virtual address in the on-chip PTE cache.
-If there is a hit, it sends the translation result to a result-buffer unit
-and updates the statistics of the PTE cache through a {\em PTE cache manager} (for replacement policy).
-Otherwise, it forwards the request to the {\em PTE fetch unit} which reads the corresponding hash bucket from DRAM
-and checks if there is a matching PTE.
-If so, we send the result to the result-buffer unit.
-Otherwise, we forward the request and the (fault) result to the next unit,
-a {\em page fault handler}.
-
-The page fault handler deals with two cases.
-If the PTE lookup result is a permission violation, it sends an error message to the result-buffer unit.
-If the lookup result is an unallocated physical page, we need to do an on-demand physical memory allocation.
-As allocation is performed by ARM, fetching the allocation results via the slow path between FPGA and ARM would hugely affect foreground performance.
-We propose an asynchronous design to avoid this performance overhead.
-We maintain a set of {\em free physical page lists} (of different page sizes),
-which ARM continuously fills by allocating physical pages. % actual allocation.
-During an on-demand page fault, the page fault handler simply fetches a pre-allocated physical page address 
-from the corresponding free page list. % of the corresponding page size.
-%This asynchronous design enables us to avoid the long wait for ARM to do an allocation on the fly.
-
-The page fault handler then performs three tasks in parallel: 
-writing the new PTE to the DRAM page table, sending the new PTE to the PTE cache manager (which then inserts the PTE to the PTE cache),
-and sending the new PTE to the translate result unit.
-This early result forwarding avoids the performance overhead of one DRAM write,
-but requires additional measures to guarantee consistency.
-The inconsistent case would happen when another in-flight request to the same virtual address 
-finishes the PTE fetching step before the new PTE is written to DRAM,
-in which case the already fetched PTE would be invalid causing another page fault.
-To avoid this case, %creating another PTE for this other request, 
-we temporarily store the previously created PTE in a small buffer at the page fault handler before writing it to DRAM.
-For all the requests coming into the page fault handler, we lookup this new PTE buffer 
-and bypass the page fault handling logics for a match.
-After a new PTE has been written to DRAM, we send a signal back to the pipeline (PTE updated dash line)
-to remove the corresponding entry in the new PTE buffer.
-Thus, PTEs live in the buffer only for the duration of the DRAM write, and the buffer could be kept small 
-(in the rare case when the buffer is full, we stall the pipeline).
-%With the above performance-optimization techniques, the whole page fault handler takes only {\em three cycles} in total.
-
-The translation result buffer unit gathers resulting physical addresses and sends them to the data access pipeline in order.
-We follow request arrival order here (\ie, an in-order pipeline) to provide stronger consistency guarantees
-and to make our implementation simpler. 
-%An out-of-order pipeline can be built on top of our current design to allow further performance improvement.
-
-The data access pipeline runs in parallel with the address translation pipeline.
-It first buffers request headers and request data in two FIFO queues.
-After receiving a translation result from the address translation pipeline, 
-it takes the next header and data from the two queues and forms a physical memory access request.
-Because all these queues are in the same order as the request arrival order, 
-we do not need to do any re-ordering in the data access pipeline.
-When the physical memory access completes, 
-the data access pipeline forms a response request which is sent back to the client (via XBar and network stack).
-
-\subsection{Virtual Memory System Metadata Plane}
-\label{sec:metadataplane}
-
-The ARM processor handles all the metadata and control operations.
-Physical links between ARM and FPGA and between ARM and on-board DRAM are slow both in latency and in bandwidth.
-To mitigate this performance problem, 
-first, we shift operations involving ARM off the performance-critical path.
-Second, we maintain shadow copies of metadata at ARM's local DRAM 
-to avoid the much higher (79\x\ in our experiment) cost of going to the on-board DRAM.
-Third, we employ an efficient polling mechanism for ARM-FPGA communication.
-We dedicate one ARM core to busy poll an (RX) ring buffer between ARM and FPGA,
-where the FPGA posts tasks for ARM.
-This polling thread hands over tasks to other worker threads for task handling %that perform the tasks
-and post responses to a TX ring buffer.
-We use DMA to implement the ring buffers, 
-as DMA is the fastest communication methods we found among all the available ones.
-
-The major metadata tasks in \sys\ are virtual and physical memory allocation and free.
-Virtual memory allocation (free) happens when applications call \alloc\ (\free).
-The \sys\ library sends the slice ID(s) the \alloc\ is designated to 
-together with the size to be allocated and the \pid\ (see \S~\ref{sec:dist-virtmem}).
-The FPGA command pre-processor forwards these requests to ARM.
-ARM maintains a VMA (virtual-memory-address) tree for each slice of a registered process,
-similar to Linux VMA trees.
-It also maintains a {\em shadow} version of hash page tables in its local memory for fast accesses.
-
-We adapted Linux' VMA-tree-based virtual memory allocation algorithm to accommodate our fix-slot hash page table design as follows.
-After finding an available address range in the VMA tree, we calculate the hash values of the
-virtual pages and check if inserting them to the shadow page table would cause hash overflow. 
-If so, we mark the failed virtual pages in the VMA tree as ``unusable'' and do another VMA-tree search
-%We also insert special ``unusable'' PTEs of the failed pages to the shadow page table to be used for future \free.
-%by linking them outside the fix-slot bucket
-%These steps repeat 
-until we find a valid virtual address range or run out of virtual addresses.
-When a valid virtual address range is found, we insert corresponding PTEs to both the shadow page table in ARM memory
-and the real page table in the on-board DRAM (through ARM's DDR interface).
-These PTEs have no physical addresses and are set to invalid.
-To handle an \free\ request, ARM sends a PTE invalidation request to FPGA,
-which invalidates the PTE in its cache and in the main DRAM page table.
-ARM also removes the corresponding PTE in its shadow page table.
-If there are other previously marked ``unusable'' PTEs that fall to the same hash 
-bucket, we mark them usable again, as the freed PTE creates an empty slot.
-%one in the same hash bucket, we remove them from the shadow page table as well and mark them as usable again.
-
-ARM also manages physical memory allocation and uses a traditional buddy allocation algorithm, which takes $\sim100\ns$ per allocation from our experiments. 
-We decouple ARM's generation of 
-new physical pages from FPGA's consumption of them.
-ARM keeps filling the free page lists
-with newly allocated physical page addresses until the lists are full.
-FPGA consumes a free physical page at the page fault handling time and 
-notifies ARM about the consumption. % (through another ring buffer).
-%For the allocation algorithm, we simply use the traditional buddy allocator.
-
-\subsection{Network Layer}
-\label{sec:network}
-
-We built our network system on top of an open-source 10\Gbps\ FPGA IP/UDP stack~\cite{Corundum-FCCM20}.
-
-\fi

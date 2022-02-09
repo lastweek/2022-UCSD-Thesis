@@ -1,5 +1,5 @@
 \section{Building Applications on \sys}
-\label{sec:app}
+\label{sec:clio:app}
 
 We built five applications on top of \sys, one that uses the basic \sys\ APIs, one that implements and uses a high-level, extended API, and two that offload data processing tasks to \MN{}s, and one that splits computation across \CN{}s and \MN{}s.
 
@@ -28,10 +28,6 @@ We then expose this functionality to \CN{}s as an extended API.
 The software running at \CN\ allocates a big contiguous remote memory space using \alloc\ and uses this space to store radix tree nodes. Nodes in each layer are linked to a list.
 To search a radix tree, the \CN\ software goes through each layer of the tree and calls the pointer chasing API until a match is found.
 We implemented the radix tree with 300 C code at \CN\ and 150 SpinalHDL code at \sysboard\ in less than one developer day.
-
-
-\input{fig-scalability-tail}
-\input{fig-throughput-latency}
 
 
 \ulinebfpara{Key-value store.}

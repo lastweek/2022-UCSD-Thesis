@@ -1,21 +1,11 @@
-%\vspace{-0.05in}
 \section{Discussion and Conclusion}
-\label{sec:discussion}
-%\vspace{-0.05in}
+\label{sec:clio:discussion}
 
-%We presented a new hardware-based active disaggregated memory model
-%and \sys, a real system built with this model.
 We presented \sys, a new hardware-based disaggregated memory system.
 Our FPGA prototype demonstrates that \sys\ achieves great performance, scalability, and cost-saving.
 This work not only guides the future development of \md\ solutions
 but also demonstrates how to implement a core OS subsystem in hardware and co-design it with the network.
 We now present our concluding thoughts.
-%\sys\ outperforms passive disaggregated memory system and 
-%achieves comparable performance as CPU-based active disaggregated memory,
-%while significantly reduces the monetary cost of server-based disaggregated memory systems.
-
-
-%\ulinebfpara{Data caching.}
 
 \ulinebfpara{Security and performance isolation.}
 \sys’s protection domain is a user process, which is the same as the traditional single-server process-address-space-based protection. The difference is that \sys\ performs permission checks at MNs: it restricts a process’ access to only its (remote) memory address space and does this check based on the global PID. Thus, the safety of \sys\ relies on PIDs to be authentic (\eg, by letting a trusted CN OS or trusted CN hardware attach process IDs to each \sys\ request). There have been researches on attacking RDMA systems by forging requests~\cite{ReDMArk-security21} and on adding security features to RDMA~\cite{1RMA,sRDMA-ATC20}. How these and other existing security works relate and could be extended in a memory disaggregation setting is an open problem, and we leave this for future work.

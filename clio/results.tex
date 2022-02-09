@@ -1,9 +1,9 @@
-% \input{fig-scalability-tail}
-% \input{fig-throughput-latency}
 
+\input{clio/fig-scalability-tail}
+\input{clio/fig-throughput-latency}
 
 \section{Evaluation}
-\label{sec:results}
+\label{sec:clio:results}
 
 
 Our evaluation reveals the scalability, throughput, median and tail latency, energy and resource consumption of \sys.
@@ -23,10 +23,8 @@ We also include results from CloudLab~\cite{CloudLab} with the Nvidia ConnectX-5
 
 \subsection{Basic Microbenchmark Performance}
 
-
-\input{fig-alloc-breakdown-photo-radix}
-
-\input{fig-radix-kv-mv-df}
+\input{clio/fig-alloc-breakdown-photo-radix}
+\input{clio/fig-radix-kv-mv-df}
 
 
 \ulinebfpara{Scalability.}
@@ -76,7 +74,7 @@ Figure~\ref{fig-tail-latency} plots the request latency CDF of continuously runn
 Even without page faults, \sys\ has much less latency variation and a much shorter tail than RDMA.
 %Thanks to our bounded address translation and deterministic hardware design, \sys\ has much less latency variation and a much shorter tail than RDMA.
 
-\input{fig-energy-fpgautil}
+\input{clio/fig-energy-fpgautil}
 
 \ulinebfpara{Read/write throughput.}
 We measure \sys's throughput by varying the number of concurrent client threads (Figure~\ref{fig-read-write-throughput}).
@@ -139,47 +137,11 @@ contributor to read latency, especially with large read size.
 Both could be largely improved in a real \sysboard\ with better memory controller and higher frequency.
 TLB miss (which takes one DRAM read) is the other main part of the latencies.
 
-%\ulinebfpara{Data migration.}
-%We use two ZCU106 \sysboard{}s to evaluate the performance of inter-\MN\ data migration.
-%Migrating 1\GB\ data takes around 1.3 seconds.
-%This speed is somewhat lower than the 10\Gbps\ board port bandwidth, because of the additional tasks required to clear and set up metadata (\eg, PTEs) at both boards, which involves the slow path.
-
-%As \sysboard-to-\sysboard\ communication is fast (with just the link layer), 
-%data migration reaches the 10\Gbps, (sending 1\GB\ data takes around 1.3 seconds).
-
-\if 0
-{\em DDRAccess} in the figure is the time between sending a DDR request to a third-party DDR IP 
-and when the IP reports the completion of the request.
-DDR access time for read is larger than write because the DDR IP signals the ``commit'' of a write before the data is all written to DRAM,
-but the commit of a read is signaled only after the entire data is read, which is one of the reason why large reads are slower.
-We do not change this feature of the DDR IP, as it follows our sequentiality and read committed consistency guarantees.
-Address translation takes a constant of 20\ns\ for a PTE cache hit.
-A PTE cache miss incurs a constant addition of 252\ns, mainly for fetching the PTE from DRAM.
-Thanks to our overflow-free hash page table design, this PTE fetch time is bounded.
-Note that a page fault does not add {\em any more} time on top of the 252\ns\ when free page lists are not empty,
-as it goes through the same fault handling pipeline (which takes 3 cycles).
-\sys's pre-processor and XBar account for a constant of 24\ns.
-%With a page fault, our pipeline takes 3 cycles more. %another constant addition of XXX\ns.
-Our reliable transport layer's request processing accounts for 30--72\ns.
-The final number we report (as {\em OtherNet}) accounts for the open-source third-party FPGA IP/UDP stack we use. 
-%It adopts stall-and-forward buffer to calculate the checksum in UDP header for every out-going packet.
-\sys\ is blocked by non-\sys\ entities (lower-layer network stacks, physical network port, and physical network) from sending out read/write replies.
-This effect is higher with larger reads mainly because sending the third-party IP/UDP stack performs a checksum for the TX path but not the RX path
-and that read size dominates the TX path.
-\fi
- %out large read replies through the network in our cluster is slower.
-%Our \CN-side threading model overhead is around a constant of 0.26\mus\ to 0.3\mus\ (we use a global polling thread to forward requests to client threads).
-%These overheads mainly come from laying our network stack on top of an RDMA NIC (and its driver) at \CN{}s.
-%They could be avoided or reduced by changing \CN-side's NIC and/or NIC driver.
-
-
 
 \subsection{Application Performance}
-%\vspace{-0.05in}
 
 \ulinebfpara{Image Compression.}
 We run a workload where each client 
-%(process for RDMA and collection for \sys)
 compresses and decompresses 1000 256*256-pixel images with increasing number of concurrently running clients.
 Figure~\ref{fig-photo} shows the total runtime per client.
 We compare \sys\ with RDMA, with both performing computation at the \CN\ side and the RDMA using one-sided operations instead of \sys\ APIs to read/write images in remote memory.
@@ -196,7 +158,6 @@ while \sys\ only needs one RTT for each pointer chasing (each tree level).
 In addition, RDMA also scales worse than \sys.
 
 \ulinebfpara{Key-value store.}
-%\subsubsection{Key-Value Store}
 Figure~\ref{fig-kvstore} evaluates \syskv\ using the YCSB benchmark~\cite{YCSB} and compares it to Clover, HERD, and HERD-BF.
 We run two \CN{}s and 8 threads per \CN.
 We use 100K key-value entries and run 100K operations per test,
@@ -246,40 +207,11 @@ When the select ratio is low, \sys\ transfers much less data than RDMA, resultin
 %\syskv's latency results with reported latencies in ~\cite{KVDIRECT}. 
 %\syskv\ has {\bf lower end-to-end latency than all these existing systems}.
 
-\if 0
-\ulinebfpara{Multi-version data store.}
-%\subsubsection{Multi-Version Data Store}
-We evaluate \sysmv\ by varying the number of \CN{}s that concurrently access data objects (of 16\,B) on an \MN\ using workloads of 50\% read (of different versions) and 50\% write under uniform and Zipf distribution of objects (Figure~\ref{fig-mvstore}). 
-\sysmv's read and write have the same performance, and reading any version has the 
-same performance, since we use an array-based version design. 
-Running multiple \MN{}s have similar performance and we omit for space.
-
-\ulinebfpara{DataFrame.}
-We ran a simple workload which first \texttt{select} rows in a table whose field-A matches a value (\eg, gender is female)
-and calculate \texttt{avg} of field-B (\eg, final score) of all the rows.
-Finally, it calculates the histogram of the selected rows (\eg, score distribution), which can be presented to the user together with the avg value (\eg, how female students' scores compare to the whole class).
-\sys\ executes the first two steps at \MN\ offloads and the final step at \CN,
-while RDMA always reads rows to \CN\ and then does each operation.
-Figure~\ref{fig-dataframe} plots the total run time as the select ratio decreases (fewer rows selected).
-When the select ratio is high, \sys\ and RDMA send similar amount of data across the network,
-and as CPU computation is faster than FPGA, \sys's overall performance is worse than RDMA.
-When the select ratio is low, \sys\ transfers much less data than RDMA, resulting in its better performance.
-\fi
-
 %then sends the data to \CN, which shuffles the data and sends the shuffled 
 %data back to \MN\ for aggregation.
 
 \subsection{CapEx, Energy, and FPGA Utilization}
-\label{sec:results-cost}
-
-%\vspace{-0.05in}
-
-%\sys's memory layer has a 2\x\ CapEx saving and 25\x\ energy saving compared to a server-based active disaggregated memory layer.
-%A Dell PowerEdge R740 server with a Xeon 5218 processor and 128\GB\ memory (the type in our cluster) costs \$6330~\cite{Dell-R740}.
-%The Xilinx ZCU-106 board costs \$2495~\cite{ZCU106}, and 128\GB\ DRAM costs around \$720~\cite{Samsung-32GDRAM}.
-%The measured power consumption of our FPGA plus our ARM processor is 6.825\,W (with 43\% used by ARM and the rest by FPGA).
-%In comparison, our measured power consumption of our Dell server when running HERD is 175\,W. 
-%consumes 175\,W while running HERD (data reported by iDRAC~\cite{dell-idrac}).
+\label{sec:clio:results-cost}
 
 
 We estimate the cost of server and \sysboard\ using market prices of different hardware units. When using 1\TB\ DRAM, a server-based \MN\ costs 1.1-1.5\x\ and consumes 1.9-2.7\x\ power compared to \sysboard. These numbers become 1.4-2.5\x\ and 5.1-8.6\x\ with OptaneDimm~\cite{optane-dcpm}, which we expect to be the more likely remote memory media in future systems.
@@ -303,9 +235,3 @@ the network stack (NetStack) consume a small fraction of the total resources,
 with the rest being vendor IPs (PHY, MAC, DDR4, and interconnect).
 %To put things in perspective, we implement a Go-back-N network stack which supports 1K connections. It uses 2.5\x\ more logic than what our current network stack consumes. 
 Overall, our efficient hardware implementation leaves most FPGA resources available for application offloads.
-%\syskv\ consumes 2.5\% LUTs and 2.6\% BRAM;
-%\syskvphys\ consumes 5.7\% LUTs and 2.4\% BRAM.
-%It indicate that even a small FPGA is sufficient.
-%will be able to host multiple memory services on \sys\ at the same time.
-%\zhiyuan{Add number of concurrent connections here? Tonic: 1024 Connections, no swap; do not include RDMA functions. StRoM: 500 QP. no swap.}
-
