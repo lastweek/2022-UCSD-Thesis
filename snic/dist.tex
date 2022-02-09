@@ -1,0 +1,36 @@
+\section{Distributed SuperNIC}
+\label{sec:dist}
+
+The design discussion so far focused on a single \snic. To enable better consolidation and network as a service, we 
+%When we use a single \snic\ to consolidate \nt{}s of its connected endpoints, the \snic\ needs to be provisioned with the aggregated peak load of these endpoints.
+%To further reduce cost, we 
+build a rack-scale distributed \snic\ platform that enables one \snic\ to use other \snic{}s' resources.
+With this platform, a rack's \snic{}s can collectively provision for the maximum aggregated load of all the endpoints in the rack.
+
+As discussed in \S\ref{sec:overview}, we support two types of \snic\ pool topology.
+For the switch-attached topology, the ToR switch serves as the load balancer across different \snic{}s.
+It also decides which \snic\ to launch a new instance of an \nt\ with the goal of balancing traffic and efficiently utilizing \snic\ hardware resources.
+%Specifically, it chooses the \snic\ that has enough free regions and is lightly loaded to launch new instances of \nt\ chains.
+%Afterwards, the switch simply directs incoming flows to the \snic{}s that contain their target \nt{}s.
+Supporting the intermediate-pool topology where the ToR switch cannot perform the above tasks is more complex. Below we discuss our design for it.
+
+%\boldpara{Distributed Control Plane.}~~
+SoftCores on the \snic{}s in the intermediate pool form a distributed control plane. 
+They communicate with each other to exchange metadata and cooperate in performing distributed tasks. % like \nt\ migration and memory swapping.
+We choose this peer-to-peer design instead of a centralized one, because the latter requires another global manager and adds complexity and cost to the rack architecture. %\zac{I am not sure about this argument -- I have heard that other places (e.g. google) have used the centralized manager architecture because it's easier to build and deploy than P2P ones. I personally don't buy this argument either. Do you have stronger support?}
+Every \snic\ collects its FPGA space, on-board memory, and port bandwidth consumption, and it periodically sends this information to all the other \snic{}s in the rack.
+Each \snic\ thus has a global view of the rack and can redirect traffic to other \snic{}s if it is overloaded.
+%make decisions like \nt\ migration independently.
+To redirect traffic, the \snic's SoftCore sets a rule in the parser MAT to forward certain packets (\eg, ones to be processed by an \nt\ chain on another \snic) to the remote \snic.
+
+%\notearvind{We could also talk about something more basic - if the same NT is loaded on many snics, we can balance the load across all instances and achieve good consolidation. Maybe that would be easier for reviewers to accept before we talk about NT migration.}
+
+%\boldpara{\nt\ Migration.}~~
+If an \snic\ is overloaded and no other \snic{}s currently have the \nt\ chain that needs to be launched, the \snic\ tries to launch the chain at another \snic.
+Specifically, the \snic's SoftCore first identifies the set of \snic{}s in the same rack that have available resources to host the \nt\ chain.
+Among them, it picks one that is closest in distance to it (\ie, fewest hops).
+The \snic's SoftCore then sends the bitstreams of the \nt{} chain to this picked remote \snic, which launches the chain in one of its own free regions.
+When the original \snic\ has a free region, it moves back the migrated \nt\ chain. 
+%It does so by first launching the \nt\ chain locally, then removing the MAT tunneling rule, and finally instructing the remote \snic\ to remove its \nt\ chain.
+If the \nt\ chain is stateful, then the SoftCore manages a state migration process after launching the \nt\ chain locally, by first pausing new traffic, then migrating the \nt's states (if any) from the remote \snic\ to the local \snic. %and finally removing the MAT rule.
+

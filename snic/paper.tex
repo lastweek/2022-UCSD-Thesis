@@ -1,0 +1,198 @@
+%
+% The top tex file
+%
+
+\documentclass[10pt,twocolumn]{article}
+%\documentclass[sigconf]{acmart}
+%\documentclass[pageno]{jpaper}
+
+\usepackage[small,compact]{titlesec}
+
+\usepackage[normalem]{ulem}
+
+\usepackage{hyperref}
+\hypersetup{hidelinks,colorlinks=true,linkcolor=red,citecolor=purple}
+%\urlstyle{rm}
+%\usepackage[usenames]{color}
+%\usepackage{xcolor}
+%\usepackage{oneinchmargins}
+%\usepackage{tightenum}
+%\usepackage{enumitem}
+\usepackage[numbers,sort,compress]{natbib}
+
+\usepackage{soul}
+
+%\usepackage{authblk}
+\usepackage{setspace}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{times}
+\usepackage{amsmath}
+
+\usepackage{bbding}
+\usepackage{pifont}
+\usepackage{amssymb}
+\usepackage{wasysym}
+\usepackage{latexsym}
+
+% This setting can break long URL into multiple lines.
+\usepackage{url}
+\def\UrlBreaks{\do\/\do-}
+%\usepackage[hidelinks,breaklinks]{hyperref}
+%\usepackage{breakurl}
+
+\usepackage{nonfloat}
+\urlstyle{rm}
+%\usepackage{algorithmic}
+% \titlespacing*{\section}{0em}{-0ex}{-2ex}
+% \titlespacing*{\subsection}{0em}{-0ex}{-2ex}
+% \titlespacing*{\subsubsection}{0em}{-0ex}{-2ex}
+%\setstretch{0.98}
+
+\usepackage{multirow}
+
+\let\oldthebibliography=\thebibliography
+\let\endoldthebibliography=\endthebibliography
+\renewenvironment{thebibliography}[1]{%
+\begin{oldthebibliography}{#1}%
+  \setlength{\parskip}{0ex}%
+  \setlength{\itemsep}{0ex}%
+}%
+{%
+\end{oldthebibliography}%
+}
+
+\usepackage{geometry}
+\geometry{reset, letterpaper, height=9in, width=7in, hmarginratio=1:1, vmarginratio=1:1, marginparsep=0pt, marginparwidth=0pt, headheight=15pt}
+\setlength{\columnsep}{0.33in}
+%\setlength{\rightmargin}{0.0in}
+%\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9.25in}
+\setlength{\textwidth}{7.0in}
+%\setlength{\oddsidemargin}{-0.275in}
+%\setlength{\evensidemargin}{-0.275in}
+
+\usepackage{listings}
+  \usepackage{courier}
+ \lstset{
+         basicstyle=\footnotesize\ttfamily, % Standardschrift
+         %numbers=left,               % Ort der Zeilennummern
+         numberstyle=\tiny,          % Stil der Zeilennummern
+         %stepnumber=2,               % Abstand zwischen den Zeilennummern
+         numbersep=5pt,              % Abstand der Nummern zum Text
+         tabsize=2,                  % Groesse von Tabs
+         extendedchars=true,         %
+         breaklines=true,            % Zeilen werden Umgebrochen
+         keywordstyle=\color{red},
+    		frame=b,         
+ %        keywordstyle=[1]\textbf,    % Stil der Keywords
+ %        keywordstyle=[2]\textbf,    %
+ %        keywordstyle=[3]\textbf,    %
+ %        keywordstyle=[4]\textbf,   \sqrt{\sqrt{}} %
+         stringstyle=\color{white}\ttfamily, % Farbe der String
+         showspaces=false,           % Leerzeichen anzeigen ?
+         showtabs=false,             % Tabs anzeigen ?
+         xleftmargin=17pt,
+         framexleftmargin=17pt,
+         framexrightmargin=5pt,
+         framexbottommargin=4pt,
+         %backgroundcolor=\color{lightgray},
+         showstringspaces=false      % Leerzeichen in Strings anzeigen ?        
+ }
+ \lstloadlanguages{% Check Dokumentation for further languages ...
+         %[Visual]Basic
+         %Pascal
+         C
+         %C++
+         %XML
+         %HTML
+         %Java
+ }
+
+\sloppy
+
+%% Leave this on, so we can see them!!!
+%\remarktrue
+\newcommand{\shortenum}{\vspace*{-0.1in}}
+%\newcommand{\shortsec}{\vspace*{-0.2in}}
+%\newcommand{\sparagraph}[1]{\vspace*{-0.2in}\paragraph{#1}}
+%\newcommand{\sparagraph}[1]{\vspace*{-0.15in}\paragraph{#1}}
+\newcommand{\sparagraph}[1]{\vspace*{0.0in}\paragraph{#1}}
+
+%\setlength{\marginparwidth}{0.6in}
+\setlength{\marginparwidth}{2cm}
+\usepackage[textsize=tiny,textwidth=0.6in]{todonotes}
+\newcommand{\allnotes}[1]{}
+\renewcommand{\allnotes}[1]{#1} % Comment to turn off notes
+%\newcommand{\fixme}[1]{\allnotes{{\bf\textcolor{red}{[#1]}}}}
+\newcommand{\notearvind}[1]{\allnotes{\todo[color=yellow!50]{AK: #1}}}
+
+\newcommand{\noteyiying}[1]{\allnotes{\todo[color=yellow!50]{YZ: #1}}}
+
+\newcommand{\noteryan}[1]{\allnotes{\todo[color=yellow!50]{RK: #1}}}
+
+\newcommand{\noteys}[1]{\allnotes{\todo[color=yellow!50]{YS: #1}}}
+
+
+
+
+
+
+%\input{texheader}
+
+\input{macros}
+\input{remark}
+\input{defs}
+
+\begin{document}
+
+%\title{Disaggregating and Consolidating Network Functionalities with SuperNIC}
+%\date{}
+%\maketitle
+%\thispagestyle{empty}
+
+
+\twocolumn[
+    \begin{@twocolumnfalse}
+    \begin{center}
+	{\Large\bf Disaggregating and Consolidating Network Functionalities with SuperNIC}
+    \end{center}
+    \centerline{
+    Yizhou Shan\textsuperscript{\textdagger},
+    Will Lin\textsuperscript{\textdagger},
+    Ryan Kosta\textsuperscript{\textdagger},
+    Arvind Krishnamurthy\textsuperscript{*},
+    Yiying Zhang\textsuperscript{\textdagger}}
+    \centerline{
+    \it{
+    \textsuperscript{\textdagger}University of California San Diego, \textsuperscript{*}University of Washington}
+    }
+    \vspace{0.2in}
+    %\smallskip
+    \end{@twocolumnfalse}
+]
+\thispagestyle{empty}
+
+\setcounter{page}{1}
+
+\input{abstract}
+\input{introduction}
+\input{motivation}
+\input{overview}
+\input{design}
+\input{dist}
+\input{application}
+\input{results}
+%\input{design_yizhou}
+%\input{discussion}
+%\input{related}
+\input{conclude}
+
+%\input{extended_abstract}
+
+
+\input{texfooter}
+
+\input{appendix}
+
+\end{document}

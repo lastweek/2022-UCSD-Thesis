@@ -1,0 +1,36 @@
+%\NOTE{Check defs.tex for comment marcos.}
+
+\begin{abstract}
+
+Resource disaggregation has gained huge popularity in recent years.  %in both academia and industry. 
+Existing works demonstrate how to disaggregate compute, memory, and storage resources. We, for the first time, demonstrate how to disaggregate {\em network resources} by proposing a network resource pool that consists of a new hardware-based network device called {\em SuperNIC}. 
+Each SuperNIC consolidates network functionalities from multiple endpoints by fairly sharing limited hardware resources, and it achieves its performance goals by an auto-scaled, highly parallel data plane and a scalable control plane.
+We prototyped SuperNIC with FPGA and demonstrate its performance and cost benefits with real network functions and customized disaggregated applications.
+
+\if 0
+For decades, the unit of deployment, operation, and failure in datacenters has been a monolithic server,
+one that contains all the hardware resources needed to run a user program.
+This decade-old server architecture is seeing its limits in the face of today’s datacenter needs.
+Hardware resource disaggregation is a solution that breaks full-blown,
+general-purpose servers into segregated, network-attached hardware resource pools,
+each of which can be built, managed, and scaled independently.
+
+While increasing amounts of effort go into disaggregating compute, memory, and storage,
+the fourth major resource in computing, \textit{network},
+has been completely left out.
+No work has attempted to disaggregate the network.
+At first glance, network cannot be disaggregated from either
+a traditional monolithic server or a disaggregated device,
+as they both need to be attached to the network and
+each endpoint is provisioned with its own network interface and the associated network stack.
+
+In this research exam,
+I will first present our preliminary study
+to motivate network disaggregation and consolidation.
+Then I will present a detailed survey on all possible solutions and show why they fall short.
+Those solutions include programmable switch, circuit switch, coherent fabrics, middlebox, NFV, and multi-host NIC.
+Finally, I will present our initial work, an FPGA-based new network device that meets
+all our goals for network disaggregation and consolidation.
+\fi
+
+\end{abstract}

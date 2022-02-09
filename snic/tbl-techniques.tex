@@ -1,0 +1,77 @@
+% https://homes.cs.washington.edu/~arvind/papers/pcp.pdf
+
+{
+\begin{table*}[th]\footnotesize
+\begin{center}
+\begin{tabular}{ p{1in} | p{1.5in} |p{3.3in} | p{0.5in}}
+
+\textbf{Goal} &
+\textbf{Mechanism} &
+\textbf{Description} &
+\textbf{Section} \\
+\hline
+\hline
+
+Connectivity            & Reliable link layer & enable connection between supernic and endpoints & XX \\
+\hline
+Endpoint Integration    & Endpoint shim layer & APIs and lighteweight states & XX \\
+\hline
+\hline
+
+Perf & Partial NF Chaining & XXXX  & XXX \\
+\hline
+
+Perf & Service-level Parallelism & XXXX  & XXX \\
+\hline
+
+Perf & Instance-level Parallelism & XXXX  & XXX \\
+\hline
+
+Correctness & Reorder Buffer & parallel services and instances & XXX \\
+\hline
+
+Perf \& Security & Resource Partition & Partition resource to improve aggregated on-board throughput & XXX \\
+\hline
+\hline
+
+Management & Softcore & Runs management plane (all policies) & XX \\
+\hline
+
+Consolidation & Packet Store & Shared central packet buffer & XX \\
+\hline
+
+Fairness & Credit Allocation & Eager and \& on-demand policies & XXX \\
+\hline
+
+Fairness & Header/PIFO Queues & XX & XXX \\
+\hline
+
+XX & NF Wrapper & XXXX & XXX \\
+\hline
+
+Security & Segmented VM & XXXX & XXX \\
+\hline
+
+
+PR Facility & PR Region Decoupler & Logically isolates static and dynamic PR regions, with quiescence API & XXX \\
+\hline
+
+Computation Scaling & PR-based Auto Scaling & PR can replace, add, and remove NFs during runtime & XXX \\
+\hline
+
+Computation Scaling & Bitstream Store & A table of bitstreams saved in on-board DRAM & XXX \\
+\hline
+
+Better Deployment & Bitstream AutoGen & A framework to generate wrapped bitstreams using user netlists & XXX \\
+\hline
+
+
+\end{tabular}
+\end{center}
+\mycaption{table-techniques}{Technique Summary.}
+{
+PR: Partial Reconfiguration.
+NF: Network Function.
+}
+\end{table*}
+}

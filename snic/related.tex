@@ -1,0 +1,442 @@
+% https://docs.google.com/spreadsheets/d/1JODWoEtDBxeOTr-ZqEqm3D-9wfADyNqgMoIOSpukBL0/edit#gid=0
+
+\section{Related Work}
+\label{sec:related}
+
+
+Datacenter network topology.
+Disaggregation.
+Devices: pswitch, circuit switch, multi-host nic.
+
+Intel IPU
+
+
+
+
+
+
+
+
+
+
+\if 0
+In this section, we review emerging network devices
+and investigate whether they can be used to implement the
+network resource pool, which, in turn provides network-as-a-service
+for both disaggregated devices and regular servers.
+Our focus is the support for disaggregated devices.
+As it requires more functionalities and hence a super set of 
+the ones required for regular server case.
+Solutions work for the disaggregation setting would naturally
+work for the regular-server cluster setting.
+
+To this end, we propose a set of goals that a particular
+solution must meet:
+\boldpara{1) Port Count}.
+The solution must be able to
+support the exploded number of endpoints with
+a cost-effective network topology.
+\boldpara{2) Heterogeneous Endpoints}.
+The solution should support various known computation mediums
+such as FPGA, ASIC, and CPU, as well as any new ones in the future.
+\boldpara{3) Transports and Network Functions}.
+As we discussed earlier, the network resource pool is 
+consolidating three types of resources: packet processing
+in NIC, software network stack and advanced application-specific
+network functions. The first type naturally comes with hardware.
+The solution must have a mean to support the latter two.
+\boldpara{4) Programmability}.
+One of the key requirements for any current or future datacenters
+is the ability to upgrade or re-program after deployment.
+\boldpara{5) Consolidation, Manageability, and Multi-Tenancy}.
+The core of pool is resource consolidation,
+which relies on good management and multi-tenancy support.
+
+Table~\ref{tabel-related-work} presents all the goals
+and whether each reviewed network device or system can meet them.
+Next, we will take a deep dive into each one.
+
+
+\subsection{Programmable Switch}
+
+\subsubsection{Primer}
+Unlike traditional switches, the programmable switches
+allow users to install specific actions on the switch data path.
+thereby enable line-rate packet processing.
+The core of programmable switch is Reconfigurable Match Table (RMT),
+pioneered by a seminal SIGCOMM'13 paper~\cite{RMT-SIGCOMM13}.
+RMT was first proposed to enhance OpenSDN deployment.
+Since then, the programmable switches have seen great success in both industry and academic. 
+P4~\cite{p4-paper}, a young domain-specific language specifically designed for packet processing, is the de-facto programming language for programmable switches. P4 greatly simplifies
+packet manipulation and has helped the wide adoption of programmable switches.
+
+The arise of programmable switch shifted the network computation paradigm:
+it breaks the common belief held by distributed system designers
+and opens doors to improve, redesign, or create distributed systems in unimaginable ways.
+In essence, programmable switch is a centralized computation point
+that can mitigate synchronization and consistency issues,
+acting as cache front end, or simply be a network function offloading unit. 
+Recent systems demonstrate performance improvements in domains like
+caching for KV~\cite{netcache-sosp17, incbricks-asplos17},
+caching for load-balancing~\cite{distcache-fast19},
+in-network coherence directories~\cite{pegasus-osdi20},
+congestion control~\cite{hpcc-sigcomm19},
+distributed lock management~\cite{netlock-sigcomm20},
+databases~\cite{cheetah-sigmod20},
+scheduling~\cite{racksched-osdi20},
+and network function processing~\cite{tea-sigcomm20}.
+%consensus,
+%machine learning,
+
+Most recently, researchers started using programmable switches
+to consolidate computation resource.
+Wang et al.~\cite{wang-hotcloud20} observes programmable switches are
+heavily under-utilized, hence use a set of
+compile/run-time techniques to deploy multiple p4 programs
+onto one programmable switch, thereby enabling multi-tenancy and consolidation.
+TEA~\cite{tea-sigcomm20} consolidates NFs at rack-scale,
+providing NF-as-a-service to the servers under the ToR switch.
+Das et al.~\cite{active-hotnets20} takes a fresh look at
+active networking and uses p4 to turn a programmable switch
+into a physical computing device akin to a virtual machine.
+
+\subsubsection{Feasibility}
+
+Programmable switch has limited number of ports,
+e.g., 64 ports for Intel Tofino2, hence not able to
+accommodate the exploded number of disaggregated devices.
+Further, with the diminishing of Dennard Scaling and Moore's Law,
+the merchant chip is not likely to see dramatic computation power increase,
+which in turn limits the number of ports a certain chip can support.
+
+Most of commodity programmable switches are Ethernet-based.
+To communicate with such switches,
+an endpoint requires an Ethernet gear
+(could be any physical form: a chip, a device, or integrated IPs)
+with at least L1 and L2 functionalities (i.e., a PHY and a MAC). 
+Since all disaggregated devices are directly attached to the network,
+it is reasonable to assume they have such Ethernet gear equipped.
+As for regular servers, they already have NIC installed.
+In all, programmable switches are able to support heterogeneous devices.
+Note that both the switch and the endpoints are free to
+use other physical and link layer protocols (e.g., Infiniband),
+there is nothing fundamental about using Ethernet except it is
+already widely used so its beneficial continue using it.
+
+As we mentioned earlier, several work~\cite{tea-sigcomm20,active-hotnets20,wang-hotcloud20}
+have tried to consolidate NFs and applications onto programmable switches.
+No work has tried to build transport on it, though we believe it is doable.
+However, the multi-tenancy support is still at its infancy.
+Most of the existing work leverage compile-time tricks to
+overcome hardware limitations, which result in some inevitable cost.
+With enough momentum, the vendors might wight in and develop certain
+virtualization features on programmable switches.
+It would be interesting to explore what those features might be.
+
+\subsubsection{Summary}
+
+For both regular server's network disaggregation and consolidation,
+programmable switches can partially meet their goals.
+Servers can offload their transport processing,
+network functions, and advanced application-specific functions to
+the programmable switches -  this is already possible now.
+However, current commodity programmable switches
+are not able to meet the goals for disaggregated datacenter.
+Specifically, it is not able to solve the exploded port counts
+without a significant increase in cost.
+
+%What about line cards.
+
+\subsection{Circuit Switch}
+
+\subsubsection{Primer}
+
+Circuit switch establishes a dedicated channel between
+endpoints connected to it. It guarantees the full bandwidth
+of the channel and remains connected for the duration of a
+certain session. It creates an illusion as if endpoints are
+directly and physically connected.
+
+Circuit switch operates at the physical layer with no buffers,
+no arbitration, and no packet inspection mechanisms.
+Thus, they are cheaper and more power-efficient than
+traditional electrical packet switch. As a result,
+circuit switches could support hundreds or even thousands of
+ports with lower CAPEX and OPEX than equivalent packet switches,
+making it a good candidate to interconnect disaggregated devices in a rack.
+
+Circuit switch has seen great improvement over the previous decade.
+Around 2010, Helios~\cite{helios-sigcomm10} first proposes to integrate circuit switches into
+the datacenter network and uses a hybrid packet and circuit switching mode.
+Mordia~\cite{mordia-sigcomm13} improves the switching time from
+tens of milliseconds to microsecond level. In response, Mordia proposes
+a proactive scheduling mechanism instead of a reactive one.
+REACToR~\cite{reactor-nsdi14} leverages Mordia's fast switching and builds a hybrid
+ToR using both packet and circuit switches, enjoy the benefits of both.
+But REACToR is sensitive to the traffic pattern.
+Until then, circuit switch solutions were tightly coupling
+their data plane with the control plane. The control plane
+reconfigures the switches in response to traffic demands.
+Such solutions cannot scale well.
+Hence, RotorNet~\cite{rotornet-sigcomm17} proposes a fully decentralized
+control plane solution using specialized hardware and a round-robin policy.
+In addition, RotorNet can scale to 1000s of ports with 10 us switching delay.
+The latest work, Sirius~\cite{sirius-sigcomm20} achieves nanosecond-level
+switching time (3.84 ns for end-to-end reconfiguration).
+Overall, the state-of-the-art circuit switch is able to
+achieve fast nanosecond-level switching, works with decentralized control plane,
+while still able to provide high port counts and consumes very little energy.
+Given the foreseeable limitations of electrical packet switch,
+circuit switch is gradually making its way into datacenters (e.g., Shoal~\cite{shoal-nsdi19} and dRedBox~\cite{dRedBox-DATE}).
+
+\subsubsection{Feasibility}
+
+Clearly, circuit switch is a good candidate to deploy networks in disaggregated datacenters.
+As it supports high port counts hence able to accommodate the exploded number of devices.
+Further, circuit switch is able to overcome the over-subscription problem while operating
+with very low energy consumption compared to traditional packet switch.
+
+To use circuit switch,
+endpoints need to use specialized physical and link layer protocols,
+with companion upper layer software~\cite{alex-thesis2020}.
+This is relatively easier to achieve in servers with regular NICs
+than the heterogeneous devices.
+Past work has built an FPGA-based NIC~\cite{alex-thesis2020} for this purpose.
+Similar to the programmable switch case,
+we anticipate devices using circuit switch would incorporate customized network gear (e.g., a device, a chip, or IPs).
+
+However, circuit switch is not able to
+run any computation other than the scheduling algorithm (if any).
+Unlike electrical packet switch which encapsulates the control complexity
+within the switch, circuit switch \textit{exposes} the control complexity
+to the rest of the network~\cite{rotornet-sigcomm17}.
+Hence, circuit switch is not able to meet any other goals requiring computation.
+
+\subsubsection{Summary}
+
+Circuit switch has several appealing traits
+such as high port counts, power efficient, and excellent scalability.
+These make it a good candidate to \textit{build} disaggregated datacenters,
+but not necessary for network consolidation.
+Its lack of computation power is the key limitation.
+If future circuit switch technologies are able to incorporate
+any form of computation, then it would become one of the best choices
+to build network resource pool.
+
+\subsection{Coherent Fabrics}
+\subsubsection{Primer}
+
+In recent years, there are several industry proposals to build new interconnect
+fabrics across endpoints in a server or in a rack.
+They include Gen-Z~\cite{GenZ}, CXL~\cite{CXL}, OpenCAPI~\cite{OpenCAPI}, and CCIX~\cite{CCIX}.
+These fabrics usually provide a universal memory interface and hardware-level memory/cache coherence across different endpoints.
+
+Gen-Z~\cite{GenZ} is a new datacenter-scale fabric providing low latency
+and high bandwidth accesses to remote resources.
+It supports byte-addressable memory access, block memory access, and
+accelerator-specific messaging interface.
+Gen-Z is a full-stack solution, it specifies the physical layer,
+link layer, network layer, transport layer, and above virtual memory interfaces.
+It also defines its own routers and switches.
+Each Gen-Z compliant device has a Gen-Z controller attached.
+This controller translates user requests into Gen-Z requests
+and sends to remote.
+
+OpenCAPI~\cite{OpenCAPI}, CCIX~\cite{CCIX}, and CXL~\cite{CXL}
+are all intra-server memory coherent interconnects.
+OpenCAPI attaches CPUs to accelerators and I/O devices with minimal overhead.
+It provides coherent memory interface across CPU and various devices.
+CCIX provides a similar set of features.
+On top of those capabilities, CXL further exposes a window directly
+into the processor caching hierarchy.
+All of them use the widely available PCIe physical and link layer to transmit data within the chassis.
+
+Recently, CXL and Gen-Z consortium announced that
+they will bridge their protocols and improve compatibility.
+It is likely that in the near future,
+CXL could be extended out beyond server boundary
+and have coherent access to remote memory (or accelerators) via Gen-Z.
+%Likewise, IBM has OpenCAPI has been extended to access disaggregated memory.
+Those emerging coherent fabric protocols are gradually
+making their ways into datacenters and being used for disaggregation purpose.
+
+\subsubsection{Feasibility}
+
+We will focus on Gen-Z as it is the only datacenter-scale fabric for now.
+Unfortunately, there are no commercial Gen-Z products available, so we will
+draw our discussion purely based on its latest specification~\cite{GenZ}.
+
+In theory, Gen-Z's topology is able to support high port count.
+It uses a combination of routers and switches, and they can be
+customized for high port count.
+However, they run at link layer or network layer,
+thereby lacking any other computation power.
+Hence, they are not able to support packet processing offload, nor resource consolidation.
+
+As Gen-Z attaches its own controller to each device,
+it is able to support any types of heterogeneous devices.
+Also, it supports per-device customization.
+
+\subsubsection{Summary}
+
+Most of the emerging coherent fabrics are still under heavy development
+(except OpenCAPI, which is already used in IBM Power series), no commercial
+products are available. All of them have great potentials but with high uncertainties.
+
+The main obstacle in adopting these fabrics is the requirement to
+replace existing network infrastructure with new switches and new hardware network controllers (one at each endpoint).
+These controllers cannot be easily managed or reconfigured, and they are not programmable.
+
+Although these emerging coherent fabrics
+are beneficial for traditional disaggregation on compute or memory,
+they cannot satisfy the requirements for network disaggregation.
+
+\subsection{Middleboxes and NFV}
+\subsubsection{Primer}
+
+Middleboxes, also known as hardware-based network appliances, originally
+resided in specialized hardware boxes from various vendors.
+They provide network functionalities such as firewall, packet filtering,
+NAT, load balancing, and so on.
+They are mostly black boxes for network operators.
+
+In the early 2000s, people were still championing middleboxes~\cite{walfish-osdi04}.
+But starting form early 2010s, as the workloads were rapidly changing,
+people started questioning middleboxes' black box nature
+and proposed software-centric middlebox deployment,
+which resulted in consolidated middlebox architecture~\cite{comb-nsdi12}.
+Around the same time, APLOMB~\cite{aplomb-sigcomm20} took a step further
+by outsouring enterprise middleboxes processing all together to the cloud.
+Despite middleboxes' usefulness and ubiquitousness, they come with
+a set of problems, many of which arise from the fact that they are
+hardware-based: they are costly, difficult to manage, and their
+functionality is hard or impossible to change.
+
+In response, also in the early 2010s,
+the Network Function Virtualization (NFV) concept was proposed.
+NFV advocates moving traditional network functions out of
+proprietary middleboxes into virtualized software applications
+that can be run on commodity, general purpose processors.
+
+The past decade was a golden age for NFV.
+Along the timeline, it is very clear what researchers were
+focusing on at their time.
+In the beginning, single-machine solutions such as ClickOS~\cite{clickos-nsdi14} arise just to enable virtualized
+NF development. Not soon after, E2~\cite{e2} was proposed
+to help distributed NF deployment. E2 deals with a set of typical
+distributed system issues such as failure handling and scaling.
+However, during 2016, despite all the promised benefits of NFV,
+there has been little progress towards large-scale deployment.
+One of the reasons is performance degradation due to virtualization.
+Hence, NetBricks~\cite{netbricks} uses safe language Rust to avoid that.
+In the same vein, Metron~\cite{metron-nsdi18} and ResQ~\cite{resq-nsdi18}
+also propose low-level processor hacks to improve single machine efficiency.
+
+It was clear that CPU will not be able to keep up with the
+fast growing network speed.
+As a result, there was a renewed interest in moving NFV
+back to specialized hardware.
+Notably, early work ClickNP~\cite{clickos-nsdi14} deploys NF to
+FPGA-based programmable NICs.
+FPGA provides massive cheap parallelism and is an ideal medium to run NFs.
+Many work followed~\cite{flowblaze-nsdi19,panic-osdi20} and Microsoft
+has deployed FPGA-based NF platform in their Azure cloud~\cite{azure-nsdi18}.
+
+Over the years, the whole space moved from specialized middleboxes
+to consolidated software-based NFs, and finally find their
+way back to using specialized hardware.
+But unlike original closed middleboxes, these new hardware (e.g., programmable switch or programmable NIC) are open, programmable,
+and supported by the community at large.
+
+\subsubsection{Feasibility}
+
+Both middleboxes and NFV are not able to provide
+high number of ports. As the former being a specialized box
+and the latter mostly runs on commodity hardware.
+Likewise, both of them cannot support heterogeneous endpoints
+, nor can they support offloaded transports.
+By design, both of them are able to run offloaded NFs. 
+
+Similarly, both of them could support resource consolidation.
+Prior work has tried to consolidate middleboxes~\cite{comb-nsdi12}.
+As for NFV consolidation, TEA~\cite{tea-sigcomm20} accomplish that using programmable switches,
+PANIC~\cite{panic-osdi20} uses programmable NIC,
+and SNF~\cite{snf-socc20} uses a serverless framework.
+For manageability, middleboxes' closed system nature makes it hard to manage and scale.
+On the contrary, NFV is relatively easier to manage and has much more mature systems.
+
+\subsubsection{Summary}
+
+Overall, middlebox is no longer considered a good
+solution for future datacenter development,
+as its black box nature cannot fit in.
+NFV systems are more diverse and open,
+in which both hardware and software have open standard and
+backed by the community.
+For regular server datacenters,
+NFV has already been consolidated and provided as a service~\cite{tea-sigcomm20,snf-socc20,panic-osdi20}.
+However, none of these systems is able
+to do so for disaggregated datacenters.
+
+
+\subsection{Multi-host NIC}
+\subsubsection{Primer}
+Multi-host NIC~\cite{Intel-RedRockCanyon,Mellanox-Multihost}, as its name suggests, is a physical NIC shared by multiple hosts.
+It connects to hosts via extended PCIe cables.
+It appears as independent NIC to each host.
+Internally, it can partition its uplink bandwidth among connected hosts,
+follow a certain policy (e.g., fair partition).
+To host, it is no different than using a normal exclusive NIC,
+hence each host runs its own network stack.
+Multi-host NIC is proposed to consolidate network resources
+in virtualized environment, but it has never been widely deployed.
+
+\subsubsection{Feasibility}
+
+Multi-host NICs reduces the number of ports ToR switch needs,
+and it consolidates traditional NIC functionalities.
+However, it still requires each end host to run its transport and network
+functions in software.
+Also, multi-host NICs do not support programmability or rapid on-field upgradability.
+
+\subsubsection{Summary}
+
+Multi-host NIC can meet the port count goal.
+Since it is using a more general PCIe interface, it could
+potentially support heterogeneous devices.
+Although it is designed to consolidate resources,
+it only does so for physical and link layer resources.
+Higher level protocols such as transports and network functions
+cannot be offloaded to the multi-host NIC.
+
+\subsection{Summary of Network Device Review}
+
+We have now reviewed programmable switch,
+circuit switch, coherent fabrics, middleboxes, NFV, and multi-host NIC.
+Table~\ref{tabel-related-work} summarizes whether each system can meet
+the goals for network disaggregation and consolidation.
+Unfortunately, none of them can make the cut.
+Programmable switch and NFV are the closest solution for regular-server
+datacenter, but they are not able to solve exploded port count and
+to accommodate heterogeneous devices. Coherent fabrics and multi-host NIC
+are able to meet specific goals for disaggregated datacenter, but
+lack the support for computation offload and consolidation.
+
+We find that programmable switch, circuit switch, and NFV
+all made their first appearance in the early 2010s.
+The past decade has witnessed their rapid growth:
+programmable switch and NFV are widely deployed in
+datacenters~\cite{hpcc-sigcomm19,azure-nsdi18};
+though circuit switch has received less adoption,
+it is gaining its momentum~\cite{dRedBox-DATE,sirius-sigcomm20}.
+
+\textit{But are they the right devices to build next decade's datacenter network?}
+Our answer is no.
+We think the next-generation datacenter,
+including regular-server and disaggregated,
+should use a disaggregated and consolidated network,
+for the reasons in Section~\ref{sec:motivation}.
+But none of the above device is able to meet our goals.
+As a result, we propose a new device called \sysname,
+which meets all the goals in Table~\ref{tabel-related-work}
+\fi

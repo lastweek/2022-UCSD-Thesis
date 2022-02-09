@@ -1,0 +1,124 @@
+%\documentclass[pageno]{jpaper}
+%\newcommand{\asplossubmissionnumber}{234}
+%\usepackage[normalem]{ulem}
+%\begin{document}
+
+\title{Disaggregating and Consolidating Network Functionalities with SuperNIC}
+\date{}
+\maketitle
+\thispagestyle{empty}
+
+\if 0
+\twocolumn[
+    \begin{@twocolumnfalse}
+    \begin{center}
+	{\Large\bf Disaggregating and Consolidating Network Functionalities with SuperNIC}
+    \end{center}
+    \smallskip
+%    \centerline{Yizhou Shan}
+%    \centerline{\em UCSD}
+    \end{@twocolumnfalse}
+]
+\fi
+
+{\em Resource disaggregation}, a concept that organizes hardware resources as separate types of network-attached pools instead of as monolithic servers, has quickly gained popularity in both academia and industry in recent years~\cite{Shan18-OSDI,HP-TheMachine,IntelRackScale,FireBox-FASTKeynote,Tsai20-ATC,Nitu18-EUROSYS,DDC-hotcloud20,Ali-SinglesDay}.
+Existing production and research disaggregated systems have focused on separating three types of resources: compute (processing)~\cite{Shan18-OSDI,any-gpu-disagg-work}, memory (or persistent memory)~\cite{Shan18-OSDI,HP-TheMachine,Lim09-disaggregate,Aguilera-FarMemory,Tsai20-ATC}, and storage~\cite{cao2018polarfs,SnowFlake-NSDI20}.
+%These efforts have seen real success, and more data centers have started to adopt disaggregation at the production-scale~\cite{Ali-SinglesDay}.
+%For example, Alibaba listed their disaggregated storage solution as a key enabling factor of serving 544,000 orders per second during their shopping festival~\cite{Ali-SinglesDay}.
+
+The fourth major resource in computing, \textit{network}, has been completely left out in resource disaggregation research.
+No work has attempted to disaggregate the network.
+At first glance, ``network'' cannot be disaggregated from either a traditional monolithic server or a disaggregated device, as they both need to be attached to the network.
+
+\section{Key Insights and Proposal}
+Our insight is that even though each endpoint still needs its own network interface, its \emph{network-related tasks} such as a layer in the network stack or a customized network function do not have to run at the endpoint, \ie, they could potentially be disaggregated and run as a separate resource pool.  
+
+With this insight, we propose to \textit{segregate} network tasks (or {\em \nt{}s}) from individual endpoints and \textit{consolidate} them in a network resource pool.
+This pool consists of a distributed set of \textit{SuperNIC}s (or \textit{\snic} for short), a new programmable device that executes \nt{}s for the endpoints.
+Each \snic\ connects to a small set of endpoints (\eg, 4 to 8) and a ToR switch,
+and all \snic{}s are connected, \eg, as a ring.
+%Together, the disaggregated \snic\ pool offers \textit{Network Functionality as a Service} ({\em NFaaS}).
+In building \snic, we answer six key research questions.
+%it is an essential part after disaggregation,
+
+\vspace{0.05in}
+\noindent \textbf{\textit{What is the benefit of disaggregating and consolidating network functionalities?}} 
+To answer this question, we study network communication patterns and needs in the traditional server-based data-center environment and in the disaggregated data-center environment by understanding the unique architecture of these environments and by analyzing real-world network traces.
+We discover three potential benefits of network disaggregation and consolidation for the disaggregated environment: it enables an existing rack and ToR switch to host a large number of disaggregated devices; it avoids the need to implement hardware and/or software units for \nt{}s at each type of device; and it uses less hardware resources to run \nt{}s.
+Server-based data centers share the last and to some extent the second benefits.
+To elaborate on the last benefit, the cost saving comes from the fact that both server-based and disaggregated data centers exhibits a highly bursty pattern.
+Thus, after consolidation, an \snic{} only needs to provision the \textit{aggregated} peak bandwidth and hardware utilization,
+while traditional endpoints need to each provision for its own peak.
+
+
+\vspace{0.05in}
+\noindent \textbf{\textit{What network functionalities should be disaggregated?}}
+To answer this question, we explore two dimensions.
+In the first dimension, we consider what type of \nt{}s that would benefit from disaggregation and consolidation for different types of endpoints. 
+For example, regular servers could offload their TCP transport to \snic\ and potentially share one transport at \snic\ for consolidation.
+Servers and disaggregated devices could also offload various network functions like encryption and filtering or application-specific functions like caching and replication.
+
+In the second dimension, we explore where different parts of an \nt{} should be located.
+We separate each network functionality into three parts: computation logic (\eg, transmission protocol), states (\eg, packet sequence number, connection information), and data (\eg, un-acknowledged send buffer, or un-ack buffer).
+While traditional network solutions bundle all three at one location (host CPU or host NIC), with \sysname's flexible offloading choice, each part of each network functionality could sit at different locations.
+For example, the link-layer logic and states and transport-layer states could be at an endpoint, while the link-layer un-ack buffer, transport logic and un-ack buffer for this end host could be maintained at its connected \snic.
+Such flexibility could potentially unlock new ways to build network stacks and functions and new mechanisms to provide end-to-end reliability, and it will be especially useful when exploring customized communication abstractions for disaggregated devices.
+
+\vspace{0.05in}
+\noindent \textbf{\textit{How to consolidate network functionalities in a way that maximizes the utilization of \snic{} hardware resources while ensuring fairness and minimizing impact on application execution?}}
+Instead of provisioning for the peak load at each individual end point, we leverage statistical multiplexing to provision for the aggregated peak load of all connected end points at an \snic.
+We achieve this goal with three techniques: 1) sharing an \snic's hardware resources across different \nt{}s ({\em space sharing}), 2) sharing the same \nt{} across different applications ({\em time sharing}), and 3) configuring the same hardware resources for different \nt{}s at different time ({\em time sharing with context switching}).
+%Our goal of network disaggregation is to reduce the total amount of hardware resources (CapEx and OpEx) compared to no disaggregation (\ie, each endpoint hosts its own network device for all its network functionalities) while achieving application performance on par with no disaggregation. 
+%For 1), we partition the reconfigurable hardware resource of an \snic\ (\eg, FPGA logic cells, on-chip memory, etc.) into fix-sized {\em regions}, each of which can be reconfigured independently. 
+%A region can be configured to run different \nt{}s over time.
+Space sharing is relatively straightforward and has no side effect; we partition the FPGA space to chunks of different sizes, with each hosting one or more \nt{}s.
+On the other hand, time sharing is more challenging, as it could potentially impact application performance and fairness.
+Moreover, context switching would hurt application performance a lot more as reconfiguring an area on reconfigurable hardware is orders of magnitude slower than processing a packet.
+
+We solve these challenges by designing policies and mechanisms that leverage the flexiblity network disaggregation and our \snic\ brings.
+Our policies include heuristics that favor space sharing over time sharing and fallback to context switching as the last resort. Before starting context switching, we first try migrating the \nt\ to another \snic\ and give applications a chance to mitigate the problem (\eg, by slowing down the sending speed or by switching to software implementation of the \nt). We also frame \nt\ allocation as a multi-dimensional resource allocation problem and considers Dominant Resource Fairness~\cite{DRF} when making the allocation decision.
+Our mechanisms focus on reducing the need to reconfigure spaces and on {\em hiding} the reconfiguration performance overhead. We use a technique similar to victim cache for the former. For the latter, we always leave one or more empty slots to quickly start new \nt{}s, while in the background we evict least used \nt{}s to make more empty slots.
+
+\vspace{0.05in}
+\noindent \textbf{\textit{How to achieve high-throughput, low-latency, and scalable performance?}}
+When we consolidate the \nt{}s of multiple endpoints to one \snic, the \snic\ should provide high throughput for all the endpoints, minimize latency overhead spent at \snic, and be able to handle many concurrent \nt{}s.
+We provide high throughput by two levels of parallelism:
+{\em \nt{} parallelism} where a packet goes through multiple \nt{}s in parallel and {\em instance parallelism} where we launch multiple instances of the same \nt{} to handle different packets in an application.
+\snic\ automatically scales an \nt{} out/down as its load increases/decreases. 
+To achieve low latency and scalability, we propose a scheduling system that centers around a new notion, {\em \nt\ chaining}.
+The idea is to group \nt{}s that are likely to be executed in a sequence into a chain and to have our central scheduler schedule packets only once for the entire chain. 
+Our scheduler reserves credits for the entire chain and only sends packets over when there are credits.
+Doing so avoids going through scheduler after each \nt\ and thus improves both packet-processing latency and scheduler scalability.
+Finally, to accomodate more types of \nt\ combinations, we support skipping arbitrary \nt{}s in a chain (\eg, a chain falls back to a single \nt\ when all other \nt{}s are skipped).
+
+
+\vspace{0.05in}
+\noindent \textbf{\textit{How to build and utilize a distributed \snic{} framework?}}
+When one \snic\ is overloaded and need to accommodate too much network bandwidth, on-chip hardware resources, or off-chip memory space, traditional solutions would drop packets or an entire \nt{} to make room for others or to provision a larger \snic. The former impacts application performance and the latter results in resource wastes when loads are not at their peaks. 
+Our idea is to utilize other \snic{}s to handle load spikes, based on the observation that not all \snic{}s under a rack would run at their peak load at the same time. Essentially, with distributed \snic{}s, we provision for the maximum aggregated bandwidth in a rack instead of the sum of peak loads under each \snic.
+Specifically, to support overloaded network bandwidth or on-chip hardware resources at an \snic, we create an \nt\ at another \snic\ (one with light load). 
+The current \snic\ then only serves as a simple pass-through device to redirect packets to the new \snic, with the latter sending packets to the next hop after processing them.
+To support overloaded memory space at an \snic, we deploy a {\em transparent} swapping mechanism that swaps colder data to another \snic's memory.
+
+\vspace{0.05in}
+\noindent \textbf{\textit{How to best exploit \snic{}s to build disaggregated applications?}}
+While network disaggregation has its benefits in resource and port consolidation, independent network resource scaling and management, it offers additional unique benefits to disaggregated applications. 
+We made an initial exploration in this direction with two examples.
+First, we explore a customized network abstraction for disaggregated memory device: a key-value store interface (rather than the standard messaging interface).
+Second, we explore using \snic{}s as centralized, in-network computation for tasks like data replication, caching, and \fixme{XXX}.
+
+
+In building \snic\ and its distributed framework, we separate data and control plane, with the former performed in ASIC and FPGA and the latter done in software.
+We prototyped \snic\ with FPGA (Xilinx \fixme{XXX}) and connect \snic{}s with both regular server and disaggregated devices.
+We demonstrate \snic's benefits and tradeoffs by disaggregating and consolidating three types of network functionalities:
+a go-back-N reliable transport, a set of network functions including firewall, AES, and \fixme{XXX}, and a set application-specific functions including \fixme{XXX}.
+We evaluated these scenarios with micro- and macro-benchmarks and compared \snic\ with no disaggregation and disaggregation using a device similar to a recent programmable NIC~\cite{PANIC}.
+Our results show that \fixme{XXX}.
+We will open source \snic\ upon the publication of this paper.
+
+
+
+%\pagebreak
+%\bibliographystyle{plain}
+%\bibliography{references}
+%\end{document}

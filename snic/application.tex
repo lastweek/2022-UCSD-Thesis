@@ -1,0 +1,48 @@
+\section{Case Studies}
+\label{sec:application}
+
+We now present two use cases of \snic\ that we implemented, one for disaggregated memory and one for regular servers.
+
+\subsection{Disaggregated Key-Value Store}
+\label{sec:kvstore}
+We first demonstrate the usage of \snic\ in a disaggregated environment by adapting a
+%building a key-value store on a disaggregated memory device.
+%In this setting, clients running on regular servers access key-value pairs stored in disaggregated memory devices. 
+%We adapt an 
+recent open-source FPGA-based disaggregated memory device called {\em Clio}~\cite{Clio}.
+The original Clio device hosts standard physical and link layers, a Go-Back-N reliable transport, and a system that maps keys to physical addresses of the corresponding values.
+Clients running at regular servers send key-value load/store/delete requests to Clio devices over the network.
+When porting to \snic, we do not change the client-side or Clio's core key-value mapping functionality.
+
+\bolditpara{Disaggregating transport.}~~
+The Go-Back-N transport consumes a fair amount of on-chip resources %ß(5.8\% LUTs and 2.6\% BRAM of the Clio device and 
+(roughly the same amount as Clio's core key-value functionality~\cite{clio-arxiv}).
+%(mainly on-chip memory used to store states for retransmission). 
+We move the Go-Back-N stack from multiple Clio devices to an \snic\ and consolidate them by handling the aggregated load.
+After moving the Go-Back-N stack, we extend each Clio device's link layer to a reliable one (\S\ref{sec:overview}).
+
+\bolditpara{Disaggregating KV-store-specific functionalities.}~~
+A unique opportunity that \snic\ offers is its centralized position when connecting a set of endpoints, which users could potentially use to more efficiently coordinate the endpoints.
+We explore this opportunity by building a replication service and a caching service as two \nt{}s in the \snic.
+%that connects the Clio devices.
+
+For \textbf{replication}, the client sends a replicated write request with a replication degree $K$, which the \snic\ handles by replicating the data and sending them to $K$ Clio devices. 
+In comparison, the original Clio client needs to send $K$ copies of data to $K$ Clio devices or send one copy to a primary device, which then sends copies to the secondary device(s).
+The former increases the bandwidth consumption at the client side, and the latter increases end-to-end latency.
+
+For \textbf{caching}, the \snic\ maintains recently written/read key-value pairs in a small buffer. It checks this cache on every read request. If there is a cache hit, the \snic\ directly returns the value to the client, avoiding the cost of accessing Clio devices. Our current implementation that uses simple FIFO replacement already yields good results. Future improvements like LRU could perform even better.
+
+\if 0
+In addition to replication and caching, we also deploy encryption (AES-256~\cite{aes-wiki}) and hashing (SHA-512~\cite{sha-wiki}) \nt{}s to \snic\ which encrypts and checks the integrity of key-value data.
+The application could deploy encryption, hashing, and replication as an \nt\ chain or just some of these three \nt{}s.
+\fi
+
+\subsection{Virtual Private Cloud}
+\label{sec:vpc}
+
+Cloud vendors offer Virtual Private Cloud (VPC) for customers to have an isolated network environment where their traffic is not affected by others and where they can deploy their own network functions such as firewall, network address translation (NAT), and encryption.
+Today's VPC functionalities are implemented either in software~\cite{andromeda-google-nsdi18,ovs-nsdi15,ovs-sigcomm21} or offloaded to specialized hardware at the server~\cite{vfp-nsdi17,SmartNIC-nsdi18,aws-nitro}.
+As cloud workloads experience dynamic loads and do not always use all the network functions (\S\ref{sec:motivation}), VPC functionalities are a good fit for offloading to \snic.
+Our baseline here is regular servers running Open vSwitch (OVS) with three NFs, firewall, NAT, and AES encryption/decryption. %Both senders and receivers servers employ the same setting and are connected to a physical switch directly.
+We connect \snic{}s to both sender and receiver servers and then offload these three NFs to each \snic\ as one \nt\ chain. 
+

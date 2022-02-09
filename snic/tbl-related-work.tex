@@ -1,0 +1,32 @@
+{
+\begin{table*}[th]\smallsize
+\begin{center}
+\begin{tabular}{ p{1.7in} | p{0.5in} | p{0.85in} | p{0.6in} | p{0.55in} | p{0.8in}  | p{0.7in} }
+
+\textbf{Solution} & \textbf{Port Count \textasteriskcentered} & \textbf{Heterogeneous End-Points \textasteriskcentered} & \textbf{Offloaded Transport} & \textbf{Network Function} & \textbf{Manageability} & \textbf{Consolidated Resources} \\
+\hline
+\hline
+Programmable Switch~\cite{RMT-SIGCOMM13,netcache-sosp17} & \xmark & \cmark & \cmark & \cmark  & $\bigcirc$  & $\bigcirc$ \\
+\hline
+Circuit Switch~\cite{sirius-sigcomm20,shoal-nsdi19,dRedBox-DATE} & \cmark & \cmark & \xmark & \xmark  & \xmark  &\xmark \\
+\hline
+Coherent Fabrics~\cite{GenZ,CXL,CCIX} & $\bigcirc$ & \cmark & \xmark & \xmark & \xmark & \xmark\\
+\hline
+Middleboxes~\cite{walfish-osdi04,comb-nsdi12,aplomb-sigcomm20} & \xmark  & \xmark  & \xmark & \cmark & \xmark  & \cmark  \\
+\hline
+NFV~\cite{clickos-nsdi14,e2,netbricks} & \xmark  & \xmark  & \xmark & \cmark & \cmark & \cmark \\
+\hline
+Multi-Host NIC~\cite{Intel-RedRockCanyon,Mellanox-Multihost} & \cmark &  $\bigcirc$ & \xmark & \xmark & \xmark  & $\bigcirc$ \\
+\hline
+\hline
+\textbf{\sysname}     & \cmark & \cmark &  \cmark & \cmark & \cmark & \cmark \\
+\hline
+\end{tabular}
+\end{center}
+\mycaption{tabel-related-work}{Comparison of Network Solutions.}
+{
+\textasteriskcentered\ features only applicable to disaggregated datacenters.
+$\bigcirc$ partially support.
+}
+\end{table*}
+}

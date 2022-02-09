@@ -1,0 +1,318 @@
+
+\input{fig-eval1}
+
+
+\section{Evaluation Results}
+\label{sec:results}
+
+%\boldpara{Implementation.}~~
+We implemented \snic\ on the HiTech Global HTG-9200 board~\cite{htg9200}. 
+Each board has nine 100\Gbps\ ports, 10\GB\ on-board memory, and a Xilinx VU9P chip with 2,586K LUTs and 43\MB\ BRAM.
+We implemented most of \snic's data path in SpinalHDL~\cite{spinalhdl} and \snic's control path in C (running in a MicroBlaze SoftCore~\cite{microblaze-xilinx} on the FPGA).
+Most data path modules run at 250 MHz.
+In total, \snic\ consists of 8.5K SLOC (excluding any \nt\ code).
+%Figure~\ref{fig-fpga-resource} shows the FPGA resource consumption of different modules in \snic.
+The core \snic\ modules consume less than 5\% resources of the Xilinx VU9P chip, leaving most of it for \nt{}s (see Appendix for full report).
+To put it in perspective, the Go-back-N reliable transport we implement consumes 1.3\% LUTs and 0.4\% BRAM.
+
+\bolditpara{Environment.}~~ 
+We perform both cycle-accurate simulation (with Verilator~\cite{verilator-site}) and real end-to-end deployment.
+Our deployment testbed is a rack with a 32-port 100\Gbps\ Ethernet switch, two HTG-9200 boards acting as two \snic{}s, eight Dell PowerEdge
+R740 servers, each equipped with a Xeon Gold 5128 CPU and an NVidia 100\Gbps\ ConnectX-4 NIC, and two Xilinx 10\Gbps\ ZCU106 boards running as Clio~\cite{clio-arxiv} disaggregated memory devices.
+Each \snic\ uses one port to connect to the ToR switch and one port to connect to the other \snic.
+Depending on different evaluation settings, an \snic{}'s downlinks connect to two servers or two Clio devices.
+
+\subsection{Overall Performance and Costs}
+\label{sec:eval-overview}
+
+\bolditpara{CapEx cost saving.}~~
+We compare the CapEx cost of \snic's two architectures with no network disaggregation, traditional multi-host NIC, and traditional NIC-enhanced switches.
+All calculations are based on a single rack and include 1) endpoint NICs, 2) cables between endpoints, \snic{}s, and the ToR switch, 3) the ToR switch, and 4) cost of \snic{}s or multi-host NICs.
+We use market price when calculating the price of regular endpoint NICs and cables.
+With \snic, the endpoint NICs can be shrunken down to physical and link layers (based on our prototype estimation, it is roughly 20\% of the original NIC cost of \$500), and the cables connecting endpoints and \snic{}s in the middle-layer-pool architecture can be shortened (roughly 60\% of the original cable cost of \$100~\cite{RAIL-NSDI}).
+We estimate the ToR-switch cost based on the number of ports it needs to support and a constant per-port cost of \$250~\cite{fs-64port-switch}.
+
+To estimate the cost of an \snic, we separate the non-\nt\ parts and the \nt\ regions. The former has a constant hardware cost, while the latter can be provisioned to the peak of aggregated traffic and \nt\ usages, both of which are workload dependent. We use the peak-of-sum to sum-of-peak ratios obtained from the Facebook traces (\S\ref{sec:benefits}). Today's multi-host NIC and NIC-enhanced switches do not consolidate traffic, and we assume that they will be provisioned for the sum-of-peak. See Appendix for detailed calculation. 
+
+Figure~\ref{fig-rack-capex} plots the per-endpoint dollar CapEx cost. Overall, \snic\ achieves \textbf{52\% and 18\% CapEx savings} for the middle-layer and switch-attached pool architecture compared to no disaggregation.
+Multi-host NIC and NIC-enhanced switches both have higher CapEx costs than \snic, because of its high provisioning without auto-scaling. The NIC-enhanced switches are even more costly than traditional racks mainly because of the added switch ports and NICs.
+
+\bolditpara{OpEx saving and single-\snic\ performance.}~~
+We compare a single \snic\ connecting four endpoints with the baseline of no disaggregation when these endpoints each run its \nt{}s on its own SmartNIC.
+We generate workloads for each endpoint based on the Facebook memcached dataset distributions~\cite{Atikoglu12-SIGMETRICS}.
+For the per-endpoint SmartNIC, we statically allocate the hardware resources that can cover the peak load.
+Overall, we found that \snic\ achieves \textbf{56\% OpEx saving}, because \snic\ dynamically scales the right amount of hardware resources for the aggregated load.
+\snic\ only adds \textbf{only 4\% performance overhead} over the optimal performance that the baseline gets with maximum allocation.
+
+%\bolditpara{Single \snic\ throughput.}~~
+We then test the throughput a real \snic\ board can achieve with a dummy \nt.
+These packets go through every functional module of the \snic, including the central scheduler and the packet store. 
+We change the number of initial credits and packet size to evaluate their effect on throughput, as shown in Figure~\ref{fig-credit}.
+These results demonstrate that our FPGA prototype of \snic\ could reach more than 100\Gbps\ throughput. 
+With higher frequency, future ASIC implementation could reach even higher throughput.
+%Similar to PANIC~\cite{panic-osdi20}, we find that having more initial credits achieves higher throughput, and 8 credits are enough for 100\Gbps\ network.
+
+\if 0
+\bolditpara{System scalability.}~~
+We evaluate \snic{}'s aggregated throughput by varying the number of physical ports. We use the same dummy NT and let packets go through all modules.
+Figure~\ref{fig-scalability} shows that \snic{} scales linearly when ports increased. It confirms \snic{} on-board design is scalable and able to support a lot of endpoints.
+\fi
+
+%\boldpara{Single \snic\ latency.}~~
+Next, we evaluate the latency overhead a real \snic\ board adds.  
+It takes 1.3\mus\ for a packet to go through the entire sNIC data path. % (PHY, MAC, sNIC core, MAC, and PHY). 
+Most of the latency is introduced by the third-party PHY and MAC modules, which could potentially be improved with real ASIC implementation and/or a PCIe link. 
+The \snic\ core only takes 196\,ns.
+Our scheduler achieves a small, fixed delay of 16 cycles, or 64\,ns with the FPGA frequency. 
+%The synchronization buffer has an overhead of 4 cycles, or 16\,ns.
+To put things into perspective, commodity switch's latency is around 0.8 to 1\mus.  
+
+\input{fig-eval2}
+
+\bolditpara{Distributed \snic{}s.}~~
+To understand the effect of distributed \snic\ pool, we compare the two pool topology with a single \snic\ (no distributed support).
+Figure~\ref{fig-sim-dist-nic} shows the performance and OpEx cost.
+Here, we use the workload generated from the Facebook distribution as the foreground traffic and vary the load of the background traffic.
+As background load increases, a single \snic\ gets more over-committed and its performance becomes worse.
+With distributed \snic, we use an alternative \snic{} to handle the load, thus not impacting the foreground workload's performance. Note that the background workload's performance is not impacted either, as long as the entire \snic\ pool can handle both workloads' traffic. Furthermore, these workloads are throughput oriented, and we achieve max throughput with distributed \snic{}s.
+As for OpEx, the intermediate-pool topology uses one \snic\ to redirect traffic to the other \snic.
+As the passthrough traffic also consumes energy, its total OpEx increases as the total traffic increases.
+The switch-attached topology does not have the redirecting overhead.
+The single \snic\ also sees a higher OpEx as load increases because the workload runs longer and consumers more energy.
+
+We then compare the two topologies of \snic\ pool. % and with no disaggregation. 
+Figure~\ref{fig-topology-cmp} shows the latency comparison.
+%As expected, no disaggregation achieves the best latency, as it does not need any additional network hops. 
+The intermediate-pool topology where we connect the \snic{}s using a ring has a range of latency depending on whether the traffic only goes through the immediately connected \snic\ (single-\snic) or needs to be redirected to another \snic\ when the immediate \snic\ is overloaded. 
+Because of the ring connection, this other \snic's distance to the immediately connected \snic\ determines the additional latency incurred (intermediate-best and worst).
+In contrast, the switch-attached topology has a constant latency, even when one or multiple \snic{}s are overloaded. This is because the traffic always goes through the switch which directs it to the right \snic.
+
+\subsection{Deep Dive into \snic\ Designs}
+\label{sec:deepdive}
+
+We now perform a set of experiments to understand the implications of \snic's various designs in terms of performance and OpEx cost, also with the Facebook distribution.
+%We calculate OpEx cost as the amount of and duration of hardware resources used. 
+%For these experiments, we generate workloads also from the same Facebook distributions.
+
+\bolditpara{Effect of auto-scaling.}~~
+We compare our auto-scaled implementation of \snic\ with two types of static allocations (\ie, no load-based scaling): allocating for the highest load needs ({\em static-max}) and allocating for the average load needs ({\em static-avg}), and an unrealistic auto-scaled scheme which instantly scales the right amount of \nt\ instances as load changes and incurs zero context switching overhead ({\em as-instant}).
+We generate two workloads using the Facebook distributions, one where different endpoints spike at similar time (high correlation) and one where they spike at different times (low correlation).
+Figure~\ref{fig-sim-overview} shows the performance slowdown (compared to no network disaggregation) and OpEx costs (compared to static-max).
+
+\snic\ is at the Pareto frontier compared to the two static allocation schemes. Static-max has the best performance but the worst OpEx cost, as it pays for the peak hardware resources for the entire duration. In contrast, static-avg has the worst performance but best OpEx cost, since it only allocates the resource for the average usage for the entire duration.
+Compared to \snic, as-instant only achieves slightly better performance with slightly more OpEx spending, as it tightly matches resources to the load which is unrealistic.
+
+Comparing the two workloads, the low-correlation one always has better performance and more OpEx spending than the high-correlation one (except for as-instant which always yields best performance and static-max which always yields best performance and worst OpEx).
+This is because with low correlation, the aggregated traffic is more flattened out, which gives \snic\ better chance to properly handle. As a result, \snic\ scales the right amount of resources to satisfy the load's performance needs.
+When correlation is high (which is unlikely from our trace analysis in \S\ref{sec:benefits}), there will be fewer but more intensive spikes. When \snic\ is not fast or powerful enough to handle some of them, less resources is used but the performance goes down.
+
+\bolditpara{Effect of victim cache.}~~
+To evaluate the effect of our victim-cache design, we set the baseline to be disabling victim cache (blue dot in Figure~\ref{fig-sim-single-snic}).
+We then change how often a de-scheduled \nt\ can be kept around as a victim instead of being completely deleted (shown as percentage on the green line). 
+This configuration models how often an \snic's area is free to host victim \nt{}s.
+As expected, the more de-scheduled \nt{}s we can keep around, the better performance we achieve, with no victim cache (baseline) having the worst performance.
+The OpEx implication is less intuitive.
+Here, we only count the time and amount of \nt\ regions that are actually accessed, as only those will cause the dynamic power (when idle, FPGA has a static power consumption regardless of how it is programmed).
+With fewer de-scheduled \nt{}s kept around, more \nt{}s need to be re-launched (through FPGA PR) when the workload demands them. 
+These re-launching overhead causes the OpEx to also go up.
+
+%In Figure~\ref{fig-sim-single-snic}, we run low-correlation workload with an average peak length of 15 ms. The default monitor period is 5 ms.
+%We use a victim cache with just one NT region and manually control its availability (i.e., whether a scale-down NT area can be inserted into the victim cache. Once in the victim cache, the NT region will be kept warm until next scale-out event). A larger victim cache availability rate yields better performance and lower OpEx.
+%This is because the NT region in the victim cache is not counted towards the total user-perceivable OpEx and also absorbs traffic spikes otherwise will be missed by long PR latency.
+
+\bolditpara{Effect of area over-commitment.}~~
+We change the degree of area over-commitment by limiting how much hardware resources (\ie, NT regions) the workload can use compared to the ideal amount of resources needed to fully execute it.
+%which is the amount of resources actually used over the total amount of hardware resources needed to execute the workload without context switching.
+As Figure~\ref{fig-sim-single-snic} shows, as we increase the area over-commitment rate, we see worse performance and less resources (OpEx) used. 
+Thus, our design uses distributed \snic{}s to avoid the over-commitment of a single \snic.
+%However, even with 50\% overcommitment, the performance is only \fixme{XXX}\% worse than the baseline of no overcommitment. 
+%there will be fewer NT regions left for scaling out. As as result, we see lower OpEx but at the cost of worse performance.
+
+% we should just remove this monitor period sensitivty i think
+%\bolditpara{Effect of monitoring period length.}~~
+%Figure~\ref{fig-sim-single-snic} also shows monitor period's impact. For this low-correlation workload, a longer
+
+\if 0
+\TODO{revisit}
+\bolditpara{Effect of average spike length.}~~
+Using the same low-correlation workload, Figure~\ref{fig-sim-single-snic} shows average peak length's impact on performance and cost.
+Surprisingly, we saw almost no performance loss with a short peak length (i.e., 5 and 10 ms). A deep investigation reveals that \snic's deep buffers served as a cushion and absorb the spiky traffic during PR. As the peak length increases, \snic's buffer will overflow and performance gradually worsens.
+Since the performance loss originated from missed spikes during our PR and monitor period, the loss is actually capped. As we keep increasing the peak length (just pass the 20 ms mark, which is the sum of monitor period' 15 ms and PR's 5 ms), the performance gets better. Though it trades for a higher NT region utilization hence higher OpEx cost.
+\fi
+
+%\subsubsection{\nt\ Chaining and \nt-Level Parallelism}
+
+\bolditpara{\nt\ chaining.}~~
+To evaluate the effect of \snic's \nt-chaining technique, we change the length of \nt\ sequence from 2 to 7 (as prior work found real NFs are usually less than 7 in sequence~\cite{NFP-sigcomm17}).
+In comparison, we implemented PANIC's scheduling mechanism on our platform, so that everything else is the same as \snic.
+We also evaluate the case where \snic\ splits the chain into two sub-chains.
+Figure~\ref{fig-nt-chain} shows the total latency of running the \nt\ sequence with these schemes.
+\snic\ outperforms PANIC because it avoids going through the scheduler during the sequence for single-chain and only goes through the scheduler once for half-chain.
+
+\input{fig-eval4}
+%\input{fig-eval5}
+\input{fig-eval3}
+
+\bolditpara{\nt-level parallelism.}~~
+%As we mentioned earlier, users or compilers identify opportunities to parallelize, \snic{} follows the execution DAG. \snic{}-Parallel employs \nt-level parallelism and has lower latency compared to the basic \snic{} model.
+We then evaluate the effect of \snic's \nt-level parallelism by increasing the number of \nt{}s that could run in parallel.
+We compare with PANIC (on our platform), which does not support \nt-level parallelism.
+We also show a case where we split \nt{}s into two groups and run these groups as two parallel \nt-chains (half-parallel).
+Figure~\ref{fig-nt-parallel} shows the total latency of these schemes.
+As expected, running all \nt{}s in parallel achieves the best performance.
+The tradeoff is more \nt\ region consumption.
+Half-parallel only uses two regions and still outperforms the baseline. % no parallelism PANIC scheme.
+
+\bolditpara{DRF Fairness.}~~
+To evaluate the effectiveness of our scheduling policy, we ran the synthetic workloads as described in Figure~\ref{fig-nt-example} and use the default \texttt{EPOCH\_LEN} of 20\mus\ and \texttt{MONITOR\_PERIOD} of 10\ms.
+%Here, we set \texttt{EPOCH\_LEN} to 20\mus\ and \texttt{MONITOR\_PERIOD} to 10 epochs or 200us.
+Figure~\ref{fig-drf} shows the resulting throughput timeline for different \nt{}s of the two users.
+In between epoch 1 and 2, the loads of user2 increased to the second step.
+At the next epoch, we run DRF and adjust the allocation. After the DRF algorithm finishes (in around 3\mus), user2 gets a higher (and fairer) allocation of \nt{}2 and \nt{}4, while user1's allocation decreases.
+After observing \nt{}2 being overloaded for 10\ms, the \snic\ scales out \nt{}2 by adding one more instance of it at time epoch-503.
+After PR is done (in 5\ms), both user1 and user2's throughput increase.
+
+
+
+\subsection{End-to-End Application Performance}
+
+We now present our end-to-end application performance conducted on our rack testbed. Because of space constraint, \textit{we move the consolidation experiments of these applications to the Appendix}.
+
+\subsubsection{Disaggregated Key-Value Store}
+
+In this set of experiments, we use one client server and two Clio devices. The Clio devices connect to one \snic\ which connects to the ToR switch. We run YCSB's workloads A (50\% set, 50\% get), B (5\% set, 95\% get), and C (100\% get)~\cite{ycsb-socc10} for these experiments. We use 100K key-value entries and run 100K operations per test, with YCSB's default key-value size of 1\KB\ and Zipf accesses ($\theta=0.99$). 
+%The accesses to keys follow the Zipf distribution ($\theta=0.99$).
+
+\bolditpara{Non-replicated YCSB performance and caching.}~~
+%Our disaggregated key-value store experiments build on top of the Clio disaggregated memory platform~\cite{clio-arxiv}, where the client side is a regular server and the memory side is two Clio boards.
+%Our baseline is the original Clio, which runs a Go-back-N transport on the Clio boards.
+%With \snic, we first move the Go-back-N transport as an \nt\ to the \snic\ which connects the two Clio boards to the ToR switch.
+%We then add a caching \nt\ to the \snic.
+We first evaluate the performance of running YCSB without replication using one client server and one Clio memory device.
+Figure~\ref{fig-ycsb} and \ref{fig-ycsb-tput} plot the average end-to-end latency and throughput of running the YCSB workloads with (1) the original Clio, (2) Clio's Go-Back-N transport offloaded to \snic\ (Clio-sNIC), (3) adding caching on top of Clio-sNIC (Clio-sNIC-\$), (4) Clover~\cite{ATC20-pDPM}, a {\em passive} disaggregated memory system where all processing happens at the client side and a global metadata server, (5) HERD~\cite{Kalia14-RDMAKV}, a two-sided RDMA system where both the client and memory sides are regular servers, and (6) HERD running on the NVidia BlueField SmartNIC~\cite{bluefield} (HERD-BF).
+\snic's performance is on par with Clio, Clover, and HERD, as it only adds a small overhead to the baseline Clio.
+With caching \nt, \snic\ achieves the best performance among all systems, esp. on throughput. 
+This is because all links in our testbed are 100\Gbps\ except for the link to the 10\Gbps\ Clio boards. When there is a cache hit at the \snic, we avoid going to the 10\Gbps\ Clio boards.
+HERD-BF performs the worst because of the slow link between its NIC and the ARM processor.
+
+\bolditpara{Replicated YCSB performance.}~~
+%As many key-value store users desire strong reliability, replication at the memory nodes is usually required.
+We then test Clio, Clover, and Clio with \snic\ with replicated write to two Clio devices. HERD does not support replication, and we do not include it here.
+Clover performs replicated write in a similar way as the baseline Clio, but with a more complex protocol.
+Figure~\ref{fig-ycsb-replication} plots the average end-to-end latency with and without replicated writes using the YCSB A and B workloads.
+With \snic's replication \nt, the overhead that replication adds is negligible,
+while both Clio and Clover incur significant overheads when performing replication.
+
+\subsubsection{Virtual Private Cloud}
+We use one sender server and one receiver server, both running Open vSwitch (OVS)~\cite{ovs-nsdi15}, to evaluate VPC.
+Our baseline is the default Open vSwitch that runs firewall, NAT, and AES.
+We further improve the baseline by running DPDK to bypass the kernel.
+In the \snic\ setup, we connect the sender to an \snic\ and the receiver to another \snic.
+Each \snic\ runs the three NFs as a chain.
+Figure~\ref{fig-ovs} shows the throughput results.
+Overall, we find OVS to be a major performance bottleneck in all the settings. Using DPDK improves OVS performance to some extent.
+Compare to running \nt{}s at servers, offloading them to the \snic\ improves throughput, but is still bounded by the OVS running at the endhosts.
+%Offloading the \nt{}s to \snic\ offers a further performance improvement, mainly because of the hardware implementation.
+%Offloading the \nt{}s to \snic{} achieves nearly identical performance to running them at the server side.
+
+\if 0
+\subsubsection{Consolidation across Multiple Endhosts}
+To evaluate the benefit and tradeoff of consolidation, we deploy a testbed with four sender and four receiving servers with four setups:
+each endhost connects to a ToR switch with 100\Gbps\ or 40\Gbps\ link (baseline, no consolidation), and four endhosts connect to an \snic, each with 100\Gbps\ or 40\Gbps\ link, and the \snic\ connects to the ToR switch with a 100\Gbps\ or 40\Gbps\ link (\snic\ consolidation).
+%, and 3) four endhosts connect to an emulated multi-host NIC, each with a 25\Gbps\ link (\S\ref{sec:related}), and the multi-host NIC connects to the ToR switch with a 100\Gbps\ link. %(multi-host NIC, statically partitioned link bandwidth).
+For both settings, we execute two \nt{}s, firewall and NAT, in FPGA. 
+For the baseline, each endhost has its own set of \nt{}s, while %the multi-host NIC uses one set of \nt{}s in total and 
+\snic\ autoscales \nt{}s as described in \S\ref{sec:policy}.
+On each server, we generate traffic to follow inter-arrival and size distribution reported in the Facebook 2012 key-value store trace~\cite{Atikoglu12-SIGMETRICS}.
+%the Hadoop load distribution reported in the 2015 Facebook workloads~\cite{facebook-sigcomm15}.
+%Since there is no reported inter-arrival time for these workloads, we use the inter-arrival time reported by the 2012 Facebook workloads~\cite{Atikoglu12-SIGMETRICS}.
+%We measure the application throughput (IOPS) every 10\ms\ time unit to evaluate the throughput changes over time.
+
+Figure~\ref{fig-kv-consolid} reports the throughput comparison of \snic\ and the baseline.
+%average IOPS and 95-percentile IOPS across all time units for the three settings. 
+\snic\ only adds 1.3\% performance overhead to the baseline under 100\Gbps\ network and 18\% overhead under 40\Gbps\ network. 
+We further analyze the workload and found its median and 95-percentile loads to be 24\Gbps\ and 32\Gbps.
+With four senders/receivers, the aggregated load is mostly under 100\Gbps\ but often exceeds 40\Gbps.
+Note that a multi-host NIC would not be able to achieve \snic's performance, as it subdivides the 100\Gbps\ or 40\Gbps\ into four 25\Gbps\ or 10\Gbps\ sub-links, which would result in each endhost exceeding its sub-link capacity.
+
+
+We then calculate the amount of FPGA used for running the \nt{}s multiplied by the duration they are used for, to capture the run-time resource consumption with \snic's autoscaling mechanism. The baseline has one set of \nt{}s per endhost for the whole duration.
+Figure~\ref{fig-kv-cost} shows this comparison when consolidating two and four endhosts to an \snic\ and using \nt{}s of different performance metrics.
+For a slower \nt{} (\eg, one that can only sustain 20\Gbps\ max load), the \snic\ auto-scales more instances of it, resulting in less cost saving.
+Our implementation of firewall \nt{} reaches 100\Gbps, while the AES \nt\ is 30\Gbps, resulting in a 64\% cost saving when deploying both of them.
+
+
+
+%On the other hand, multi-host NIC incurs higher performance overhead, especially for the tail.
+%Whenever any endhost exceeds 25\Gbps\ load, multi-host NIC will have a bottleneck link.
+%On the other hand, \snic\ can sustain the peak of aggregated traffic, which is mostly under 100\Gbps, demonstrating the benefit of run-time, dynamic consolidation.
+
+
+\subsubsection{Distributed \snic{}}
+To run an \nt\ at a remote \snic,
+an \snic{}'s SoftCore first sends a control message to the remote \snic{} to launch the \nt{} and then installs forwarding rules to its parser. This process takes 2.3\mus\ in our testbed.
+Afterwards, packets are forwarded to the remote \snic. We observe an addition of 1.3\mus\ latency when packets go through the remote \snic. %\zac{Maybe put these numbers in a table and include std. dev or some kind of latency CDF (depending on how much space you have available)?}
+%An \snic{} can "borrow" at most \texttt{100 Gbps x T} bandwidth, where \texttt{T} is the number of peer links.
+
+\fi
+
+
+
+
+
+
+\if 0
+\subsection{Microbenchmark Results}
+%\yizhou{mention this is simulation? Without phy/mac's limitation, internal link can run with their maximum BW which is 128Gbps.}
+Our microbenchmark tests evaluate various \snic\ techniques in a controlled manner. 
+Similar to PANIC~\cite{panic-osdi20}, for these tests, we implement a packet generator to generate traffic on the FPGA
+and a delay unit to emulate \nt{}s and other tasks like PR by delaying packets in a controlled way.
+
+
+\subsubsection{\snic\ System Module Performance}
+
+\fi
+
+
+\if 0
+
+\begin{enumerate}
+    \item Figure~\ref{fig-4}. A single snic and a single end-host. Run a set of NFs at either snic or end-host, and show their latency/bandwidth difference. This experiment showcase how much overhead snic puts on the data path. (NFs: transport, firewall, AES, SHA). This figure can be a bar graph, each NF has two bars. (Instead of single NF, we should run chains as well.)
+    \item Figure~\ref{fig-1}. The above fig shows basic NF perf when offloaded to snic. This figure shows how snic impact end-to-end app performance. One snic (Transport), one clio (KVS-virt), and one client (YCSB). Client issues YCSB requests (workloads A, B, C), using different value size (e.g., 64, 128, 256, 512, 1024). We show the end-to-end latency. And we could compare to Clio, Clover, HERD. So in total 4 lines.
+    \item if have time, compare to Bluefield (HERD?).
+    \item Figure~\ref{fig-2}. Building on top of Figure~\ref{fig-1}. We want to show app can offload their functionalities to snic to accelerate certain operations (e.g., coordination, replication, etc). In this test, we use 1 client, 1 snic with 2 clio boards connected to it. We add a KVS Replication NF to snic. A KV write request will specify whether the data should be replicated. If so, the Replciatio NF will proactively duplicate the request and send to both Clio boards. We should compare with replicated Clio/Clover. Show throughput or total app runtime?
+    \item Virtual Private Cloud. VPC. 1 snic, 1 server first. Encap/Decap, Firewall, NAT NFs.
+    \item For the final figure (optional, if we have time), compose KVS and VPC. 1 clio + 1 snic, 1 server + snic. The server is behind the VPC running at the second snic. The server runs YCSB? 
+\end{enumerate}
+
+Microbenchmarks (simulation, 3 or 4 Figures):
+\begin{enumerate}
+    \item One-hop buffer/logic cost. Resource utilization. Just some numbers in text or a Table.
+    \item Figure~\ref{fig-5} on-board NF chaining latency compared to PANIC. Couple lines: snic-eager credit allocation, snic-lazy credit allocation, no chaining (PANIC). We can vary the chain length as x-axis. Y-axis should be latency. (Reference to PANIC, come up with a chain model.)
+    \item Figure~\ref{fig-6} how our parallesim improve performance. Use an NF chain: [A + B + C] -- [D]. Normal case, PANIC/other systems go through A-B-C-D. Since A,B,C have no dependcies, we can run them at the same time (NF-level parallelism). We should create multiple instances of A/B/C to show Instance-level paralleslim. Show the throughput/latency improvements. X-axis should be pkt size? Y-axis should be latency/throughput. (Find out the Long NF chain paper, use their chain)
+    \item Figure~\ref{fig-8} should be a large figure our Auto-scaling/Scheduling policies. The x-axis is Timeline. The y-axis is Space Util, BW Util, Mem Util. At certain timestamps, we make a scheduling decision and show its impact.
+    \item a bench without victim cache.
+\end{enumerate}
+
+1. micro. latency, throughput, w/ different number of ports.
+2. apps. consolidation, fair sharing etc.
+
+List of microbenmarks:
+\begin{enumerate}
+    \item test PR time, vary bitstream size. not necessary a figure.
+    \item system shell performance, vary packet size
+    \item packet store, credit store, header store throughput. maybe also a latency breakdown.
+    \item scheduler pre-alloc v.s. on-demand allocation.
+    \item auto scaling
+\end{enumerate}
+
+List of application tests (better to calculate all the capex and opex savings):
+\begin{enumerate}
+    \item disaggregated memory.
+    \item run transport + NF. Baseline is running transport at endhost (e.g., CPU, bluefield, or even FPGA). compared to run that on supernic. This shows our latency performance.
+    \item consolidation: disaggregated memory + transports + other NFs.
+    \item design a benchmark to trigger auto-scaling.
+\end{enumerate}
+
+\fi
+

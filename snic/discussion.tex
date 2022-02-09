@@ -1,0 +1,39 @@
+\section{Discussion}
+
+\subsection{Programming Model}
+Couple points.
+1) why we need such a PL model?
+2) what's in this PL model?
+3) the challenges and benefits of designing/using this PL model?
+
+We could benefit from having a programming framework, like ClickNP, the ones
+that provide APIs to do packet processing. Through these APIs,
+SuperNIC can do better scheduling etc.
+We do not have such model yet.
+Ideally, such model can be:
+1) a way to describe services, their linking etc.
+And SuperNIC is able to infer better NF merging and runtime scheduling policies.
+2) a set of shell interfaces through which NFs interact with SuperNIC.
+
+Also its worth mentioning: it is user/system's responsibility to partition
+the function among endpoints and SuperNIC. 
+
+\subsection{Failure}
+
+We restrict out discussion to transient failures.
+We assume permanent failures are rare.
+SuperNIC adds back fate-sharing failure domain (all the connected devices and the SuperNIC). It is making failure handling a bit worse than a full disaggregation model.
+
+Ideally, we want SuperNIC be able to physically isolate its on-board
+failure domains, possibly by using different power supplies and chips.
+For example, the board has two domains, one pass-through and one computation domain.
+The latter hosts all logic and softcore.
+If the latter fails, SuperNIC is still able to route traffic via the pass-through domain hence the connected
+devices are still reachable from others.
+
+\subsection{Security and FPGA Side-Channels}
+
+We ensure security by properly isolate resources.
+FPGA side-channels are possible, but they can be prevented
+during compile time by checking user logic.
+Most malicious FPGA programs have a certain signature logic.

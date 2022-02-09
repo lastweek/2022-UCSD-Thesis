@@ -1,0 +1,251 @@
+\input{tbl-techniques}
+
+\if 0
+\section{\sysname\ Overview}
+\label{sec:overview}
+
+We walk through the key challenges and present out solutions.
+
+\boldunderpara{Key Challenges:}
+\begin{itemize}[leftmargin=0cm,itemindent=.35cm]
+
+\myitem{C1:}
+After decoupling the network, what's left at the endpoints?
+And how can endpoints communicate with the NetPool?
+%
+\textbf{Answer:} \TODO{}
+We observe that a reliable link layer is sufficient
+to connect endpoints and NetPool.
+We design a shim library at the endpoints.
+
+\myitem{C2:}
+How to efficiently and safely consolidate applications onto NetPool
+with limited amount of resource?
+%
+\textbf{Answer:} \TODO{}
+Scheduling: space and time sharing limited resource.
+Auto Scaling: xxx.
+Isolation: segmented virtual memory, XXX.
+Fairness: PIFO, XXX.
+
+
+
+\myitem{C3:}
+How to design a flexible management interface so that
+we can deploy, upgrade, scale applications easily?
+\textbf{Answer:}
+Although FPGA enables in field reconfiguration,
+it is far from a complete solution.
+In response, \sysname\ makes a clean separation between the management and data plane.
+The management plane makes decisions based on runtime policies
+and react to real time traffic load. The data plane simply follows
+the management plane's instructions and adapts its computation layout.
+We build the management plane using C running at softcores.
+As a result, \sysname\ has software-alike configurability
+while able to run at raw hardware speed.
+
+\myitem{C4:} The NetPool adds another hop in the path and is
+shared by many applications, how to ensure low latency and high throughput?
+%
+\textbf{Answer:}
+Latency: we make two technical contributions.
+a) to optimize the common case, we propose \textif{partial chaining}
+to shorten the connection latency between chained functions.
+b) we use service-level parallelism to shorten critical path.
+Throughput:
+we use \textit{resource partitioning} and ensure SuperNIC's system
+component (e.g., packet scheduler) is able to sustain peak throughput.
+\yizhou{partitioning maybe beneficial for side channels}.
+When consolidated computation exceeds SuperNIC's capacity,
+we use either time- or space-sharing to multiplex resource.
+As a result, the execution latency build up.
+We trade some extra latency for the consolidation benefits.
+Luckily, we obverse that datacenter traffic is bursty and mostly underutilized,
+thus peak load scenario is rare.
+
+\myitem{C5:} Failure.
+The failure domain is enlarged.
+Shall we handle it? If so, how?
+Make endpoints multi-homed. Add another link
+to switch or to another sNIC.
+
+\yizhou{other challenges: tail latency. security, side channels, programming framework.}
+
+\yizhou{for latency part: it would be great to say:
+we obverse the average chain length is XXX,
+and we find XX\% traffic will traverse N NFs.
+Also, in our eval, during low load, we found offloading transport and NF
+to SuperNIC actually improves latency compared to baselin (running transport
+on CPU or smartnic like bluefield.)
+}
+
+\end{itemize}
+%
+\\
+
+
+\textbf{Features}
+
+1. Distributed setup.
+A resource pool has set of connected SuperNIC, in mesh or others.
+3 planes.
+Traffic can bounce among SuperNICs.
+Load balancing. (\TODO{depends.})
+
+2. Resource consolidation and abstraction groups.
+Describe how end points can choose to offload whatever to supernic,
+they could enjoy flexible combo. (this is essentially our Abstraction discussion earlier.)
+
+3. New smartnic architecture.
+Highlight prior archs, esp PANIC, show the difference.
+Our arch has the benefits of both worlds (we have a diagram for this).
+
+4. Packet Processing Parallelism.
+We introduce service-level and instance-level parallelism.
+And to ensure ordering, we introduce Reorder Buffer, a mechanism that XXX.
+
+5. Runtime NF Scheduling and scaling, time and space sharing.
+We closely monitor NF status and does automatic NF scheduling and scaling
+
+6. Performance Isolation and Protection.
+We have virtual memory interface for on-board memory.
+We use PIFO and other things to control bandwidth etc.
+\fi
+
+\section{\sysname\ Design Yizhou}
+\label{sec:design}
+
+\subsection{Overview}
+
+SuperNIC's innovation comes from two parts, the board-level design and the distributed design.
+
+\subsubsection{At Board-Level}
+
+We adopt PANIC’s architecture as our baseline.
+Its design enables resource consolidation and flexible NF chaining.
+Despite its advantages over traditional RMT, Pipeline, and SoC-based SmartNICs, PANIC suffers from long chaining latency and cannot scale resources.
+
+We propose three techniques to improve this state-of-the-art SmartNIC architecture, namely, 1) traffic-aware NF merging, 2) eager credit allocation scheduling, 3) on-demand scheduling and auto-scaling. These techniques are crucial for reducing latency and enable flexible consolidation. We will cover the details later. (NF merging has two benefits: reduce latency, and increase slot resource utilization while reducing the pressure on the xbar. We need experiments to show.)
+
+In addition, we introduce a softcore (could be a real SoC in the future)
+to run the management and control plane tasks.
+Our microservice-style software is partitioned into \texttt{agents}.
+Each agent is responsible for one particular task, e.g., we currently have monitoring agent, auto-scaling agent, Inter-SuperNIC agent, PR agent, and so on.
+It presents a shell-alike interface hence administrates can control SuperNIC via simple commands. 
+
+In all, a single SuperNIC supports multi-tenancy chaining,
+traffic-aware NF merging, on-demand scheduling, and auto scaling.
+It presents flexible policies with a clean separation of data and management/control planes.
+
+\subsubsection{At Distributed-Level}
+
+A single SuperNIC has limited resources and may become the computation bottleneck during peak load.
+To tackle this issue, we leverage the fact that SuperNICs under one ToR are
+connected in a ring or a mesh.
+We \textit{logically} group such a pool of physically distributed SuperNICs as one giant computation entity.
+Within the pool, SuperNICs are able to auto-scale, migrate, and balance computation among each other.
+
+We offer two-level auto-scaling, in which a certain computation offload
+can not only scale-up within one SuperNIC
+but also scale-out across SuperNICs.
+On top of it, SuperNICs can migrate computation and balance traffic on demand.
+
+These designs are possible because of the following components.
+First, each SuperNIC board has extensive monitoring facilities collecting runtime statistics for software agents to consume and make decisions using flexible policies.
+Second, our fast PR mechanism serves as the basis.
+Third, we deploys a hardware routing agent to help re-route traffic.
+
+\subsection{Physical Connections}
+
+\textit{Endpoints and Link Layer}.
+We need to describe what's the minimum setting required at the endpoint side. The minimum setting is used when the whole transport and NF are moved to SuperNIC.
+The minimum setting should include: a) a reliable link layer, with one-hop flow control, error detection and correction. b) a shim layer exposed to applications. this layer needs to save at least the connection IDs.
+I'm a bit worried about the error correction part - what if we cannot guarantee
+100\% error-free, then what's the guarantee we offer to endpoints.
+We had discussion on this part before, e.g., expose bit error as network failure.
+
+\subsection{On-chip Architecture}
+
+\yizhou{Overview. Add a figure.}
+
+\subsubsection{Parser}
+Each RX port has a Parser attached. All parsers share a service chain store.
+The parser uses Match-Action-Table style to generate a runtime
+descriptor for each packet.
+This descriptor is a metadata placeholder, includes XXX.
+
+\subsubsection{Central Scheduler}
+
+\yizhou{Deserves a zoom-in figure.}
+
+\textbf{On-demand and eager credit management}:
+The classical pull and push model proposed by
+Click (used by PANIC) is designed for single element/NF.
+With a NF chain, especially consider the extra cost
+of going back to Scheduler or going across xbar,
+it is beneficial to favor push over pull.
+Mapping to our model, we propose on-demand
+and eager credit management.
+
+On-demand credit allocation:
+If a packet is going to use a NF, the packet must allocate credit right before traversing the NF.
+Hence, if a packet needs to traverse a NF chain, the packet must go back to the central scheduler to
+allocate credit for the next NF in the chain. 
+
+Eager credit allocation:
+The packet can pre-allocate credits for services it going to use.
+Hence, if a packet wants to traverse a NF chain, the packet would 
+allocate credits for all NFs in the chain.
+Implication: a packet will wait until all NFs in a chain have available credits.
+
+Eager credit pre-allocate resources, lower latency, but may have poor resource utilization.
+We think the eager should be the default policy during low load.
+We should switch to on-demand when load spikes.
+
+\subsubsection{Parallelism}
+Reorder buffer.
+
+Three-level parallelism.
+1) pipeline level.
+2) fine-grained, needs help from a PL framework.
+3) service-level, coarse-grained. Either manual linking, or use a high-level scripting language like Click.
+4) instance-level, among instances of the same service.
+
+For now, 1) come from user, 2) is our future work,
+We can do 3), manually. We have to do 4).
+Both 3 and 4 need the help of ROB.
+
+\yizhou{we could briefly mention that this can benefit from a programming framework. The PL part is deferred to the Discussion section.}
+
+\subsubsection{Service Scheduling}
+Mechanism: we use counters. rely on fpga PR, a softcore.
+Policy: based on counters? once it exceeds/lowers than XXX, we do YYY.
+
+\subsubsection{Abstraction Groups}
+
+0. Wrapper, and other facilities: slot, PR wrapper, etc.
+
+1. Transports (what about congestion control?)
+2. Network Function
+
+\if 0
+\subsubsection{NF Shell}
+We expose a standard shell abstraction to each running NF.
+The shell is analogous to a system call interface,
+through which NF will communicate with the rest of SuperNIC.
+The shell has several standard signals such as fixed clock (250 MHz),
+a pair of network interface, memory access interface, and control signals. Amazon F1 has a similar shell.
+\fi
+
+\subsubsection{Security Measures}
+Consolidating resource means we need security measures.
+1) NFs are only allowed to access shared resource via a fixed set of interfaces provided by shell. This reduced the exposed attack surface.
+2) On-board memory employs a simple segment-based permission checking.
+3) From FPGA's perspective, the generation framework (we should have a section describing what's this) would do security checks during compilation time, to filter FPGA side-channels designs (bunch papers on this).
+
+\subsection{Distributed SuperNICs}
+
+\subsubsection{Scale-out}
+\subsubsection{Migration}
+\subsubsection{Hardware Routing Agent}
+
