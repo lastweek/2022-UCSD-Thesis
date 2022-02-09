@@ -20,7 +20,7 @@ We compare \hotpot\ with one in-memory file system, two \nvm-based file systems,
 one replicated \nvm-based system, and three distributed shared memory systems.
 Below we briefly describe these systems in comparison.
 
-\noindent{\textbf{Single-Node File Systems.}} 
+{\textbf{Single-Node File Systems.}} 
 Tmpfs is a Linux file system that stores all data in main memory and does not perform any I/Os to storage devices.
 \pmfs~\cite{Dulloor14-EuroSys} is a file system designed for \nvm. 
 The key difference between \pmfs\ and a conventional file system is that its implementation of
@@ -28,7 +28,7 @@ The key difference between \pmfs\ and a conventional file system is that its imp
 forth between the file store and the buffer cache.
 \pmfs\ ensures data persistence using \sfence\ and \clflush\ instructions.
 
-\noindent{\textbf{Distributed \nvm-Based Systems}}
+{\textbf{Distributed \nvm-Based Systems}}
 Octopus~\cite{Octopus} is a user-level RDMA-based distributed file system designed for \nvm.
 \Octopus\ provides a set of customized file APIs including read and write,
 but does not support memory-mapped I/Os or provide data reliability and availability.
@@ -40,7 +40,7 @@ over a customized IB layer.
 Similar to \hotpot, \pmfs, and Octopus, Mojim maps \nvm\ pages directly into application virtual memory address spaces.
 Mojim supports application reads and writes on the primary node but only reads on backup nodes. 
 
-\noindent\textbf{Distributed Shared Memory Systems.} 
+\textbf{Distributed Shared Memory Systems.} 
 We implemented two kernel-level DSM systems, {\em \dsmxact} and {\em \dsmnoxact}, on top of the same network stack as \hotpot's.
 Both of them support multiple readers and single writer (MRSW)
 and use a home node for each memory page to serve remote read and to store which nodes are the current readers and writer of the page, 
@@ -123,7 +123,7 @@ ensure data reliability and avoid the performance cost of journaling.
 Moreover, \hotpot\ and Mojim make three persistent replica for all data, while \pmfs\ makes only one.
 Tmpfs is slower than \hotpot\ even though \tmpfs\ does not make any data persistent, 
 because MongoDB's slower replication mechanism on IPoIB.
-\hotpot's network layer is significantly better than IPoIB~\cite{lite-sosp17}.
+\hotpot's network layer is significantly better than IPoIB~\cite{Tsai17-SOSP}.
 
 \Octopus\ performs worse than \hotpot\ and \Mojim\ because it incurs significant overhead of additional {\em indirection layers}:
 each memory operation within the memory-mapped file goes through the FUSE file system and then through \Octopus.

@@ -8,13 +8,13 @@ Since \hotpot\ reads have a constant latency (around 7.9\us) and \hotpot\ writes
 \hotpot's performance is largely affected by its data commit process.
 Because of space reasons, we focus our microbenchmark experiments on commit.
 
-\noindent{\bf Scalability.}
+{\bf Scalability.}
 Figure \ref{fig-nodescale} shows the total commit throughput of \hotpot\ on 2 to 16 nodes with a workload 
 that lets all nodes concurrently commit 32 random 4\KB\ areas with replication degree 1. 
 Overall, both \mrmw\ and \mrsw\ commit scale.
 As expected, \mrmw\ \commitxact\ is more costly than \mrsw. 
 
-\noindent{\bf Replication degree and committing size.} 
+{\bf Replication degree and committing size.} 
 %Figure \ref{fig-repdegree}
 We next evaluate the effect of replication degree and the total amount of data in a \commitxact\ call.
 %using a workload that let four nodes concurrently commit 32 sequential 4\KB\ areas. 
@@ -22,7 +22,7 @@ As expected, with higher replication degree and with more committing data, \comm
 %since more replica needs to be made.
 Because of space reasons, we do not include figures for these experiments.
 
-\noindent{\bf Chunk size.}
+{\bf Chunk size.}
 We use a controlled microbenchmark to showcase the effect of chunk size (Figure~\ref{fig-chunksize}).
 Each run has one node in a cluster of four nodes committing 32 1\KB\ areas that span a 32\MB\ region evenly with replication degree 1.
 Since \hotpot\ distributes chunks in Round Robin, 
@@ -37,7 +37,7 @@ But when the \xn\ is not \on, all commit traffic goes to only two (or one) remot
 resulting in worse performance than when chunk size is small.
 This result suggest that smaller chunk size has better load balancing.
 
-\noindent{\bf \on\ migration.}
+{\bf \on\ migration.}
 From the previous experiments, we find that the \commitxact\ performance depends heavily on the location of \on\
 and the initial \hotpot\ \on\ assignment may not be optimal.
 We now evaluate how effective \hotpot's \on\ migration technique is in improving \commitxact\ performance (Figure~\ref{fig-migration}). 
@@ -50,7 +50,7 @@ because when \xn\ is \on\ and replication degree is one, there is no need to per
 \mrmw's improvement is higher than \mrsw, because \mrmw\ can benefit more from committing data locally
 --- the \mrmw\ commit process that involves remote \on{}s is more costly than that of \mrsw.
 
-\noindent{\bf Effect of conflict commits.}
+{\bf Effect of conflict commits.}
 Figure~\ref{fig-conflict} compares the \commitxact\ performance of when 1 to 4 nodes in a four node cluster 
 concurrently commit data in two scenarios:
 all \xn{}s commit the same set of data (32 sequential 1\KB\ areas) at the same time which results in commit conflict,

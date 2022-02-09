@@ -99,7 +99,7 @@ based on traditional two-phase commit protocols~\cite{Samaras93,Gray78,Lampson81
 \hotpot\ needs to ensure cache coherence, crash consistency, and data replication all in one protocol.
 Figure~\ref{fig-mrmw} illustrates an example of \mrmw. 
 
-\noindent{\bf Commit phase 1.} 
+{\bf Commit phase 1.} 
 When a node receives a \commitxact\ call (we call this node {\em \xn}), it checks if data specified in the \commitxact\ call is dirty
 and commits only the dirty pages.
 \xn\ persistently records the addresses of these dirty pages for recovery reasons (Section~\ref{sec:hotpot:recovery}).
@@ -113,7 +113,7 @@ The \on\ also persistently records the \xactid\ and its state (\ie, completed ph
 The \on{} will block future commit requests to these data until the whole commit process finishes.
 The \xn\ can proceed to phase 2 only when all \on{}s return successfully.
 
-\noindent {\bf Commit phase 2.}
+{\bf Commit phase 2.}
 In commit phase 2, \hotpot\ makes the committing data persistent, 
 coherent, and replicated.
 This is the phase that \hotpot\ differs most from traditional distributed commit protocols.
@@ -156,12 +156,12 @@ At this point, the whole system has a coherent view of the new data
 and has at least $N$ copies of it.
 %The committing node can only proceed to phase 3 when all \on{}s returns successfully from phase 2.
 
-\noindent {\bf Commit phase 3.}
+{\bf Commit phase 3.}
 In the last phase, the \xn\ informs all \on{}s that the \commitxact\ operation has succeeded.
 The \on{}s then delete their redo logs.
 %and make the new \committed\ data visible to applications.
 
-\noindent {\bf Committing to a single \on\ and to local \on.}
+{\bf Committing to a single \on\ and to local \on.}
 When only one remote \on\ is involved in a \commitxact\ operation,
 there is no need to coordinate multiple \on{}s
 and \hotpot\ performs the above commit protocol in a single phase.
@@ -194,7 +194,7 @@ Afterwards, applications can update any date that they have acquired and use the
 commit updates and release corresponding data areas.
 Figure~\ref{fig-mrsw} shows an example of \mrsw. % acquire, commit, and release process.
 
-\noindent{\bf Acquire write permission.}
+{\bf Acquire write permission.}
 \hotpot\ uses a master node ({\em \master}) to maintain the active writer of each page. 
 An \master\ can be one of the \hotpot\ node, the \cd, or a dedicated node.
 %The \master\ maintains a simple hash table of the virtual page numbers of the data that is currently being written to.
@@ -202,7 +202,7 @@ When a node receives the \acquire\ call, it sends the virtual addresses of the d
 If the \master\ finds that at least one of these addresses are currently being written to, 
 it will reject the \acquire\ request and let the requesting node retry later.
 
-\noindent{\bf Commit and release data.}
+{\bf Commit and release data.}
 \mrsw's commit protocol is simpler and more efficient than \mrmw's,
 since there is no concurrent commit operations to the same data in \mrsw\ (concurrent commit to different data pages is still allowed).
 \mrsw\ combines phase 1 and phase 2 of the \mrmw\ commit protocol into a single phase 

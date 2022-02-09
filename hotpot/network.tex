@@ -4,7 +4,7 @@
 The networking delay in \dsnvm\ systems is crucial to their overall performance.
 We implement \hotpot's network communication using RDMA. %(Remote Direct Memory Access), 
 RDMA provides low-latency, high-bandwidth direct remote memory accesses with low CPU utilization.
-\hotpot's network layer is based on LITE~\cite{lite-sosp17}, an efficient RDMA software stack we
+\hotpot's network layer is based on LITE~\cite{Tsai17-SOSP}, an efficient RDMA software stack we
 built in the Linux kernel on top of the RDMA native APIs, {\em Verbs}~\cite{ibverbs}.
 
 Most of \hotpot's network communication is in the form of RPC. % uses this RPC interface to implement most of its functionality. 

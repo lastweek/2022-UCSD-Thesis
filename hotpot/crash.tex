@@ -18,7 +18,7 @@ Table~\ref{tbl-crash} summarizes various crash scenarios and \hotpot's recovery 
 
 \input{hotpot/tbl-crash}
 
-\noindent{\bf Recovering \cd\ and \master.}
+{\bf Recovering \cd\ and \master.}
 \cd\ maintains node membership and dataset name mappings.
 \hotpot\ currently uses one \cd\ but can be easily extended to 
 include a hot stand-by \cd\ (\eg, using Mojim~\cite{Zhang15-Mojim}).
@@ -31,7 +31,7 @@ and simply reconstructs it by contacting all other nodes during recovery.
 %Since all the metadata that the \cd\ maintains can be reconstructed, 
 %\hotpot\ simply rebuild them by contacting all \hotpot\ nodes.
 
-\noindent{\bf Non-commit time crashes.}
+{\bf Non-commit time crashes.}
 Recovering from node crashes during non-commit time is fairly straightforward.
 If the \nvm\ in the crashed node is accessible after the crash (we call it {\em with-\nvm\ failure}),
 \hotpot\ directly restarts the node and
@@ -73,7 +73,7 @@ Our evaluation results show that it takes at most 2.3 seconds to promote
 a 1GB \dn\ chunks to \on.
 
 %\subsubsection{}
-\noindent{\bf Crash during commit.}
+{\bf Crash during commit.}
 If a with-\nvm\ failure happens during a \commitxact\ call,
 \hotpot\ will just continue its commit process after restart.
 When a no-\nvm\ failure happens during commit,
