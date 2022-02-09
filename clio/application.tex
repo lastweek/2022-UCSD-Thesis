@@ -9,8 +9,8 @@ Each client of the utility (\eg, a Facebook user) has its own collection of phot
 stored in two arrays at \MN{}s, one for compressed and one for original, both allocated with \alloc.
 Because clients' photos need to be protected from each other, we use one process
 per client to run the utility.
-The utility simply reads a photo from \MN\ using \sysread, compresses/decompresses it,
-and writes it back to the other array using \syswrite.
+The utility simply reads a photo from \MN\ using \Cliosysread, compresses/decompresses it,
+and writes it back to the other array using \Cliosyswrite.
 Note that we use compression and decompression as an example of image processing.
 These operations could potentially be offloaded to \MN{}s.
 However, in reality, there can be many other types of image processing that are more complex and are hard and costly to implement in hardware, necessitating software processing at \CN{}s.
@@ -48,17 +48,17 @@ It also stores a fingerprint for each key-value pair.
 
 To create a new key-value pair, \syskv\ allocates space for
 the key-value data with an \alloc\ call and writes the
-data with an \syswrite. It then calculates the hash and the fingerprint of the key. 
+data with an \Cliosyswrite. It then calculates the hash and the fingerprint of the key. 
 Afterward, it fetches the last hash slot in the corresponding hash bucket using the hash value. If that
 slot is full, \syskv\ allocates another slot using \alloc; otherwise, it just uses the fetched last slot. 
 It then inserts the virtual address and fingerprint of the data into the last/new slot.
 Finally, it links the current last slot to the new slot if a new one is created.
 
 To perform a read, \syskv\ locates the hash bucket (with the key's hash value) and fetches one slot in the bucket
-chain at a time using \sysread. It then compares the fingerprint of the key to the seven entries in the slot. If there is no match, it
+chain at a time using \Cliosysread. It then compares the fingerprint of the key to the seven entries in the slot. If there is no match, it
 fetches the next slot in the bucket. Otherwise, with a matched
 entry, it reads the key-value pair using the address stored in that
-entry with an \sysread. It then compares the full key and returns
+entry with an \Cliosysread. It then compares the full key and returns
 the value if it is a match. Otherwise, it keeps searching the bucket.
 
 The above describes a single-\MN\ \syskv\ system. Another \CN-side load balancer is used to partition key-value pairs into different \MN{}s.

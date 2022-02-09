@@ -42,8 +42,6 @@ an application process can explicitly call \sys\ APIs by linking \syslib\ which 
 that is separate from the process' normal (local) virtual memory address space.
 Applications have precise control over what and when to use disaggregated memory and can use or implement high-level APIs like pointer chasing.
 
-%The returned addresses of \alloc\ and input addresses of \sysread/\syswrite requests will all be virtual addresses in this space ({\em dvma-vaddr}).
-
 \stepcounter{case}
 \boldpara{{\bf U\arabic{case}}: Remote memory space controlled by a middle layer.}
 A system layer like a remote-memory swap system~\cite{InfiniSwap,FastSwap} or a language runtime~\cite{Semeru}

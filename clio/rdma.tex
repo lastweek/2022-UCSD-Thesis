@@ -57,7 +57,7 @@ In fact, there are three ways to use \sys, and they have their own interpretatio
 as illustrated in Figure~\ref{fig-arch}.
 First, an application process can explicitly call \sys\ APIs by linking to a \sys\ library which creates a special \textit{\sys\ virtual memory address space}
 under the hood. 
-The returned addresses of \alloc\ and input addresses of \sysread/\syswrite requests will all be virtual addresses in this space ({\em dvma-vaddr}).
+The returned addresses of \alloc\ and input addresses of \Cliosysread/\Cliosyswrite requests will all be virtual addresses in this space ({\em dvma-vaddr}).
 Second, applications can sit on top a remote-memory swap system like FastSwap~\cite{FastSwap} and InfiniSwap~\cite{InfiniSwap},
 which uses \sys\ virtual memory addresses as swap partition address ({\em swap-vaddr}) and performs \sys\ read/write to swap in/out disaggregated memory.
 Third, a disaggregated compute device like pComponent in LegoOS~\cite{Shan18-OSDI} can integrate \sys\ into its hardware cache controller

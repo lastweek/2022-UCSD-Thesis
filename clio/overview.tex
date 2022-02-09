@@ -37,11 +37,11 @@ Figure~\ref{fig-code-eg} illustrates the usage of \sys\ with a simple example.
 
 
 An application process can perform a set of virtual memory operations in its \rspace,
-including \alloc, \sysfree, \sysread, \syswrite, 
+including \alloc, \sysfree, \Cliosysread, \Cliosyswrite, 
 and a set of atomic and synchronization primitives (\eg, \syslock, \sysunlock, \fence).
-\alloc\ works like \texttt{malloc} and returns a VA in \rspace. \sysread\ and \syswrite\ can then be issued to any allocated VAs.
+\alloc\ works like \texttt{malloc} and returns a VA in \rspace. \Cliosysread\ and \Cliosyswrite\ can then be issued to any allocated VAs.
 As with the traditional virtual memory interface, allocation and access in \rspace\ are in byte granularity.
-We offer {\em synchronous} and {\em asynchronous} options for \alloc, \sysfree, \sysread, and \syswrite.
+We offer {\em synchronous} and {\em asynchronous} options for \alloc, \sysfree, \Cliosysread, and \Cliosyswrite.
 %, with which users can choose between performance and consistency levels.
 %A synchronous API blocks until the result is ready.
 %An asynchronous API is non-blocking, and the application calls \poll\ to get its result.
@@ -54,7 +54,7 @@ We offer {\em synchronous} and {\em asynchronous} options for \alloc, \sysfree, 
 A collection can be an application process running at a \CN, a middle layer like JVM running at a \CN, a computation offload running at \MN, or any combination of them.
 Within a collection, there can be multiple {\em threads}. 
 One thread can only be at one node, but a collection can have threads on both a \CN\ and an \MN.
-\sys\ offers basic virtual memory APIs like \alloc, \sysread, and \syswrite, 
+\sys\ offers basic virtual memory APIs like \alloc, \Cliosysread, and \Cliosyswrite, 
 a set of atomic and synchronization primitives (\tas, \cas, \fence), 
 and extended APIs like array indexing and pointer chasing.
 We choose this virtual memory abstraction instead of alternatives like a key-value interface,
@@ -94,7 +94,7 @@ Threads and processes can share data even when they are not on the same \CN.
 Similar to traditional concurrent programming, \sys\ threads can use synchronization primitives to build critical sections (\eg, with \syslock) 
 and other semantics (\eg, flushing all requests with \fence).
 
-An application can choose to cache data read from \sysread\ at the \CN\ (\eg, by maintaining \texttt{local\_rbuf} in the code example).
+An application can choose to cache data read from \Cliosysread\ at the \CN\ (\eg, by maintaining \texttt{local\_rbuf} in the code example).
 Different processes sharing data in a \rspace\ can have their own cached copies at different \CN{}s.
 Similar to ~\cite{Shan18-OSDI}, \sys\ does not make these cached copies coherent automatically and lets applications choose their own coherence
 protocols.

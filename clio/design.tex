@@ -155,13 +155,6 @@ and 4) we set the page table to have extra slots (2\x\ by default) which absorbs
 %In fact, none of our evaluated application's \alloc\ requests ever require retry, even when the \alloc\ size is as huge as 1\TB.
 We find no conflicts when memory is below half utilized and has only up to 60 retries when memory is close to full (Figure~\ref{fig-alloc-conflict}).
 
-%\boldpara{Address translation flow.}
-%When a \sysread/\syswrite\ request arrives and passes the network stack,
-%\sys\ looks up its TLB based on the VA and PID.
-%If it is a TLB hit, 
-%Under our current implementation, the PTE cache is shared across application processes.
-%But it is fairly easy to change it to provide isolation between processes (\eg, for performance or security).
-
 \ulinebfpara{TLB.}~~
 %and its consistency with the page table.}
 \sys\ implements a TLB in a fix-sized on-chip memory area and looks it up using content-addressable-memory in the fast path.
@@ -496,18 +489,6 @@ Now, consider the case where there are retries.
 Because of the asynchronous network, a timed-out request could just be slow and still reach the \MN, either before or after the execution of the retried request. If another request is executed in between the original and the retried requests, inconsistency could happen (\eg, losing the data of this other request if it is a write). The root cause of this problem is that one request can be executed twice when it is retried.
 T4 solves this problem by ensuring that the \MN\ only executes a request once even if it is retried.
 
-
-\if 0
-\boldpara{Idempotence.}
-In \sys, most types of requests like \sysread\ and \syswrite\ are idempotent and can be retried multiple times with the same result.
-\sys\ also includes a few types of non-idempotent requests such as atomic increment.
-%Non-idempotent requests such as atomic or synchronization requests (\eg, \texttt{rlock}) should run \textit{exactly once} even when retried.
-To ensure that retrying non-idempotent requests will not generate wrong results, we maintain a small ring buffer at \MN\ to record the request IDs and results of $K$ recently executed non-idempotent requests.
-If \MN\ receives a request with the same ID in the buffer, it will not execute it and directly send the cached result as the response.
-%To ensure that the ring buffer does not overflow, \CN\ do not issue any new non-idempotent requests if it has not get the response of $K$ recent non-idempotent requests.
-An \MN\ will not run any new non-idempotent requests when the ring buffer is full. To properly maintain the ring buffer, \CN{}s send an ACK back to \MN\ after receiving the response from it. This ACK will free a slot in the ring buffer.
-As non-idempotent requests are rare, \MN\ only needs to maintain a small $K$-sized buffer, and this is the one of the only two cases where \MN\ maintains states.
-\fi
 
 \subsection{Extension and Offloading Support}
 \label{sec:extended}
