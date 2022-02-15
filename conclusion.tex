@@ -1,3 +1,149 @@
-\chapter{Conclusion}
+\chapter{Conclusion and Future Directions}
 
-conclude this thesis.
+The data center resource management problem is exacerbated by
+the fast-changing application demand and heterogeneous domain-specific accelerators.
+Innovations in the data center is hindered by the traditional monolithic servers.
+Hardware resource disaggregation is a proposal that breaks monolithic servers
+into independent network-attached resource pools,
+promises to offer better manageability, high resource utilization, and better failure isolation.
+Despite the high hopes for hardware resource disaggregation,
+it was not clear how it could be deployed or whether it could deliver reasonable performance.
+
+In this dissertation, we developed various systems transforming hardware resource disaggregation
+from a vague research proposal into one that is tangible, practical, deployable, and can be approached quantitatively.
+Specifically, we built a new OS, two FPGA-based disaggregated hardware devices, and several distributed systems.
+As a result, we demonstrated the feasibility of resource disaggregation, 
+presented several critical techniques for improving performance,
+and confirmed its advantages in providing better resource packing, failure isolation, and elasticity.
+
+We made our initial effort building Hotpot, a logical disaggregation system for persistent memory
+that unifies distributed share memory and distributed storage system in one single layer.
+However, we found ourselves still hindered by the inherent limitation of monolithic servers.
+This first trial reaffirmed the need to break and go beyond the traditional server boundary,
+i.e., physically disaggregate hardware resources.
+We then built LegoOS, the first operating system capable of
+managing various disaggregated resources at data center scale.
+We found that a complete disaggregation model in which compute and memory is completely separated,
+is detrimental to performance.
+Having some local memory at compute side can greatly improve the end-to-end performance without losing disaggregation's benefits.
+To avoid the emulation overheads found in LegoOS,
+we then presented Clio, a low-cost, scalable, and flexible FPGA-based disaggregated memory system.
+Clio is the first hardware device specifically designed for memory disaggregation.
+In Clio, we co-designed networking transport, virtual memory system, and hardware.
+Clio overcomes the scalability bottleneck and any emulation overheads found in other related works.
+Finally, we tackled another data center's major resource, network, and proposed the concept of network disaggregation.
+We disaggregate network tasks from endpoints and consolidate them into a network resource pool,
+which provides network as a service to the connected endpoints.
+Our network resource pool consists of a distributed control plane 
+with efficient, fair, and safe resource sharing,
+and SuperNIC, a new hardware-based programmable network device 
+that consolidates network functionalities from multiple
+endpoints by fairly sharing limited hardware resources.
+We demonstrated SuperNIC's performance and cost benefits with
+real network functions and customized disaggregated applications.
+
+\section{Future Directions}
+
+We will end this dissertation with a few open questions and possible
+future directions raised during our work.
+
+\subsection{Fully Programmable Hardware Disaggregation}
+
+The data center is becoming more intelligent than ever.
+Over the past several decades, researchers have proposed various
+schemes to offload computation to certain mediums so as to
+avoid data movement, achieve better coordination, thereby improving overall performance.
+Examples include but are not limited to active memory, active storage, active pages,
+active flash, active messages, active network, Processing-In-Memory, Near-Memory-Computing, and so on.
+
+We make two key observations.
+
+Our first observation is that the aforementioned offloading methods are
+in fact special cases under the hardware resource disaggregation scheme.
+%
+Hardware resource disaggregation decomposes servers into independent network-attached devices.
+This dissertation repeatedly shows that adding the right amount of
+computation power to such devices can greatly improve end-to-end performance
+without losing disaggregation's cost and management benefits.
+For instance, one can use a disaggregated memory device to realize active memory.
+
+Our second observation is that the emerging in-network computing
+is in fact, also a special case under the hardware resource disaggregation scheme.
+%
+Recently emerged in-network computing adds data path runtime programmability
+to both switches and end-host NICs.
+Along with an already fully distributed and programmable control path~\cite{orion-nsdi},
+the current data center network is close to
+an ideal active network setup in which one can flexibly offload, migrate, and balance application computation.
+The SuperNIC work further shows that we could view network as
+another dimension in the hardware resource spectrum,
+which is physically and logically separated from other types of resources.
+
+Our key insight is that hardware resource disaggregation is a solution
+that unifies in-network computing and various offloading schemes,
+providing a fully programmable hardware basis for upper layer software.
+%
+Under this scheme, all types of resources (e.g., compute, memory, storage, network)
+could operate on their own, each with a certain degree of programmability and able to run user or vendor computation.
+
+The remaining key question is how to best utilize this fully programmable disaggregated data center. More specifically, one should decide which computation to offload, where to offload onto, and when it should be migrated to other devices.
+
+\subsection{Selective, Dynamic Disaggregation and Programming Model}
+
+The above section projects a fully programmable hardware disaggregated data center
+in which all type of resources including network are programmable and independent from others.
+In this envisioned model, application developers and data center operators
+suddenly have access to many types of resources sitting in different locations.
+Ideally, they could make fine-grained choices to find the best matching device for their computation.
+Manual offloading and placement often times lead to worse performance and cost.
+Many prior work has proposed dynamic offloading solutions by using programming language framework or application hints.
+However, they most only target a single SmartNIC or a single progrommable switch.
+None of them is able to handle the complexity introduced by the fully programmable hardware disaggregation model.
+
+We envision the following techniques and
+deem them as beneficial to work on top of a fully programmable disaggregated data center.
+%
+First of all, we envision \textit{Selective Disaggregation},
+a static compile time mechanism or framework that once given an application as an input,
+would be able to divide the application into standalone codelets, 
+and then decides the best matching hardware for each codelet.
+The framework would then automatically compile and deploy these codelets to corresponding hardware devices.
+%
+Second, we envision \textit{Dynamic Disaggregation},
+a dynamic runtime system that could monitor the deployed codelets,
+and dynamically decide whether codelets
+should be migrated to another device with the same type or to
+a new type of device.
+%
+Third, we envision a \textit{Programmable Model}
+to facilitate the selective and dynamic disaggregation.
+At compile time, it should help selective disaggregation to break down program into codelets,
+it should also help produce binaries (or bitstreams, objects) for each different hardware devices.
+We leave the details for future work.
+
+\subsection{Security}
+
+It is still an open question on how to ensure proper security
+or deliver confidential computing in a hardware disaggregated data center.
+
+At first glance,
+both hardware and software operate in a more decentralized, distributed manner
+compared to the monolithic model, hence the first step in ensuring security is to make sure
+all network traffic is encrypted and to equip disaggregated devices
+with authorization and authentication mechanisms.
+Furthermore, each disaggregated devices should have proper multi-tenancy mechanisms 
+to isolate resources and avoid side channels.
+For instance, in Clio and SuperNIC, we added basic virtual memory subsystem to ensure memory safety,
+and rely on compilation time design rule check to avoid side channels.
+
+Delivering end-to-end confidential computing is a much more challenging task.
+Existing confidential computing solutions such as Intel
+SGX or ARM TrustZone target CPU-only environments,
+leaving disaggregated hardware devices unprotected.
+To realize confidential computing in a fully programmable disaggregated data center,
+we envision a two-step approach.
+First, we should add basic confidential solution to the disaggregated devices.
+For example, adding a Trusted Platform Module to FPGA, GPU, and programmable switch~\cite{AccGuard,Telekine}.
+Second, we need a distributed security control system working with the
+aforementioned dynamic disaggregation system to orchestrate computation and data movement,
+ultimately ensure no information leakage.

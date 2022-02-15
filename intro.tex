@@ -1,4 +1,175 @@
 \chapter{Introduction}
-thesis introduction
-\section{Disaggregation}
-Test.
+
+Cloud is a fast growing area and data centers are a norm for running commodity computation.
+%
+Data centers are able to host and absorb the fast-changing and large-scale applications such as big data processing system, machine learning, serverless computing, and so on.
+%
+Meanwhile, with the slowdown of Moore's Law and the diminish of Dennard scaling, 
+specialized domain specific computing devices and accelerators are finding their
+way into the data centers (e.g., Google TPU and VPU~\cite{TPU,VPU}, AWS Nitro~\cite{aws-nitro}, GPU, FPGA, programmable switch and NICs). These accelerators offer higher computing efficiency
+while operating at a lower cost than traditional general purpose processors.
+%
+The data center hardware infrastructure and resource management systems are under constant changes, not only because the demand from applications change frequently, but also due to the changes required to host new hardware accelerators.
+
+%The strong conflict between the fast-changing, high-demanding applications and the heterogeneous hardware creates a storm for data center resource management and system software design. We need to revisit data center hardware infrastructure and system software ecosystem to adapt to the new changes.
+
+Unfortunately, innovations in the data center is hindered by the traditional monolithic server deployment model.
+For many years, the unit of deployment, operation, and failure in data centers
+has been a monolithic server, one that contains all the hardware resources required to run user programs. 
+%
+This long-standing server-center architecture has several key limitations.
+First, with a server being the physical boundary of resource allocation, it is difficult to fully utilize all resources in a datacenter~\cite{LegoOS}.
+Second, it has poor hardware elasticity since it is difficult to add, move, remove, or reconfigure hardware devices after a server is deployed.
+Third, it has coarse failure domain with a large but non-correlated fate-sharing scheme among all devices within a server.
+Fourth, it has bad support for heterogeneity. The monolithic server model
+tightly couples hardware devices with each other.
+As a result, making new hardware devices work with existing servers is a painful and lengthy process~\cite{Putnam14-FPGA}.
+
+The server-centric architecture is a bad fit for the fast-changing data center software and hardware needs.
+Traditional distributed systems enable applications to utilize resources beyond what a single server can offer. Distributed data processing systems~\cite{Zaharia12-NSDI}, distributed shared memory~\cite{Nelson15-ATC, Li89-ACM}, distributed storage systems~\cite{calder11-azure,DeCandia+07-Dynamo,Ghemawat03-GoogleFS} have been widely deployed in the real world.
+%
+Those solutions \textit{logically} break the server boundary
+by collectively expose a logical resource pool abstraction using physically distributed resources.
+We call this model logical resource disaggregation.
+However, they cannot overcome all the issues of using monolithic servers,
+since fundamentally the smallest hardware unit is still a monolithic one.
+%
+To fully support the growing heterogeneity in hardware and fast-changing demand in software, and to provide elasticity and flexibility at the hardware level, we should \textit{physically} break the monolithic servers.
+
+Hardware resource disaggregation is such a solution to break full-blown, general-purpose monolithic servers into segregated, network-attached hardware resource pools,
+each of which can be built, managed, and scaled independently.
+%
+The disaggregated approach largely increases the management flexibility of a data center.
+Applications can freely use resources from any hardware component, which makes
+resource management efficient and easy, thereby improving data center utilization.
+Different types of hardware resources can scale and fail independently.
+It is also easy to add, move, remove, or reconfigure hardware devices.
+In addition, adding new hardware is as simple as directly attaching it to the network.
+Finally, hardware resource disaggregation shrinks the fate-sharing domain thereby
+enables finer-grained failure isolation.
+
+Despite its management, cost, and failure handling benefits,
+hardware resource disaggregation is a completely different
+computing paradigm from the traditional monolithic server model.
+%
+With such a drastic departure,
+it introduces huge challenges and calls for a top-down redesign
+on system software, hardware devices, and data center networks.
+
+A complete or partial disaggregation of processor, memory, and
+storage means that when managing one of them, there
+will be no or limited local accesses to the other two.
+Resources that used to be accessible via intra-server interconnect
+are now disaggregated across data center network.
+However, commodity operating system (OS) assumes local accesses to all resources.
+Therefore, it is not clear how an OS can run top of a disaggregated architecture,
+let alone the upper layer applications.
+%
+To make it worse,
+the communication latency increases by multiple orders of magnitude
+when going from nanosecond-level intra-server interconnect
+to even the fastest data center network which runs at microsecond-level.
+It is not clear whether we can deliver reasonable good performance when deploying
+OSes and applications over a much slower network interconnect.
+%
+Finally, breaking monolithic servers into multiple independent network-attached
+hardware devices demands high network bandwidth and network topology upgrade.
+The number of required switch ports may explode by multiple times,
+and the network needs to run at hardware speed.
+%
+In all, there were many open questions and doubts on when and how disaggregation
+should be deployed, as well as questions on what are the trade-offs among performance, cost, and manageability when building systems for disaggregation.
+
+This dissertation seeks to address the challenge of building and deploying
+hardware resource disaggregation in real data centers.
+We demonstrated the feasibility of resource disaggregation, 
+presented several critical techniques for improving performance,
+also confirmed its advantages in better resource packing, failure isolation, and elasticity.
+
+We first explored logical resource disaggregation using monolithic servers.
+We are among the first to build a distributed system for the emerging persistent memory (PM),
+enabling a wider adoption for it in data centers~\cite{Shan17-SOCC}.
+However, the inherent limitations of monolithic servers still exist.
+So we took a radical turn to leverage the hardware resource disaggregation to overcome these limitations,
+by physically separating hardware resources into pools.
+We built LegoOS, the first operating system capable of managing disaggregated hardware resources,
+providing a binary-compatible interface to existing software while delivering good performance~\cite{Shan18-OSDI}.
+%
+Our solution in LegoOS is achieved by emulating disaggregated devices using servers,
+which has non-trivial overhead.
+To address this, we built real disaggregated devices using Field Programmable Gate Arrays (FPGAs).
+We tackled the most challenging resource in disaggregation, memory,
+and built the first hardware-based disaggregated memory device called Clio~\cite{clio-arxiv}.
+Clio co-designs the networking stack and virtual memory subsystem, both tailored for resource disaggregation.
+%
+We soon found that it is difficult to customize the 
+network task for various heterogeneous hardware devices.
+More importantly, we realized that network, the fourth major computing resource in data centers, can also be disaggregated.
+We then propose the concept of network disaggregation,
+which decouples network tasks from endpoints and consolidate them into a network resource pool~\cite{supernic-axiv}.
+Our network resource pool consists of a distributed control plane with efficient, fair, and safe resource
+sharing, and SuperNIC, a new hardware-based programmable network device that consolidates
+network functionalities from multiple endpoints.
+%
+While all projects included in this dissertation can work individually, 
+when combined, they collectively outline
+a principled path to manage resources in both monolithic server and disaggregated data centers.
+
+This dissertation advances the state of art in hardware resource disaggregation,
+transforming it from a vague research proposal into
+one that is tangible, practical, deployable, and can be approached quantitatively.
+%
+We propose principled guidelines for building both disaggregated hardware devices and software systems,
+and navigate the complex design trade-offs among manageability, performance and cost.
+
+Below, we give a brief overview of the four projects in this dissertation.
+
+\textbf{Chapter 2: Distributed Shared Persistent Memory.}~~
+Persistent memory (PM) provides byte-addressability, persistence, high density, and DRAM-like performance.
+Even though it has the potential to greatly benefit large-scale 
+applications, it was unclear how to best utilize it in data centers.
+%
+The first part of the dissertation focuses on enabling PM in a distributed, large-scale data center environment.
+%
+We propose Distributed Shared Persistent Memory,
+a framework that exposes a logical, virtual disaggregated PM resource pool abstraction using a set of physically distributed PM attached to monolithic servers.
+This framework unifies distributed shared memory and distributed storage system into one layer.
+%
+This system not only outlines a path for wider PM adoption in data centers but also showcases the performance improvements over similar systems.
+
+\textbf{Chapter 3: LegoOS, A Disseminated, Distributed OS for
+Hardware Resource Disaggregation.}~~
+While exploring the logical, virtual resource disaggregation (as the first part of this dissertation),
+we realized that the inherent limitations of monolithic servers still persist.
+In the second part of this dissertation, we take a radical departure to
+enabling physical hardware resource disaggregation in data center.
+%
+The key question we seek to answer is \textit{how to manage these physically disaggregated resources and run existing applications on top of them, without losing disaggregation's management benefits and performance.}
+%
+We propose a new OS model called splitkernel to manage disaggregated resources.
+Splitkernel disseminates traditional OS functionalities into loosely-coupled
+monitors, each of which runs on and manages a hardware device.
+The system has performance comparable to monolithic Linux servers,
+while largely improving resource packing and reducing failure rate
+over monolithic servers.
+
+\textbf{Chapter 4: Clio, A Hardware-Software Co-Designed Disaggregated Memory System.}~~
+The third piece of this dissertation tackles
+the most challenging resource to disaggregate, memory.
+All existing memory disaggregation solutions have taken one of two approaches:
+building/emulating memory nodes using regular servers or
+building them using raw memory devices with no processing power.
+%
+Both fail to balance cost, scalability, and management problems.
+%
+We seek a sweet spot in the middle by proposing a hardware-based
+memory disaggregation solution that co-design OS functionalities,
+hardware architecture, and the network system.
+Our system scales much better and has orders of magnitude lower
+tail latency than RDMA.
+
+\textbf{Chapter 5: Disaggregating and Consolidating Network Functionalities with SuperNIC.}~~
+While increasing amounts of effort go into disaggregating compute, memory, and storage, the fourth major resource, network, has been completely left out.
+The final piece of this dissertation, for the first time, proposes the concept of network disaggregation and builds a real disaggregated network system.
+The core of our proposal is the concept of a rack-scale disaggregated network resource pool, which consists of a set of hardware devices that can execute network tasks and collectively provide Network-as-a-Service.
+Our system guarantees an efficient, safe, and fair consolidation, with little performance penalty.

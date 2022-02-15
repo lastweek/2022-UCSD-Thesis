@@ -1,3 +1,28 @@
 \begin{abstract}
-This is thesis abstract. fill me in.
+
+
+Hardware resource disaggregation is a solution that decomposes
+general-purpose monolithic servers into segregated, network-attached resource pools,
+each of which can be built, managed, and scaled independently.
+Despite its management, cost, and failure tolerance benefits, hardware resource
+disaggregation is a drastic departure from the traditional computing paradigm,
+and calls for a top-down redesign on system software, hardware, and data center networks.
+This dissertation seeks to address the challenge of building and deploying
+hardware resource disaggregation in real data centers.
+We first explored logical resource disaggregation for the emerging persistent memory.
+We found that the inherent limitations of monolithic servers still persist.
+We then took a radical turn to using a complete hardware resource disaggregation model,
+and emulate disaggregated devices using monolithic servers.
+We built the first operating system capable of managing disaggregated resources,
+providing backward compatible interfaces while delivering good performance.
+To avoid emulation overhead,
+we then built the first practical hardware-based disaggregated memory device, co-designing networking transport, virtual memory, and hardware.
+We soon realized that while increasing amount of effort go into
+disaggregating compute, memory, and storage, the network has been completely left out. 
+The final piece of this dissertation proposed the concept of network disaggregation,
+and built a new hardware-based networking device along with a distributed runtime system
+to provide network as a service.
+Together, these four pieces outline a practical path to enable hardware
+resource disaggregation in real data centers,
+especially how one can navigate the complex trade-offs among performance, cost, and manageability when building operating system, hardware, and network for it.
 \end{abstract}
