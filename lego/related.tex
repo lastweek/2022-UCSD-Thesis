@@ -1,7 +1,7 @@
 \section{Related Work}
 \label{sec:lego:related}
 
-\paragraph{Hardware Resource Disaggregation.}
+\textbf{Hardware Resource Disaggregation.}
 There have been a few hardware disaggregation proposals from academia and industry,
 including Firebox~\cite{FireBox-FASTKeynote}, HP "The Machine"~\cite{HP-TheMachine,HP-MemoryOS}, dRedBox~\cite{dRedBox-DATE},
 and IBM Composable System~\cite{IBM-Composable}.
@@ -12,7 +12,7 @@ FireBox is an early-stage project and is likely to use high-radix switches to co
 The disaggregated cluster we envision to run \lego\ on is one that hosts hundreds to thousands of
 non-coherent, heterogeneous hardware devices, connected with a commodity network.
 
-\paragraph{Memory Disaggregation and Remote memory.}
+\textbf{Memory Disaggregation and Remote memory.}
 Lim \etal\ first proposed the concept of hardware disaggregated memory
 with two models of disaggregated memory: using it as network swap device 
 and transparently accessing it through memory instructions~\cite{Lim09-disaggregate,Lim12-HPCA}.
@@ -26,7 +26,7 @@ These remote memory systems help improve the memory resource packing in a cluste
 However, as discussed in \S\ref{sec:lego:motivation}, unlike \lego, these solutions cannot solve other limitations 
 of monolithic servers like the lack of hardware heterogeneity and elasticity. 
 
-\paragraph{Storage Disaggregation.}
+\textbf{Storage Disaggregation.}
 Cloud vendors usually provision storage at different physical machines~\cite{deepview-nsdi18,url:aws-storage,url:vmware-vSAN}.
 Remote access to hard disks is a common practice, because their high latency and low throughput
 can easily hide network overhead~\cite{petal-asplos96,blizzard-nsdi14,Parallax-hotos15,Legtchenko-hotstorage17}.
@@ -36,7 +36,7 @@ tightly integrate network and storage layers to minimize software overhead in th
 Although storage disaggregation is not our main focus now,
 we believe those techniques can be realized in future \lego\ easily.
 
-\paragraph{Multi-Kernel and Multi-Instance OSes.}
+\textbf{Multi-Kernel and Multi-Instance OSes.}
 Multi-kernel OSes like Barrelfish~\cite{Baumann-SOSP09,Barrelfish-DC}, Helios~\cite{Helios-SOSP}, Hive~\cite{Hive-SOSP}, and fos~\cite{fos-SOCC}
 run a small kernel on each core or programmable device in a monolithic server,
 and they use message passing to communicate across their internal kernels.
@@ -53,7 +53,7 @@ Helios~\cite{Helios-SOSP} runs {\em satellite kernels} on heterogeneous cores an
 We took a step further by disseminating OS functionalities to run on individual, network-attached hardware devices. % and run split kernel at hardware controllers.
 Moreover, \lego\ is the first OS that separates memory and process management and runs virtual memory system completely at network-attached memory devices.
 
-\paragraph{Distributed OSes.}
+\textbf{Distributed OSes.}
 There have been several distributed OSes built in late 80s and early 90s~\cite{Amoeba-Status,Amoeba-Experience,Sprite,MOSIX,V-System,Accent-SOSP,DEMOS-SOSP,Charlotte}.
 Many of them aim to appear as a single machine to users and focus on improving inter-node IPCs. 
 Among them, the most closely related one is Amoeba~\cite{Amoeba-Status,Amoeba-Experience}.

@@ -45,12 +45,13 @@
     keywordstyle=\color{magenta},
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\footnotesize,
+    basicstyle=\ttfamily\small,
     breakatwhitespace=false,         
     breaklines=true,                 
     captionpos=b,                    
     keepspaces=true,                 
-    numbers=left,                    
+    numbers=left,
+    xleftmargin=1.5em,
     numbersep=5pt,                  
     showspaces=false,                
     showstringspaces=false,
@@ -93,9 +94,10 @@
 \makeatother
 \usepackage{setspace}
 \doublespace
-\usepackage[font=small, width=0.9\textwidth]{caption}
+\usepackage[font=small, width=0.9\textwidth,tableposition=top]{caption}
 \usepackage{subcaption}
 \usepackage[capposition=bottom]{floatrow} %force captions below figure per OGS requirement
+\floatsetup[table]{capposition=top}
 
 \usepackage{soul}
 \usepackage{ulem}
@@ -176,7 +178,7 @@
 
 
 
-
+\newcommand{\yiying}[1]{{\color{cyan}\textbf{\fbox{Yiying} #1}}}
 
 %% DISSERTATION
 
@@ -190,6 +192,7 @@
 % Of course, if you prefer, you can just start with
 %   \chapter{My First Chapter Name}
 % and start typing away.  
+\sloppy
 \input{intro}
 \input{hotpot}
 \input{legoos}

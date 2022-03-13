@@ -11,7 +11,7 @@ The Linux version we used for comparison is v4.9.47.
 \input{lego/fig-associativity}
 
 \subsection{Micro- and Macro-benchmark Results}
-\noindent{\textit{\uline{Network performance.}}}
+\textit{\uline{Network performance.}}
 Network communication is at the core of \lego' performance.
 Thus, we evaluate \lego' network performance first before evaluating \lego\ as a whole.
 Figure~\ref{fig-net-latency} plots the average latency of sending messages with socket-over-InfiniBand (Linux-IPoIB) in Linux,
@@ -20,7 +20,7 @@ Figure~\ref{fig-net-latency} plots the average latency of sending messages with 
 all application-initiated socket network requests.
 Both \lego' networking stacks significantly outperform Linux's.
 
-\noindent{\textit{\uline{Memory performance.}}}
+\textit{\uline{Memory performance.}}
 Next, we measure the performance of \mcomponent\ using a multi-threaded user-level micro-benchmark. 
 In this micro-benchmark, each thread performs one million sequential 4\KB\ memory loads in a heap.
 We use a huge, empty \excache\ (32\GB) to run this test, 
@@ -38,7 +38,7 @@ As expected, bypassing \mcomponent\ accesses with p-local lines significantly
 improves memory access performance.
 The difference between p-local and Linux demonstrates the overhead of trapping to \lego\ kernel and setting up \excache.
 
-\noindent{\textit{\uline{Storage performance.}}}
+\textit{\uline{Storage performance.}}
 To measure the performance of \lego' storage system, we ran a single-thread micro-benchmark 
 that performs sequential and random 4\KB\ read/write to a 25\GB\ file on a Samsung PM1725s NVMe SSD (the total amount of data accessed is 1\GB).
 For write workloads, we issue an {\em fsync} after each {\em write} to test the performance of writing all the way to the SSD.
@@ -53,7 +53,7 @@ With better SSD sequential read performance, network cost has a higher impact.
 \lego\ requires one RTT between \pcomponent\ and \mcomponent\ to perform write 
 and two RTTs (\pcomponent\ to \mcomponent, \mcomponent\ to \scomponent) for fsync.
 
-\noindent{\textit{\uline{PARSEC results.}}}
+\textit{\uline{PARSEC results.}}
 We evaluated \lego\ with a set of workloads from the PARSEC benchmark suite~\cite{PARSEC},
 including BlackScholes, Freqmine, and StreamCluster.
 These workloads are a good representative of compute-intensive datacenter applications, 
@@ -85,7 +85,7 @@ The total working sets of the TensorFlow and Phoenix execution are 0.9\GB\ and 1
 Our default \excache\ sizes are set as roughly 25\% of total working sets.
 We ran both applications with four threads.
 
-\noindent{\textit{\uline{Impact of \excache\ size on application performance.}}}
+\textit{\uline{Impact of \excache\ size on application performance.}}
 Figures~\ref{fig-tf4} and \ref{fig-phoenix} plot the TensorFlow and Phoenix run time comparison across 
 \lego, a remote swapping system (InfiniSwap~\cite{GU17-NSDI}), 
 a Linux server with a swap file in a local high-end NVMe SSD, 
@@ -109,7 +109,7 @@ and to increase its request handling throughput.
 Another optimization we did is to piggy-back dirty cache line flush and cache miss fill into one RPC.
 The optimization of the first anonymous memory access (\S\ref{sec:lego:zerofill}) improves \lego' performance further by up to 5\%.
 
-\noindent{\textit{\uline{\excache\ management.}}}
+\textit{\uline{\excache\ management.}}
 Apart from its size, how an \excache\ is managed can also largely affect application performance.
 We first evaluated factors that could affect \excache\ hit rate and found that higher associativity improves hit rate
 but the effect diminishes when going beyond 512-way.
@@ -129,7 +129,7 @@ the kernel background thread sweeping the \excache\ locks an LRU list when adjus
 while \excache\ miss handler thread also needs to lock the LRU list to grab its head.
 Finally, the piggyback optimization works well and the combination of FIFO, free list, and piggyback yields the best performance.
 
-\noindent{\textit{\uline{Number of \mcomponent{}s and replication.}}}
+\textit{\uline{Number of \mcomponent{}s and replication.}}
 Finally, we study the effect of the number of \mcomponent s and memory replication.
 Figure~\ref{fig-mem-rep} plots the performance slowdown as the number of \mcomponent s increases from one to four.
 Surprisingly, using more \mcomponent{}s lowers application performance by up to 6\%.
@@ -149,7 +149,7 @@ to the primary \mcomponent, resulting in the performance lost.
 %We also tested synchronous replication where foreground waits for the write back of backup memory log.
 %The synchronous replication scheme has an overhead of 1.2\%.
 
-\noindent{\textit{\uline{Running multiple applications together.}}}
+\textit{\uline{Running multiple applications together.}}
 All our experiments so far run only one application at a time.
 Now we evaluate how multiple applications perform when running them together on a \lego\ cluster.
 We use a simple scenario of running one TensorFlow instance and one Phoenix instance together in two settings:

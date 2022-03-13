@@ -542,7 +542,7 @@ All rights reserved.}
 % (EVM, 9/19/94)
 
 \phantomsection
-\addcontentsline{toc}{frontmatter}{\protect\numberline{}Signature Page}%
+\addcontentsline{toc}{frontmatter}{\protect\numberline{}Dissertation Approval Page}%
 \begin{alwayssingle}
 \null\vfill
 \begin{center}
@@ -550,7 +550,8 @@ All rights reserved.}
 \vspace{\@approvalspace}
 \makebox[4in][l]{\parbox{4in}{\fmfont The dissertation of {\@author}
 is approved, and it is acceptable in quality and form for publication
-on microfilm and electronically: }}\\
+on microfilm and electronically. }}\\
+\if 0
 \begin{tabular*}{4in}[t]{r@{\extracolsep{\fill}}r}
 & \rule{0pt}{\@approvalspace} \\
 \hline
@@ -593,6 +594,13 @@ on microfilm and electronically: }}\\
 
 & \UCSD@text@chair
 \end{tabular*}\\[\@approvalspace]
+\fi
+\rule{0pt}{\@approvalspace}\\
+\rule{0pt}{\@approvalspace}\\
+\rule{0pt}{\@approvalspace}\\
+\rule{0pt}{\@approvalspace}\\
+\rule{0pt}{\@approvalspace}\\
+\rule{0pt}{\@approvalspace}\\
 {\fmfont University of California {\@campus}} \\
 \vspace{-.25in}
 \vspace{\@approvalspace}

@@ -10,7 +10,7 @@ and discusses the challenges in managing disaggregated hardware.
 A monolithic server has been the unit of deployment and operation in datacenters for decades.
 This long-standing {\em server-centric} architecture has several key limitations.
 
-\noindent{\textit{\uline{Inefficient resource utilization.}}}
+\textit{\uline{Inefficient resource utilization.}}
 With a server being the physical boundary of resource allocation, 
 it is difficult to fully utilize all resources in a datacenter~\cite{Barroso-COMPUTER,Quasar-ASPLOS,PowerNap}.
 We analyzed two production cluster traces: a 29-day Google one~\cite{GoogleTrace}
@@ -26,14 +26,14 @@ the same physical machine.
 
 \input{lego/fig-resource-anal}
 
-\noindent{\textit{\uline{Poor hardware elasticity.}}}
+\textit{\uline{Poor hardware elasticity.}}
 It is difficult to add, move, remove, or reconfigure hardware components
 after they have been installed in a monolithic server~\cite{FB-Wedge100}. %, and
 Because of this rigidity, datacenter owners have to plan out server configurations in advance.
 However, with today's speed of change in application requirements, such plans have to be adjusted frequently,
 and when changes happen, it often comes with waste in existing server hardware.
 
-\noindent{\textit{\uline{Coarse failure domain.}}}
+\textit{\uline{Coarse failure domain.}}
 The failure unit of monolithic servers is coarse.
 When a hardware component within a server fails, %(\eg, processor, memory chip, RAID controller), 
 the whole server is often unusable and applications running on it can all crash.
@@ -41,7 +41,7 @@ Previous analysis~\cite{Failure-Disk-FAST07} found that motherboard, memory, CPU
 50\% to 82\% of hardware failures in a server.
 Unfortunately, monolithic servers cannot continue to operate when any of these devices fail.
 
-\noindent{\textit{\uline{Bad support for heterogeneity.}}}
+\textit{\uline{Bad support for heterogeneity.}}
 Driven by application needs, new hardware technologies are finding their ways into modern datacenters~\cite{sigarch-dc}.
 Datacenters no longer host only commodity servers with CPU, DRAM, and hard disks. 
 They include non-traditional and specialized hardware like GPGPU~\cite{GPU-google,GPU-aws}, 

@@ -77,7 +77,7 @@ we propose a \pcomponent{} and an \mcomponent\ architecture designed
 within today's network, processor, and memory performance and hardware constraints
 (Figure~\ref{fig-lego-hw-arch}).
 
-\noindent{\textit{\uline{Separating process and memory functionalities.}}}
+\textit{\uline{Separating process and memory functionalities.}}
 \lego\ moves all hardware memory functionalities to \mcomponent{}s 
 (e.g., page tables, TLBs) and leaves {\em only} caches at the \pcomponent{} side. 
 With a clean separation of process and memory hardware units, 
@@ -85,7 +85,7 @@ the allocation and management of memory can be completely transparent to \pcompo
 Each \mcomponent{} can choose its own memory allocation technique
 and virtual to physical memory address mappings (\eg, segmentation). 
 
-\noindent{\textit{\uline{Processor virtual caches.}}}
+\textit{\uline{Processor virtual caches.}}
 After moving all memory functionalities to \mcomponent{}s,  
 \pcomponent{}s will only see virtual addresses and have to use virtual memory addresses to access its caches. 
 Because of this, \lego\ organizes all levels of \pcomponent{} caches as {\em virtual caches}~\cite{Goodman-ASPLOS87,Wang-ISCA89},
@@ -101,7 +101,7 @@ The homonym problem happens when two address spaces use the same virtual address
 Similar to previous solutions~\cite{OVC}, we solve homonyms by storing an address space ID (ASID) with each cache line,
 and differentiate a virtual address in different address spaces using ASIDs.
 
-\noindent{\textit{\uline{Separating memory for performance and for capacity.}}}
+\textit{\uline{Separating memory for performance and for capacity.}}
 Previous studies~\cite{Gao16-OSDI,GU17-NSDI} and our own show that today's network speed 
 cannot meet application performance requirements if all memory accesses are across the network. 
 Fortunately, many modern datacenter applications exhibit strong memory access temporal locality.
@@ -236,7 +236,7 @@ accepts and oversees all system calls related to virtual memory space management
 A home \mcomponent\ can also host process data.
 
 \subsubsection{Memory Space Management}
-\noindent{\textit{\uline{Virtual memory space management.}}}
+\textit{\uline{Virtual memory space management.}}
 We propose a two-level approach to manage distributed virtual memory spaces,
 where the home \mcomponent\ of a process makes coarse-grained, high-level virtual memory allocation decisions
 and other \mcomponent{}s perform fine-grained virtual memory allocation.
@@ -284,7 +284,7 @@ and only cache a copy of the \vregion\ array for fast memory accesses.
 To fill a cache miss or to flush a dirty cache line, 
 a \pcomponent{} looks up the cached \vregion\ array to find its owner \mcomponent{} and sends the request to it.
 
-\noindent{\textit{\uline{Physical memory space management.}}}
+\textit{\uline{Physical memory space management.}}
 Each \mcomponent\ manages the physical memory allocation for data that falls into the
 \vregion\ that it owns.
 Each \mcomponent{} can choose their own way of physical memory allocation
